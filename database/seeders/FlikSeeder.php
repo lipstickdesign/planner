@@ -110,7 +110,7 @@ class FlikSeeder extends Seeder
             ['2026-01-11', 'Fotball', 'Event', 'Påmelding fotball', 'Rekruttering', 'yearly', 'utkast', '', $H, 'Helge'],
             ['2026-01-10', 'Volleyball', 'Turnering', 'Volleyballturnering mini & teen #3', 'Rekruttering', 'yearly', 'til_godkjenning', '', '', 'Roger Henriksen'],
             ['2026-02-15', 'Fotball', 'Administrasjon', 'Søknad Tine', 'Admin', 'yearly', 'utkast', '', '', 'Helge'],
-            ['2026-02-01', 'Volleyball', 'Turnering', 'Regionsmesterskap', 'Konkurranse', 'once', 'utkast', '', '', 'Roger Henriksen'],
+            ['2026-02-01', 'Volleyball', 'Turnering', 'Regionsmesterskap', 'Konkurranse', 'none', 'utkast', '', '', 'Roger Henriksen'],
             ['2026-03-23', 'Administrasjon', 'Administrasjon', 'Årsmøte', 'Admin', 'yearly', 'utkast', '', '', 'Helge'],
             ['2026-03-21', 'Fotball', 'Turnering', 'Lions Cup', 'Konkurranse', 'yearly', 'til_godkjenning', '', '', 'Karstein'],
             ['2026-03-10', 'Håndball', 'Administrasjon', 'Påmelding håndball', 'Rekruttering', 'yearly', 'utkast', '', $H, 'Helge'],
