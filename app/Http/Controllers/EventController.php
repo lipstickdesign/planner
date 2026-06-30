@@ -78,4 +78,30 @@ class EventController extends Controller
 
         return response()->json($event->fresh()->toCard(), 201);
     }
+
+    /**
+     * Kopier event (med oppgaver/tekster) til neste år, med alle datoer flyttet ett år frem.
+     * Tekstene kopieres som de er – brukeren kan så oppdatere dem for nytt år med AI.
+     */
+    public function duplicateNextYear(Request $request, Event $event)
+    {
+        $event->loadMissing('tasks.destinations');
+
+        $copy = $event->replicate();
+        $copy->event_date = $event->event_date ? $event->event_date->copy()->addYear() : null;
+        $copy->approval_status = 'utkast';
+        $copy->created_by = $request->user()->id;
+        $copy->save();
+
+        foreach ($event->tasks as $t) {
+            $newTask = $t->replicate();
+            $newTask->event_id = $copy->id;
+            $newTask->publish_date = $t->publish_date ? $t->publish_date->copy()->addYear() : null;
+            $newTask->status = 'planlagt';
+            $newTask->save();
+            $newTask->destinations()->sync($t->destinations->pluck('id')->all());
+        }
+
+        return response()->json($copy->fresh()->toCard(), 201);
+    }
 }

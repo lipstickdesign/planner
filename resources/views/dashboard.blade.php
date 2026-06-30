@@ -373,6 +373,7 @@ function openEvent(id){
         '<button class="btn solid" onclick="openEventForm('+e.id+')">✎ Rediger</button>'+
         (e.landing?'<a class="btn" href="'+e.landing+'" target="_blank">🌐 Landingsside</a>':'<button class="btn" disabled>🌐 Landingsside mangler</button>')+
         (e.hoopit?'<a class="btn" href="'+e.hoopit+'" target="_blank">📝 Hoopit påmelding</a>':'')+
+        '<button class="btn" onclick="duplicateNextYear('+e.id+')">📅 Dupliser til neste år</button>'+
         '<button class="btn" style="color:#b23535" onclick="deleteEvent('+e.id+')">🗑 Slett</button>'+
       '</div></div>';
   document.getElementById('overlay').classList.add('open');
@@ -453,7 +454,7 @@ function openTaskForm(eventId,taskId){
       '<div><label>Publiseringsdato</label><input id="t_date" type="date" value="'+(t.date||'')+'"></div></div>'+
       '<label>Status</label><select id="t_status">'+stOpts+'</select>'+
       '<label>FLIK-side(r) / destinasjoner</label><select id="t_dests" multiple size="5" style="height:auto">'+destOpts+'</select>'+
-      '<label style="display:flex;align-items:center;justify-content:space-between;gap:10px">Tekst til innlegget<button type="button" class="btn sm" id="aiBtn" onclick="suggestText('+eventId+')">✨ Foreslå tekst med AI</button></label>'+
+      '<label style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap">Tekst til innlegget<span style="display:flex;gap:6px">'+(t.body?'<button type="button" class="btn sm" id="aiReviseBtn" onclick="suggestText('+eventId+',true)">🔄 Oppdater for nytt år</button>':'')+'<button type="button" class="btn sm" id="aiBtn" onclick="suggestText('+eventId+',false)">✨ Foreslå tekst</button></span></label>'+
       '<textarea id="t_body" placeholder="Skriv eller la AI foreslå teksten. Denne kan kopieres rett ut til Facebook / Meta Planner.">'+esc(t.body)+'</textarea>'+
       '<label>Lenke (valgfritt – f.eks. Google Doc)</label><input id="t_text" value="'+esc(t.text)+'">'+
       '<div class="actions"><button type="button" class="btn" onclick="openEvent('+eventId+')">Avbryt</button><button class="btn solid" type="submit">Lagre</button></div>'+
@@ -482,17 +483,32 @@ async function generatePlan(eventId){
   try{const card=await api('POST','/events/'+eventId+'/generate-plan');upsert(card);rerender();openEvent(eventId);}catch(err){alert(err.message);}
 }
 
+/* kopier event til neste år (datoer flyttet ett år frem) */
+async function duplicateNextYear(eventId){
+  const e=DATA.find(x=>x.id===eventId);
+  const ny=(new Date(e.date)).getFullYear()+1;
+  if(!confirm('Kopiere «'+e.title+'» til '+ny+'? Oppgaver og tekster kopieres, med alle datoer flyttet ett år frem.'))return;
+  try{
+    const card=await api('POST','/events/'+eventId+'/duplicate-next-year');
+    upsert(card);rerender();openEvent(card.id);
+    alert('Kopiert til '+ny+'! Åpne hver oppgave og bruk «🔄 Oppdater for nytt år», så retter AI årstall og årsklasser i teksten.');
+  }catch(err){alert(err.message);}
+}
+
 /* AI-tekstforslag for en oppgave */
-async function suggestText(eventId){
-  const e=DATA.find(x=>x.id===eventId);const btn=document.getElementById('aiBtn');
+async function suggestText(eventId,revise){
+  const e=DATA.find(x=>x.id===eventId);
+  const btn=document.getElementById(revise?'aiReviseBtn':'aiBtn');const orig=btn?btn.textContent:'';
   if(btn){btn.disabled=true;btn.textContent='✨ Skriver…';}
   try{
-    const res=await fetch('/ai/suggest',{method:'POST',headers:{'Content-Type':'application/json','Accept':'application/json','X-CSRF-TOKEN':CSRF},body:JSON.stringify({title:e.title,sport:e.sport,label:val('t_label'),date:val('t_date'),goal:e.mal,extra:e.desc})});
+    const payload={title:e.title,sport:e.sport,label:val('t_label'),date:val('t_date'),goal:e.mal,extra:e.desc};
+    if(revise){payload.existing=val('t_body');payload.year=String((new Date(e.date)).getFullYear());}
+    const res=await fetch('/ai/suggest',{method:'POST',headers:{'Content-Type':'application/json','Accept':'application/json','X-CSRF-TOKEN':CSRF},body:JSON.stringify(payload)});
     const j=await res.json();
     if(!res.ok)throw new Error(j.error||('Feil '+res.status));
     document.getElementById('t_body').value=j.text||'';
   }catch(err){alert('Kunne ikke lage tekst: '+err.message);}
-  if(btn){btn.disabled=false;btn.textContent='✨ Foreslå tekst med AI';}
+  if(btn){btn.disabled=false;btn.textContent=orig;}
 }
 
 /* kopier oppgavetekst til utklippstavle */

@@ -8,7 +8,8 @@ use Illuminate\Support\Facades\Http;
 class AiController extends Controller
 {
     /**
-     * Foreslå et tekstutkast (Facebook-innlegg) for en oppgave, i FLIKs stemme.
+     * Foreslå (eller oppdater) et tekstutkast for en oppgave, i FLIKs stemme.
+     * Hvis "existing" er satt, oppdateres fjorårets tekst til nytt år (rett årstall/årsklasser).
      */
     public function suggest(Request $request)
     {
@@ -19,6 +20,8 @@ class AiController extends Controller
             'date' => ['nullable', 'string', 'max:30'],
             'goal' => ['nullable', 'string', 'max:100'],
             'extra' => ['nullable', 'string', 'max:1000'],
+            'existing' => ['nullable', 'string', 'max:5000'],
+            'year' => ['nullable', 'string', 'max:10'],
         ]);
 
         $key = config('services.anthropic.key');
@@ -34,14 +37,27 @@ class AiController extends Controller
             .'emojier. Hold det kort og konkret, med en tydelig oppfordring (CTA) til slutt. '
             .'Ikke bruk hashtags med mindre det er naturlig.';
 
-        $user = "Lag et utkast til ett Facebook-innlegg.\n"
-            ."Arrangement: {$data['title']}\n"
-            .(! empty($data['sport']) ? "Idrett/gruppe: {$data['sport']}\n" : '')
-            .(! empty($data['label']) ? "Type innlegg i forløpet: {$data['label']}\n" : '')
-            .(! empty($data['date']) ? "Publiseringsdato: {$data['date']}\n" : '')
-            .(! empty($data['goal']) ? "Hovedmål: {$data['goal']}\n" : '')
-            .(! empty($data['extra']) ? "Ekstra info: {$data['extra']}\n" : '')
-            .'Skriv kun selve innlegget, klart til å lime inn.';
+        if (! empty($data['existing'])) {
+            $user = 'Her er fjorårets innlegg for et arrangement som nå arrangeres på nytt'
+                .(! empty($data['year']) ? " i {$data['year']}" : '').".\n"
+                .'Oppdater teksten til årets utgave: rett opp årstall, datoer og fødselsår/årsklasser '
+                .'som henger igjen fra i fjor (flytt fødselsår og årsklasser ett år frem der det er nevnt), '
+                ."men behold stil, budskap og omtrentlig lengde.\n"
+                ."Arrangement: {$data['title']}\n"
+                .(! empty($data['sport']) ? "Idrett/gruppe: {$data['sport']}\n" : '')
+                .(! empty($data['date']) ? "Ny dato: {$data['date']}\n" : '')
+                ."\nFjorårets tekst:\n{$data['existing']}\n\n"
+                .'Skriv kun den oppdaterte teksten.';
+        } else {
+            $user = "Lag et utkast til ett Facebook-innlegg.\n"
+                ."Arrangement: {$data['title']}\n"
+                .(! empty($data['sport']) ? "Idrett/gruppe: {$data['sport']}\n" : '')
+                .(! empty($data['label']) ? "Type innlegg i forløpet: {$data['label']}\n" : '')
+                .(! empty($data['date']) ? "Publiseringsdato: {$data['date']}\n" : '')
+                .(! empty($data['goal']) ? "Hovedmål: {$data['goal']}\n" : '')
+                .(! empty($data['extra']) ? "Ekstra info: {$data['extra']}\n" : '')
+                .'Skriv kun selve innlegget, klart til å lime inn.';
+        }
 
         $resp = Http::withHeaders([
             'x-api-key' => $key,
