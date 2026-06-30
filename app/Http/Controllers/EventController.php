@@ -22,6 +22,7 @@ class EventController extends Controller
             'landing_url' => ['nullable', 'string', 'max:500'],
             'signup_url' => ['nullable', 'string', 'max:500'],
             'internal_note' => ['nullable', 'string'],
+            'brief' => ['nullable', 'string'],
             'responsible_user_id' => ['nullable', 'exists:users,id'],
         ];
     }

@@ -9,7 +9,9 @@ class AiController extends Controller
 {
     /**
      * Foreslå (eller oppdater) et tekstutkast for en oppgave, i FLIKs stemme.
-     * Hvis "existing" er satt, oppdateres fjorårets tekst til nytt år (rett årstall/årsklasser).
+     * - existing: oppdaterer fjorårets tekst til nytt år (rett årstall/årsklasser).
+     * - draft: brukerens eget utkast/stikkord i tekstboksen – bygges videre på.
+     * - brief: praktisk info på eventet (utstyr, hva de må ha med, datoer) – flettes inn.
      */
     public function suggest(Request $request)
     {
@@ -20,6 +22,8 @@ class AiController extends Controller
             'date' => ['nullable', 'string', 'max:30'],
             'goal' => ['nullable', 'string', 'max:100'],
             'extra' => ['nullable', 'string', 'max:1000'],
+            'brief' => ['nullable', 'string', 'max:3000'],
+            'draft' => ['nullable', 'string', 'max:5000'],
             'existing' => ['nullable', 'string', 'max:5000'],
             'year' => ['nullable', 'string', 'max:10'],
         ]);
@@ -37,25 +41,31 @@ class AiController extends Controller
             .'emojier. Hold det kort og konkret, med en tydelig oppfordring (CTA) til slutt. '
             .'Ikke bruk hashtags med mindre det er naturlig.';
 
+        // Felles kontekst om arrangementet
+        $ctx = "Arrangement: {$data['title']}\n"
+            .(! empty($data['sport']) ? "Idrett/gruppe: {$data['sport']}\n" : '')
+            .(! empty($data['label']) ? "Type innlegg i forløpet: {$data['label']}\n" : '')
+            .(! empty($data['date']) ? "Publiseringsdato: {$data['date']}\n" : '')
+            .(! empty($data['goal']) ? "Hovedmål: {$data['goal']}\n" : '')
+            .(! empty($data['extra']) ? "Beskrivelse: {$data['extra']}\n" : '')
+            .(! empty($data['brief']) ? "Praktisk info som bør med (stikkord): {$data['brief']}\n" : '');
+
         if (! empty($data['existing'])) {
+            // Oppdater fjorårets tekst til nytt år
             $user = 'Her er fjorårets innlegg for et arrangement som nå arrangeres på nytt'
                 .(! empty($data['year']) ? " i {$data['year']}" : '').".\n"
                 .'Oppdater teksten til årets utgave: rett opp årstall, datoer og fødselsår/årsklasser '
-                .'som henger igjen fra i fjor (flytt fødselsår og årsklasser ett år frem der det er nevnt), '
-                ."men behold stil, budskap og omtrentlig lengde.\n"
-                ."Arrangement: {$data['title']}\n"
-                .(! empty($data['sport']) ? "Idrett/gruppe: {$data['sport']}\n" : '')
-                .(! empty($data['date']) ? "Ny dato: {$data['date']}\n" : '')
-                ."\nFjorårets tekst:\n{$data['existing']}\n\n"
-                .'Skriv kun den oppdaterte teksten.';
+                .'(flytt fødselsår og årsklasser ett år frem der det er nevnt), men behold stil, '
+                ."budskap og omtrentlig lengde.\n".$ctx
+                ."\nFjorårets tekst:\n{$data['existing']}\n\nSkriv kun den oppdaterte teksten.";
+        } elseif (! empty($data['draft'])) {
+            // Bygg videre på brukerens eget utkast/stikkord
+            $user = "Brukeren har skrevet dette utkastet/stikkordene – bygg videre på det og behold "
+                ."meningen, men gjør det til et ferdig, godt Facebook-innlegg:\n\"{$data['draft']}\"\n\n"
+                .$ctx."\nSkriv kun selve innlegget, klart til å lime inn.";
         } else {
-            $user = "Lag et utkast til ett Facebook-innlegg.\n"
-                ."Arrangement: {$data['title']}\n"
-                .(! empty($data['sport']) ? "Idrett/gruppe: {$data['sport']}\n" : '')
-                .(! empty($data['label']) ? "Type innlegg i forløpet: {$data['label']}\n" : '')
-                .(! empty($data['date']) ? "Publiseringsdato: {$data['date']}\n" : '')
-                .(! empty($data['goal']) ? "Hovedmål: {$data['goal']}\n" : '')
-                .(! empty($data['extra']) ? "Ekstra info: {$data['extra']}\n" : '')
+            // Helt nytt forslag
+            $user = "Lag et utkast til ett Facebook-innlegg.\n".$ctx
                 .'Skriv kun selve innlegget, klart til å lime inn.';
         }
 

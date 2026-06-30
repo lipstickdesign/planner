@@ -67,6 +67,8 @@ svg.wheel{width:100%;height:auto;display:block}
 .legend .sw{width:12px;height:12px;border-radius:3px;flex:none}.legend .c{margin-left:auto;font-size:12px;color:var(--ink-soft)}
 .wheel-hint{font-size:12px;color:var(--ink-soft);margin-top:10px;text-align:center}
 .note{background:#fff8e6;border:1px solid #f3e2af;color:#7a5b00;font-size:12.5px;padding:10px 14px;border-radius:10px;margin-bottom:18px}
+.brief{background:#eef3fd;border:1px solid #d7e4f8;color:#26344d;font-size:13px;padding:12px 15px;border-radius:12px;margin:0 0 18px;white-space:pre-wrap;line-height:1.55}
+.brief b{color:var(--flik-blue-dark)}
 .toolbar{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px;align-items:center}
 .toolbar select,.toolbar input{font-family:inherit;font-size:13px;padding:8px 11px;border:1px solid var(--line);border-radius:9px;background:#fff;color:var(--ink)}
 .toolbar input{flex:1;min-width:160px}
@@ -411,6 +413,7 @@ function openEvent(id){
       f('Dato',e.date?fmt(e.date)+' 2026':'')+f('Idrett / gruppe',e.sport)+f('Hovedmål',e.mal)+f('Ansvarlig',e.ansvarlig)+'</div>'+
       (chips?'<div class="linkchips">'+chips+'</div>':'')+
       (e.notat?'<div class="note" style="margin:0 0 18px">📝 '+e.notat+'</div>':'')+
+      (e.brief?'<div class="brief">📋 <b>Praktisk info:</b> '+esc(e.brief)+'</div>':'')+
       '<div class="planhead"><div class="planttl">📅 Publiseringsplan <span class="count">'+(e.posts?e.posts.length:0)+' oppgaver</span></div>'+
         '<div class="planbtns"><button class="btn solid sm" onclick="generatePlan('+e.id+')">🪄 Foreslå plan</button><button class="btn sm" onclick="openTaskForm('+e.id+',null)">＋ Oppgave</button></div></div>'+
       postsHtml+
@@ -470,6 +473,8 @@ function openEventForm(id){
       '<div class="two"><div><label>Status</label><select id="f_appr">'+apprOpts+'</select></div><div></div></div>'+
       '<label>Beskrivelse</label><input id="f_desc" value="'+esc(e.desc)+'">'+
       '<label>Notat (intern)</label><input id="f_notat" value="'+esc(e.notat)+'">'+
+      '<label>Praktisk info / stikkord <span style="font-weight:400;color:var(--ink-soft)">– grunnlag for AI-tekst</span></label>'+
+      '<textarea id="f_brief" placeholder="F.eks. datoer, hva barna får (t-skjorte, ball), hva de må ha med, pris, sted, tider… Kan være stikkord.">'+esc(e.brief)+'</textarea>'+
       '<div class="two"><div><label>Landingsside</label><input id="f_land" value="'+esc(e.landing)+'" placeholder="https://flik.no/…"></div>'+
       '<div><label>Påmelding (Hoopit)</label><input id="f_hoop" value="'+esc(e.hoopit)+'"></div></div>'+
       '<div class="actions"><button type="button" class="btn" onclick="'+(id?'openEvent('+id+')':'closeModal()')+'">Avbryt</button><button class="btn solid" type="submit">Lagre</button></div>'+
@@ -477,7 +482,7 @@ function openEventForm(id){
   document.getElementById('overlay').classList.add('open');
 }
 async function saveEventForm(ev,id){ev.preventDefault();
-  const body={title:val('f_title'),category_id:val('f_cat')||null,type:val('f_type'),goal:val('f_goal')||null,event_date:val('f_date'),recurrence:val('f_recur'),approval_status:val('f_appr'),description:val('f_desc')||null,internal_note:val('f_notat')||null,landing_url:val('f_land')||null,signup_url:val('f_hoop')||null,responsible_user_id:val('f_resp')||null};
+  const body={title:val('f_title'),category_id:val('f_cat')||null,type:val('f_type'),goal:val('f_goal')||null,event_date:val('f_date'),recurrence:val('f_recur'),approval_status:val('f_appr'),description:val('f_desc')||null,internal_note:val('f_notat')||null,brief:val('f_brief')||null,landing_url:val('f_land')||null,signup_url:val('f_hoop')||null,responsible_user_id:val('f_resp')||null};
   try{const card=id?await api('PUT','/events/'+id,body):await api('POST','/events',body);upsert(card);rerender();openEvent(card.id);}catch(err){alert(err.message);}
 }
 async function deleteEvent(id){
@@ -554,8 +559,9 @@ async function suggestText(eventId,revise){
   const btn=document.getElementById(revise?'aiReviseBtn':'aiBtn');const orig=btn?btn.textContent:'';
   if(btn){btn.disabled=true;btn.textContent='✨ Skriver…';}
   try{
-    const payload={title:e.title,sport:e.sport,label:val('t_label'),date:val('t_date'),goal:e.mal,extra:e.desc};
+    const payload={title:e.title,sport:e.sport,label:val('t_label'),date:val('t_date'),goal:e.mal,extra:e.desc,brief:e.brief||''};
     if(revise){payload.existing=val('t_body');payload.year=String((new Date(e.date)).getFullYear());}
+    else{const d=val('t_body');if(d)payload.draft=d;}
     const res=await fetch('/ai/suggest',{method:'POST',headers:{'Content-Type':'application/json','Accept':'application/json','X-CSRF-TOKEN':CSRF},body:JSON.stringify(payload)});
     const j=await res.json();
     if(!res.ok)throw new Error(j.error||('Feil '+res.status));

@@ -15,7 +15,7 @@ class Event extends Model
     protected $fillable = [
         'company_id', 'category_id', 'title', 'description', 'type', 'goal',
         'event_date', 'recurrence', 'approval_status', 'landing_url',
-        'signup_url', 'internal_note', 'responsible_user_id', 'created_by',
+        'signup_url', 'internal_note', 'brief', 'responsible_user_id', 'created_by',
     ];
 
     protected $casts = [
@@ -86,6 +86,7 @@ class Event extends Model
             'landing' => $this->landing_url,
             'hoopit' => $this->signup_url,
             'notat' => $this->internal_note,
+            'brief' => $this->brief,
             'posts' => $this->tasks->sortBy('sort_order')->values()->map(function ($t) {
                 return [
                     'id' => $t->id,
