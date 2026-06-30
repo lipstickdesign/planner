@@ -9,12 +9,12 @@
 <link href="https://fonts.googleapis.com/css?family=Ubuntu:300,400,500,700&display=swap" rel="stylesheet">
 @verbatim
 <style>
-:root{--flik-blue:#00529b;--flik-blue-dark:#003a73;--flik-blue-deep:#012a52;--accent:#ffb81c;--bg:#f4f6f9;--card:#fff;--ink:#1b2733;--ink-soft:#5b6b7b;--line:#e3e8ef;--green:#2e9e5b;--amber:#e8a200;--red:#d64545;--teal:#1a9aa0;--grey:#8795a3;--radius:14px;--shadow:0 1px 3px rgba(16,40,70,.08),0 6px 24px rgba(16,40,70,.06)}
+:root{--flik-blue:#2f6fd6;--flik-blue-dark:#1c3155;--flik-blue-deep:#1a1e39;--navy:#1c3155;--sky:#6aaae4;--orange:#fb471f;--magenta:#cc2170;--accent:#fb471f;--bg:#f3f5fb;--card:#fff;--ink:#1a1f33;--ink-soft:#5b6b86;--line:#e6eaf2;--green:#2e9e5b;--amber:#e8a200;--red:#d64545;--teal:#1a9aa0;--grey:#8795a3;--radius:18px;--shadow:0 2px 5px rgba(20,40,80,.05),0 12px 36px rgba(20,40,80,.07)}
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--ink);font-family:'Ubuntu',system-ui,sans-serif;line-height:1.5}
 a{color:var(--flik-blue);text-decoration:none}a:hover{text-decoration:underline}
 .wrap{max-width:1240px;margin:0 auto;padding:0 20px}
-.topbar{background:linear-gradient(135deg,var(--flik-blue),var(--flik-blue-dark) 60%,var(--flik-blue-deep));color:#fff}
+.topbar{background:linear-gradient(125deg,#26406e,#1c3155 55%,#1a1e39);color:#fff}
 .topbar .wrap{display:flex;align-items:center;gap:14px;padding:13px 20px}
 .brand{display:flex;align-items:center;gap:12px}
 .brandmark{height:38px;width:auto;color:#fff;display:block}
@@ -36,7 +36,8 @@ main{padding:24px 0 60px}.view{display:none}.view.active{display:block}
 .stat{background:var(--card);border-radius:var(--radius);padding:18px;box-shadow:var(--shadow);border:1px solid var(--line);position:relative;overflow:hidden}
 .stat .n{font-size:30px;font-weight:700;line-height:1}.stat .l{font-size:13px;color:var(--ink-soft);margin-top:6px}
 .stat .bar{position:absolute;left:0;top:0;bottom:0;width:5px}
-.stat.b1 .bar{background:var(--flik-blue)}.stat.b2 .bar{background:var(--amber)}.stat.b3 .bar{background:var(--red)}.stat.b4 .bar{background:var(--teal)}
+.stat.b1{background:#eef3fd}.stat.b2{background:#fdf1ea}.stat.b3{background:#fcebf1}.stat.b4{background:#ecf5fa}
+.stat.b1 .bar{background:var(--flik-blue)}.stat.b2 .bar{background:var(--orange)}.stat.b3 .bar{background:var(--magenta)}.stat.b4 .bar{background:var(--sky)}
 .grid2{display:grid;grid-template-columns:1.35fr 1fr;gap:18px}
 .panel{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);border:1px solid var(--line);overflow:hidden}
 .panel h3{font-size:15px;margin:0;padding:15px 18px;border-bottom:1px solid var(--line);font-weight:700;display:flex;align-items:center;gap:9px}
@@ -304,7 +305,7 @@ function renderWheel(){
     const am=((m+0.5)*30-90)*Math.PI/180;
     svg+='<text x="'+(cx+(rO+18)*Math.cos(am))+'" y="'+(cy+(rO+18)*Math.sin(am))+'" font-size="12" font-weight="500" fill="#5b6b7b" text-anchor="middle" dominant-baseline="middle" font-family="Ubuntu">'+MS[m].toUpperCase()+'</text>';
   }
-  svg+='<circle cx="'+cx+'" cy="'+cy+'" r="'+(rI-6)+'" fill="#00529b"/>';
+  svg+='<circle cx="'+cx+'" cy="'+cy+'" r="'+(rI-6)+'" fill="#1c3155"/>';
   svg+='<text x="'+cx+'" y="'+(cy-10)+'" font-size="30" font-weight="700" fill="#fff" text-anchor="middle" font-family="Ubuntu">FLIK</text>';
   svg+='<text x="'+cx+'" y="'+(cy+14)+'" font-size="13" fill="#cfe0f2" text-anchor="middle" font-family="Ubuntu">Årshjul 2026</text>';
   const byMonth={};evs.forEach(e=>{const m=new Date(e.date).getMonth();(byMonth[m]=byMonth[m]||[]).push(e);});

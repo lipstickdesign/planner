@@ -9,19 +9,19 @@
 <link href="https://fonts.googleapis.com/css?family=Ubuntu:300,400,500,700&display=swap" rel="stylesheet">
 <style>
 *{box-sizing:border-box}
-body{margin:0;font-family:'Ubuntu',system-ui,sans-serif;background:linear-gradient(135deg,#00529b,#012a52);min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
+body{margin:0;font-family:'Ubuntu',system-ui,sans-serif;background:linear-gradient(135deg,#26406e,#1c3155 55%,#1a1e39);min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
 .card{background:#fff;border-radius:20px;max-width:400px;width:100%;padding:32px 30px 26px;box-shadow:0 30px 80px rgba(0,0,0,.4);text-align:center}
-.mk{height:60px;color:#00529b;margin-bottom:8px}
+.mk{height:60px;color:#1c3155;margin-bottom:8px}
 .mk svg{height:60px;width:auto}
 h1{font-size:22px;margin:2px 0 2px;color:#1b2733}
 .sub{font-size:13.5px;color:#5b6b7b;margin:0 0 20px}
 .err{background:#fde3e3;color:#b23535;font-size:13px;border-radius:9px;padding:9px 12px;margin-bottom:14px;text-align:left}
 input[type=email],input[type=password]{width:100%;font-family:inherit;font-size:15px;padding:11px 13px;border:1px solid #e3e8ef;border-radius:10px;margin-bottom:11px;text-align:center}
-input:focus{outline:none;border-color:#00529b}
+input:focus{outline:none;border-color:#2f6fd6;box-shadow:0 0 0 3px rgba(47,111,214,.14)}
 .rem{display:flex;align-items:center;gap:7px;font-size:13px;color:#5b6b7b;justify-content:center;margin-bottom:14px}
 .rem input{width:auto}
-button{width:100%;font-family:inherit;font-size:15px;font-weight:500;padding:12px;border:none;border-radius:10px;background:#00529b;color:#fff;cursor:pointer}
-button:hover{background:#003a73}
+button{width:100%;font-family:inherit;font-size:15px;font-weight:500;padding:13px;border:none;border-radius:12px;background:#2f6fd6;color:#fff;cursor:pointer}
+button:hover{background:#2557b8}
 .hint{margin-top:16px;border-top:1px solid #e3e8ef;padding-top:13px;font-size:12px;color:#8795a3}
 </style>
 </head>
