@@ -114,6 +114,15 @@ svg.wheel{width:100%;height:auto;display:block}
 .btn{font-family:inherit;font-size:13px;font-weight:500;padding:9px 14px;border-radius:9px;border:1px solid var(--line);background:#fff;color:var(--flik-blue);cursor:pointer;display:inline-flex;align-items:center;gap:7px}
 .btn:hover{background:#f1f6fc;text-decoration:none}.btn[disabled]{opacity:.45;cursor:not-allowed}
 footer{color:var(--ink-soft);font-size:12.5px;text-align:center;padding:24px 20px 40px}
+.btn.solid{background:var(--flik-blue);color:#fff;border-color:var(--flik-blue)}
+.btn.solid:hover{background:var(--flik-blue-dark)}
+.btn.sm{padding:6px 10px;font-size:12px}
+form.f label{display:block;font-size:12px;color:var(--ink-soft);margin:10px 0 4px;font-weight:500}
+form.f input,form.f select{width:100%;font-family:inherit;font-size:14px;padding:9px 11px;border:1px solid var(--line);border-radius:9px;background:#fff;color:var(--ink)}
+form.f input:focus,form.f select:focus{outline:none;border-color:var(--flik-blue)}
+form.f .two{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+form.f .actions{margin-top:18px;display:flex;gap:10px;justify-content:flex-end}
+@media(max-width:880px){form.f .two{grid-template-columns:1fr}}
 @media(max-width:880px){.stats{grid-template-columns:repeat(2,1fr)}.grid2,.wheelwrap{grid-template-columns:1fr}.fieldgrid{grid-template-columns:1fr}}
 </style>
 @endverbatim
@@ -146,7 +155,7 @@ footer{color:var(--ink-soft);font-size:12.5px;text-align:center;padding:24px 20p
 
 <main class="wrap">
   <section class="view active" id="view-dash">
-    <div class="viewhead"><h2>Dashboard 2026</h2></div>
+    <div class="viewhead"><h2>Dashboard 2026</h2><button class="btn solid" onclick="openEventForm()">＋ Nytt arrangement</button></div>
     <div class="stats" id="statRow"></div>
     <div class="grid2">
       <div class="panel"><h3>Haster nå – trenger arbeid <span class="tag" id="urgCount">0</span></h3><div class="body" id="urgentList"></div></div>
@@ -154,7 +163,7 @@ footer{color:var(--ink-soft);font-size:12.5px;text-align:center;padding:24px 20p
     </div>
   </section>
   <section class="view" id="view-wheel">
-    <div class="viewhead"><h2>Årshjul 2026</h2></div>
+    <div class="viewhead"><h2>Årshjul 2026</h2><button class="btn solid" onclick="openEventForm()">＋ Nytt arrangement</button></div>
     <div class="note">Klikk en prikk i hjulet eller en idrett i forklaringen for å filtrere. 🔁 = årlig gjentakende.</div>
     <div class="wheelwrap">
       <div class="wheelcard"><div id="wheelHost"></div><div class="wheel-hint" id="wheelHint"></div></div>
@@ -162,7 +171,7 @@ footer{color:var(--ink-soft);font-size:12.5px;text-align:center;padding:24px 20p
     </div>
   </section>
   <section class="view" id="view-list">
-    <div class="viewhead"><h2>Eventliste</h2></div>
+    <div class="viewhead"><h2>Eventliste</h2><button class="btn solid" onclick="openEventForm()">＋ Nytt arrangement</button></div>
     <div class="toolbar">
       <input type="text" id="search" placeholder="Søk etter arrangement…">
       <select id="fSport"><option value="">Alle idretter</option></select>
@@ -178,6 +187,10 @@ footer{color:var(--ink-soft);font-size:12.5px;text-align:center;padding:24px 20p
 <script>
 window.DATA = @json($events);
 window.ME = @json(['name' => $user->name]);
+window.CATS = @json($categories);
+window.MEMBERS = @json($members);
+window.DESTS = @json($destinations);
+window.CSRF = '{{ csrf_token() }}';
 </script>
 @verbatim
 <script>
@@ -331,7 +344,8 @@ function openEvent(id){
       const stCls=p.status==='Under arbeid'?'st-arbeid':(p.status==='Publisert'?'st-publisert':(p.status==='Klar for publisering'?'st-klar':'st-planlagt'));
       return '<div class="post"><span class="pin" style="border-color:'+c+'"></span>'+
         '<div class="ph"><span class="pd">'+(p.date?fmt(p.date):'dato mangler')+'</span><span class="pt">'+(p.label||'Innlegg')+'</span><span class="pill '+stCls+'">'+p.status+'</span></div>'+
-        '<div class="pmeta">'+pages+' '+(p.text?'<a href="'+p.text+'" target="_blank">Tekstutkast ↗</a>':'')+'</div></div>';
+        '<div class="pmeta">'+pages+' '+(p.text?'<a href="'+p.text+'" target="_blank">Tekstutkast ↗</a>':'')+
+        ' <a style="cursor:pointer" onclick="openTaskForm('+e.id+','+p.id+')">✎ Rediger</a> <a style="cursor:pointer;color:#b23535" onclick="deleteTask('+e.id+','+p.id+')">🗑</a></div></div>';
     }).join('')+'</div>';
   }else{
     postsHtml='<div class="nopost">Ingen oppgaver planlagt ennå.</div>';
@@ -346,11 +360,13 @@ function openEvent(id){
       f('Dato',e.date?fmt(e.date)+' 2026':'')+f('Idrett / gruppe',e.sport)+f('Hovedmål',e.mal)+f('Ansvarlig',e.ansvarlig)+
       f('Landingsside',e.landing,true)+f('Påmelding (Hoopit)',e.hoopit,true)+'</div>'+
       (e.notat?'<div class="note" style="margin:-4px 0 16px">📝 '+e.notat+'</div>':'')+
-      '<div class="sectionlabel">Publiseringsplan – oppgaver <span class="count">'+(e.posts?e.posts.length:0)+'</span></div>'+postsHtml+
+      '<div class="sectionlabel">Publiseringsplan – oppgaver <span class="count">'+(e.posts?e.posts.length:0)+'</span><span style="flex:1"></span><button class="btn sm" onclick="openTaskForm('+e.id+',null)">＋ Oppgave</button></div>'+postsHtml+
       '<div class="checklist"><h4>Sjekkliste – klar for publisering?</h4>'+checks.map(ch=>'<div class="check '+(ch[1]?'done':'todo')+'"><span class="box">'+(ch[1]?'✓':'')+'</span><span class="lbl">'+ch[0]+'</span></div>').join('')+'</div>'+
       '<div class="links">'+
+        '<button class="btn solid" onclick="openEventForm('+e.id+')">✎ Rediger</button>'+
         (e.landing?'<a class="btn" href="'+e.landing+'" target="_blank">🌐 Landingsside</a>':'<button class="btn" disabled>🌐 Landingsside mangler</button>')+
         (e.hoopit?'<a class="btn" href="'+e.hoopit+'" target="_blank">📝 Hoopit påmelding</a>':'')+
+        '<button class="btn" style="color:#b23535" onclick="deleteEvent('+e.id+')">🗑 Slett</button>'+
       '</div></div>';
   document.getElementById('overlay').classList.add('open');
 }
@@ -367,6 +383,83 @@ document.querySelectorAll('.tab').forEach(t=>t.addEventListener('click',()=>{
   if(t.dataset.view==='list')renderList();
 }));
 ['search','fSport','fStatus'].forEach(id=>document.getElementById(id).addEventListener('input',renderList));
+
+/* ---- REDIGERING (CRUD via fetch) ---- */
+const CSRF=window.CSRF, CATS=window.CATS||[], MEMBERS=window.MEMBERS||[], DESTS=window.DESTS||[];
+function esc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');}
+function val(id){const el=document.getElementById(id);return el?el.value.trim():'';}
+async function api(method,url,body){
+  const r=await fetch(url,{method,headers:{'Content-Type':'application/json','Accept':'application/json','X-CSRF-TOKEN':CSRF},body:body?JSON.stringify(body):undefined});
+  if(r.status===422){const j=await r.json();throw new Error(Object.values(j.errors||{}).flat().join('\n')||'Ugyldige data');}
+  if(!r.ok)throw new Error('Noe gikk galt ('+r.status+'). Er du logget inn?');
+  return r.status===204?null:r.json();
+}
+function upsert(card){const i=DATA.findIndex(x=>x.id===card.id);if(i>=0)DATA[i]=card;else DATA.push(card);}
+function rerender(){renderStats();renderUrgent();renderUpcoming();const a=document.querySelector('.tab.active');if(a&&a.dataset.view==='wheel'){renderWheel();renderLegend();}if(a&&a.dataset.view==='list')renderList();}
+
+function openEventForm(id){
+  const e=id?DATA.find(x=>x.id===id):{};
+  const sel=(v,o)=>String(v)===String(o)?' selected':'';
+  const catOpts='<option value="">– ingen –</option>'+CATS.map(c=>'<option value="'+c.id+'"'+sel(e.category_id,c.id)+'>'+c.name+'</option>').join('');
+  const memOpts='<option value="">– velg –</option>'+MEMBERS.map(m=>'<option value="'+m.id+'"'+sel(e.responsible_user_id,m.id)+'>'+m.name+'</option>').join('');
+  const typeOpts=['Event','Turnering','Rekruttering','Administrasjon'].map(t=>'<option'+sel(e.type,t)+'>'+t+'</option>').join('');
+  const malOpts=['','Rekruttering','Konkurranse','Aktivitet','Inkludering','Fellesskap','Økonomi','Admin'].map(t=>'<option'+sel(e.mal||'',t)+'>'+(t||'– velg –')+'</option>').join('');
+  const apprOpts=[['utkast','Utkast'],['til_godkjenning','Til godkjenning'],['godkjent','Godkjent'],['internt','Internt']].map(o=>'<option value="'+o[0]+'"'+sel(e.approval_status||'utkast',o[0])+'>'+o[1]+'</option>').join('');
+  document.getElementById('modal').innerHTML=
+    '<div class="head" style="background:linear-gradient(135deg,var(--flik-blue),var(--flik-blue-deep))"><button class="close" onclick="closeModal()">×</button><h2>'+(id?'Rediger arrangement':'Nytt arrangement')+'</h2><div class="sub">Plasseres automatisk i årshjul og liste</div></div>'+
+    '<div class="mbody"><form class="f" onsubmit="saveEventForm(event,'+(id||'null')+')">'+
+      '<label>Tittel *</label><input id="f_title" required value="'+esc(e.title)+'" placeholder="f.eks. Tine Fotballskole">'+
+      '<div class="two"><div><label>Idrett / gruppe</label><select id="f_cat">'+catOpts+'</select></div>'+
+      '<div><label>Dato *</label><input id="f_date" type="date" required value="'+(e.date||'2026-08-21')+'"></div></div>'+
+      '<div class="two"><div><label>Type</label><select id="f_type">'+typeOpts+'</select></div>'+
+      '<div><label>Hovedmål</label><select id="f_goal">'+malOpts+'</select></div></div>'+
+      '<div class="two"><div><label>Ansvarlig</label><select id="f_resp">'+memOpts+'</select></div>'+
+      '<div><label>Gjentakelse</label><select id="f_recur"><option value="yearly"'+sel(e.recur,'yearly')+'>🔁 Årlig</option><option value="none"'+sel(e.recur,'none')+'>Engangs</option></select></div></div>'+
+      '<div class="two"><div><label>Status</label><select id="f_appr">'+apprOpts+'</select></div><div></div></div>'+
+      '<label>Beskrivelse</label><input id="f_desc" value="'+esc(e.desc)+'">'+
+      '<label>Notat (intern)</label><input id="f_notat" value="'+esc(e.notat)+'">'+
+      '<div class="two"><div><label>Landingsside</label><input id="f_land" value="'+esc(e.landing)+'" placeholder="https://flik.no/…"></div>'+
+      '<div><label>Påmelding (Hoopit)</label><input id="f_hoop" value="'+esc(e.hoopit)+'"></div></div>'+
+      '<div class="actions"><button type="button" class="btn" onclick="'+(id?'openEvent('+id+')':'closeModal()')+'">Avbryt</button><button class="btn solid" type="submit">Lagre</button></div>'+
+    '</form></div>';
+  document.getElementById('overlay').classList.add('open');
+}
+async function saveEventForm(ev,id){ev.preventDefault();
+  const body={title:val('f_title'),category_id:val('f_cat')||null,type:val('f_type'),goal:val('f_goal')||null,event_date:val('f_date'),recurrence:val('f_recur'),approval_status:val('f_appr'),description:val('f_desc')||null,internal_note:val('f_notat')||null,landing_url:val('f_land')||null,signup_url:val('f_hoop')||null,responsible_user_id:val('f_resp')||null};
+  try{const card=id?await api('PUT','/events/'+id,body):await api('POST','/events',body);upsert(card);rerender();openEvent(card.id);}catch(err){alert(err.message);}
+}
+async function deleteEvent(id){
+  if(!confirm('Slette dette arrangementet? Dette kan ikke angres.'))return;
+  try{await api('DELETE','/events/'+id);const i=DATA.findIndex(x=>x.id===id);if(i>=0)DATA.splice(i,1);rerender();closeModal();}catch(err){alert(err.message);}
+}
+
+function openTaskForm(eventId,taskId){
+  const e=DATA.find(x=>x.id===eventId);const t=(taskId?(e.posts||[]).find(p=>p.id===taskId):{})||{};
+  const sel=(v,o)=>v===o?' selected':'';
+  const stOpts=[['planlagt','Planlagt'],['under_arbeid','Under arbeid'],['klar','Klar for publisering'],['publisert','Publisert']].map(o=>'<option value="'+o[0]+'"'+sel(t.status_raw||'planlagt',o[0])+'>'+o[1]+'</option>').join('');
+  const dsel=(t.destination_ids||[]);
+  const destOpts=DESTS.map(d=>'<option value="'+d.id+'"'+(dsel.indexOf(d.id)>=0?' selected':'')+'>'+d.name+'</option>').join('');
+  document.getElementById('modal').innerHTML=
+    '<div class="head" style="background:linear-gradient(135deg,var(--flik-blue),var(--flik-blue-deep))"><button class="close" onclick="closeModal()">×</button><h2>'+(taskId?'Rediger oppgave':'Ny oppgave')+'</h2><div class="sub">Innlegg i publiseringsplanen</div></div>'+
+    '<div class="mbody"><form class="f" onsubmit="saveTaskForm(event,'+eventId+','+(taskId||'null')+')">'+
+      '<div class="two"><div><label>Hva slags post *</label><input id="t_label" required value="'+esc(t.label)+'" placeholder="f.eks. Teaser – hold av datoen"></div>'+
+      '<div><label>Publiseringsdato</label><input id="t_date" type="date" value="'+(t.date||'')+'"></div></div>'+
+      '<label>Status</label><select id="t_status">'+stOpts+'</select>'+
+      '<label>FLIK-side(r) / destinasjoner</label><select id="t_dests" multiple size="5" style="height:auto">'+destOpts+'</select>'+
+      '<label>Lenke til tekstutkast (Google Docs)</label><input id="t_text" value="'+esc(t.text)+'">'+
+      '<div class="actions"><button type="button" class="btn" onclick="openEvent('+eventId+')">Avbryt</button><button class="btn solid" type="submit">Lagre</button></div>'+
+    '</form></div>';
+  document.getElementById('overlay').classList.add('open');
+}
+async function saveTaskForm(ev,eventId,taskId){ev.preventDefault();
+  const dests=[...document.getElementById('t_dests').selectedOptions].map(o=>parseInt(o.value,10));
+  const body={label:val('t_label'),publish_date:val('t_date')||null,status:val('t_status'),draft_url:val('t_text')||null,destination_ids:dests};
+  try{const card=taskId?await api('PUT','/tasks/'+taskId,body):await api('POST','/events/'+eventId+'/tasks',body);upsert(card);rerender();openEvent(eventId);}catch(err){alert(err.message);}
+}
+async function deleteTask(eventId,taskId){
+  if(!confirm('Slette denne oppgaven?'))return;
+  try{const card=await api('DELETE','/tasks/'+taskId);upsert(card);rerender();openEvent(eventId);}catch(err){alert(err.message);}
+}
 
 renderStats();renderUrgent();renderUpcoming();populateFilters();
 </script>

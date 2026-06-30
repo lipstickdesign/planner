@@ -46,4 +46,58 @@ class Event extends Model
     {
         return $this->belongsTo(User::class, 'created_by');
     }
+
+    public const APPROVAL_LABELS = [
+        'utkast' => 'Utkast',
+        'til_godkjenning' => 'Til godkjenning',
+        'godkjent' => 'Godkjent',
+        'internt' => 'Internt',
+    ];
+
+    public const STATUS_LABELS = [
+        'planlagt' => 'Planlagt',
+        'under_arbeid' => 'Under arbeid',
+        'klar' => 'Klar for publisering',
+        'publisert' => 'Publisert',
+    ];
+
+    /**
+     * Felles dataformat brukt av både dashboard-visning og redigering (JSON til frontend).
+     */
+    public function toCard(): array
+    {
+        $this->loadMissing(['category', 'responsible', 'tasks.destinations']);
+
+        return [
+            'id' => $this->id,
+            'date' => optional($this->event_date)->format('Y-m-d'),
+            'sport' => $this->category->name ?? 'Administrasjon',
+            'color' => $this->category->color ?? '#5a7184',
+            'category_id' => $this->category_id,
+            'type' => $this->type,
+            'title' => $this->title,
+            'mal' => $this->goal,
+            'desc' => $this->description,
+            'ansvarlig' => $this->responsible->name ?? null,
+            'responsible_user_id' => $this->responsible_user_id,
+            'recur' => $this->recurrence,
+            'approval' => self::APPROVAL_LABELS[$this->approval_status] ?? 'Utkast',
+            'approval_status' => $this->approval_status,
+            'landing' => $this->landing_url,
+            'hoopit' => $this->signup_url,
+            'notat' => $this->internal_note,
+            'posts' => $this->tasks->sortBy('publish_date')->values()->map(function ($t) {
+                return [
+                    'id' => $t->id,
+                    'label' => $t->label,
+                    'date' => optional($t->publish_date)->format('Y-m-d'),
+                    'status' => self::STATUS_LABELS[$t->status] ?? 'Planlagt',
+                    'status_raw' => $t->status,
+                    'pages' => $t->destinations->pluck('name')->all(),
+                    'destination_ids' => $t->destinations->pluck('id')->all(),
+                    'text' => $t->draft_url,
+                ];
+            })->all(),
+        ];
+    }
 }
