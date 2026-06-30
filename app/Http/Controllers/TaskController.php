@@ -32,6 +32,7 @@ class TaskController extends Controller
             'status' => $data['status'],
             'draft_url' => $data['draft_url'] ?? null,
             'body_draft' => $data['body_draft'] ?? null,
+            'sort_order' => (int) $event->tasks()->max('sort_order') + 1,
         ]);
         $task->destinations()->sync($data['destination_ids'] ?? []);
 

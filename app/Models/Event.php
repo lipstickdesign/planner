@@ -86,7 +86,7 @@ class Event extends Model
             'landing' => $this->landing_url,
             'hoopit' => $this->signup_url,
             'notat' => $this->internal_note,
-            'posts' => $this->tasks->sortBy('publish_date')->values()->map(function ($t) {
+            'posts' => $this->tasks->sortBy('sort_order')->values()->map(function ($t) {
                 return [
                     'id' => $t->id,
                     'label' => $t->label,

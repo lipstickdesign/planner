@@ -58,5 +58,6 @@ Route::middleware('auth')->group(function () {
 
     Route::post('/events/{event}/generate-plan', [EventController::class, 'generatePlan']);
     Route::post('/events/{event}/duplicate-next-year', [EventController::class, 'duplicateNextYear']);
+    Route::post('/events/{event}/reorder-tasks', [EventController::class, 'reorderTasks']);
     Route::post('/ai/suggest', [AiController::class, 'suggest']);
 });

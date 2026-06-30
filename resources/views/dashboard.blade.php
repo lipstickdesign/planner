@@ -82,16 +82,16 @@ svg.wheel{width:100%;height:auto;display:block}
 .recur{font-size:11px;color:#1c5fa8}
 .overlay{position:fixed;inset:0;background:rgba(10,25,45,.55);backdrop-filter:blur(2px);display:none;align-items:flex-start;justify-content:center;padding:36px 16px;z-index:60;overflow:auto}
 .overlay.open{display:flex}
-.modal{background:var(--card);border-radius:18px;max-width:780px;width:100%;box-shadow:0 24px 70px rgba(0,0,0,.3);overflow:hidden;animation:pop .18s ease}
+.modal{background:var(--card);border-radius:22px;max-width:840px;width:100%;box-shadow:0 30px 80px rgba(0,0,0,.32);overflow:hidden;animation:pop .2s cubic-bezier(.2,.8,.2,1)}
 @keyframes pop{from{transform:translateY(12px) scale(.99);opacity:0}to{transform:none;opacity:1}}
-.modal .head{padding:22px 24px;color:#fff;position:relative}
+.modal .head{padding:28px 32px;color:#fff;position:relative}
 .modal .head .idtag{color:rgba(255,255,255,.85);font-size:11px}
 .modal .head h2{margin:6px 0 4px;font-size:22px;font-weight:700}
 .modal .head .sub{font-size:13.5px;opacity:.92}
 .modal .close{position:absolute;top:16px;right:18px;background:rgba(255,255,255,.2);border:none;color:#fff;width:32px;height:32px;border-radius:50%;font-size:18px;cursor:pointer}
 .modal .close:hover{background:rgba(255,255,255,.34)}
-.mbody{padding:20px 24px 26px}
-.fieldgrid{display:grid;grid-template-columns:1fr 1fr;gap:12px 22px;margin-bottom:18px}
+.mbody{padding:28px 32px 32px}
+.fieldgrid{display:grid;grid-template-columns:1fr 1fr;gap:20px 32px;margin-bottom:24px;background:#f9fbfd;border:1px solid var(--line);border-radius:14px;padding:18px 20px}
 .field .k{color:var(--ink-soft);font-size:11.5px;text-transform:uppercase;letter-spacing:.4px;margin-bottom:2px}
 .field .v{font-weight:500;font-size:13.5px}.field .v.empty{color:var(--red);font-weight:400;font-style:italic}
 .sectionlabel{font-size:13px;font-weight:700;margin:16px 0 10px;display:flex;align-items:center;gap:8px}
@@ -116,14 +116,38 @@ svg.wheel{width:100%;height:auto;display:block}
 footer{color:var(--ink-soft);font-size:12.5px;text-align:center;padding:24px 20px 40px}
 .btn.solid{background:var(--flik-blue);color:#fff;border-color:var(--flik-blue)}
 .btn.solid:hover{background:var(--flik-blue-dark)}
-.btn.sm{padding:6px 10px;font-size:12px}
-form.f label{display:block;font-size:12px;color:var(--ink-soft);margin:10px 0 4px;font-weight:500}
-form.f input,form.f select,form.f textarea{width:100%;font-family:inherit;font-size:14px;padding:9px 11px;border:1px solid var(--line);border-radius:9px;background:#fff;color:var(--ink)}
-form.f textarea{resize:vertical;min-height:120px;line-height:1.55}
+.btn.sm{padding:6px 11px;font-size:12px}
+.headbtn{position:absolute;top:20px;right:60px;background:rgba(255,255,255,.18);border:none;color:#fff;font-family:inherit;font-size:12.5px;font-weight:500;padding:7px 13px;border-radius:9px;cursor:pointer}
+.headbtn:hover{background:rgba(255,255,255,.32)}
+.linkchips{display:flex;gap:10px;flex-wrap:wrap;margin:0 0 20px}
+.linkchip{display:inline-flex;align-items:center;gap:8px;background:#f1f6fc;border:1px solid #dbe7f5;border-radius:11px;padding:10px 14px;font-size:13px;color:var(--ink)}
+.linkchip b{color:var(--flik-blue);font-weight:600}
+.linkchip:hover{background:#e7f0fb;text-decoration:none}
+.planhead{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:6px 0 12px;flex-wrap:wrap}
+.planttl{font-size:15.5px;font-weight:700}
+.planbtns{display:flex;gap:8px}
+.tasklist{display:flex;flex-direction:column;gap:8px;margin-bottom:22px}
+.taskitem{border:1px solid var(--line);border-radius:12px;background:#fff;overflow:hidden;transition:box-shadow .15s,border-color .15s}
+.taskitem.open{box-shadow:var(--shadow);border-color:#dbe7f5}
+.taskrow{display:grid;grid-template-columns:16px 62px minmax(0,1fr) auto auto;gap:12px;align-items:center;padding:13px 15px;cursor:pointer}
+.taskrow:hover{background:#f7faff}
+.caret{color:var(--grey);font-size:11px;transition:transform .15s;display:inline-block}
+.taskitem.open .caret{transform:rotate(90deg)}
+.tdate{font-size:12px;color:var(--ink-soft);font-weight:500;white-space:nowrap}
+.tlabel{font-weight:500;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tchan{font-size:11px;color:var(--ink-soft);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:170px;text-align:right}
+.taskdetail{display:none;padding:2px 15px 15px}
+.taskitem.open .taskdetail{display:block}
+.taskactions{display:flex;gap:7px;align-items:center;margin-top:12px;flex-wrap:wrap}
+@media(max-width:880px){.taskrow{grid-template-columns:16px 52px 1fr auto;gap:9px}.tchan{display:none}}
+form.f label{display:block;font-size:12.5px;color:var(--ink-soft);margin:18px 0 6px;font-weight:500}
+form.f input,form.f select,form.f textarea{width:100%;font-family:inherit;font-size:15px;padding:12px 14px;border:1px solid #e6ebf2;border-radius:11px;background:#fbfcfe;color:var(--ink);transition:border-color .12s,box-shadow .12s,background .12s}
+form.f textarea{resize:vertical;min-height:150px;line-height:1.6}
 .postbody{margin-top:8px;background:#f7f9fc;border:1px solid var(--line);border-radius:8px;padding:11px 13px;font-size:13.5px;line-height:1.55;white-space:pre-wrap}
-form.f input:focus,form.f select:focus{outline:none;border-color:var(--flik-blue)}
-form.f .two{display:grid;grid-template-columns:1fr 1fr;gap:14px}
-form.f .actions{margin-top:18px;display:flex;gap:10px;justify-content:flex-end}
+form.f input:focus,form.f select:focus,form.f textarea:focus{outline:none;border-color:var(--flik-blue);background:#fff;box-shadow:0 0 0 3px rgba(0,82,155,.12)}
+form.f .two{display:grid;grid-template-columns:1fr 1fr;gap:16px 24px}
+form.f .actions{margin-top:24px;padding-top:18px;border-top:1px solid var(--line);display:flex;gap:10px;justify-content:flex-end}
+form.f .actions .btn{padding:11px 22px;font-size:14px}
 @media(max-width:880px){form.f .two{grid-template-columns:1fr}}
 @media(max-width:880px){.stats{grid-template-columns:repeat(2,1fr)}.grid2,.wheelwrap{grid-template-columns:1fr}.fieldgrid{grid-template-columns:1fr}}
 </style>
@@ -340,44 +364,63 @@ function renderList(){
 function openEvent(id){
   const e=DATA.find(x=>x.id===id);if(!e)return;
   const c=col(e);
-  const f=(k,v,isLink)=>'<div class="field"><div class="k">'+k+'</div><div class="v '+(v?'':'empty')+'">'+(v?(isLink?'<a href="'+v+'" target="_blank">Åpne ↗</a>':v):'mangler')+'</div></div>';
+  const f=(k,v)=>'<div class="field"><div class="k">'+k+'</div><div class="v '+(v?'':'empty')+'">'+(v||'mangler')+'</div></div>';
   const checks=[['Dato satt',!!e.date],['Ansvarlig tildelt',!!e.ansvarlig],['Landingsside',!!e.landing],['Påmelding (Hoopit)',!!e.hoopit],['Oppgaver planlagt',!!(e.posts&&e.posts.length)]];
   let postsHtml;
   if(e.posts&&e.posts.length){
-    postsHtml='<div class="timeline">'+e.posts.map(p=>{
-      const pages=(p.pages||[]).map(pg=>'<span class="chan">'+pg+'</span>').join(' ');
+    postsHtml='<div class="tasklist">'+e.posts.map(p=>{
+      const pages=(p.pages||[]).join(' · ');
       const stCls=p.status==='Under arbeid'?'st-arbeid':(p.status==='Publisert'?'st-publisert':(p.status==='Klar for publisering'?'st-klar':'st-planlagt'));
-      return '<div class="post"><span class="pin" style="border-color:'+c+'"></span>'+
-        '<div class="ph"><span class="pd">'+(p.date?fmt(p.date):'dato mangler')+'</span><span class="pt">'+(p.label||'Innlegg')+'</span><span class="pill '+stCls+'">'+p.status+'</span></div>'+
-        '<div class="pmeta">'+pages+' '+(p.text?'<a href="'+p.text+'" target="_blank">Lenke ↗</a>':'')+
-        ' <a style="cursor:pointer" onclick="openTaskForm('+e.id+','+p.id+')">✎ Rediger</a> <a style="cursor:pointer;color:#b23535" onclick="deleteTask('+e.id+','+p.id+')">🗑</a></div>'+
-        (p.body?'<div class="postbody">'+esc(p.body)+'<div style="margin-top:9px"><button class="btn sm" onclick="copyText(this,'+e.id+','+p.id+')">📋 Kopier tekst</button></div></div>':'')+
-        '</div>';
+      return '<div class="taskitem" id="ti'+p.id+'">'+
+        '<div class="taskrow" onclick="toggleTask('+p.id+')">'+
+          '<span class="caret">▸</span>'+
+          '<span class="tdate">'+(p.date?fmt(p.date):'—')+'</span>'+
+          '<span class="tlabel">'+(p.label||'Innlegg')+'</span>'+
+          '<span class="tchan">'+pages+'</span>'+
+          '<span class="pill '+stCls+'">'+p.status+'</span>'+
+        '</div>'+
+        '<div class="taskdetail">'+
+          (p.body?'<div class="postbody">'+esc(p.body)+'</div>':'<div class="muted" style="padding:6px 0 2px">Ingen tekst lagt inn ennå.</div>')+
+          (p.text?'<div style="margin-top:8px;font-size:12.5px"><a href="'+p.text+'" target="_blank">🔗 Lenke ↗</a></div>':'')+
+          '<div class="taskactions">'+
+            '<button class="btn sm" onclick="openTaskForm('+e.id+','+p.id+')">✎ Rediger</button>'+
+            (p.body?'<button class="btn sm" onclick="copyText(this,'+e.id+','+p.id+')">📋 Kopier tekst</button>':'')+
+            '<span style="flex:1"></span>'+
+            '<button class="btn sm" title="Flytt opp" onclick="moveTask('+e.id+','+p.id+',-1)">↑</button>'+
+            '<button class="btn sm" title="Flytt ned" onclick="moveTask('+e.id+','+p.id+',1)">↓</button>'+
+            '<button class="btn sm" style="color:#b23535" title="Slett" onclick="deleteTask('+e.id+','+p.id+')">🗑</button>'+
+          '</div>'+
+        '</div>'+
+      '</div>';
     }).join('')+'</div>';
   }else{
-    postsHtml='<div class="nopost">Ingen oppgaver planlagt ennå.</div>';
+    postsHtml='<div class="nopost">Ingen oppgaver planlagt ennå. Bruk «🪄 Foreslå plan» for et komplett forslag basert på datoen.</div>';
   }
+  const chips=
+    (e.landing?'<a class="linkchip" href="'+e.landing+'" target="_blank">🌐 Landingsside <b>Åpne ↗</b></a>':'')+
+    (e.hoopit?'<a class="linkchip" href="'+e.hoopit+'" target="_blank">📝 Hoopit påmelding <b>Åpne ↗</b></a>':'');
   document.getElementById('modal').innerHTML=
     '<div class="head" style="background:linear-gradient(135deg,'+c+','+c+' 55%,rgba(0,0,0,.35) 160%)">'+
       '<button class="close" onclick="closeModal()">×</button>'+
+      '<button class="headbtn" onclick="openEventForm('+e.id+')">✎ Rediger</button>'+
       '<div class="idtag">'+e.type+(e.recur==='yearly'?' · 🔁 årlig':'')+'</div>'+
-      '<h2>'+e.title+'</h2><div class="sub">'+(e.desc||'')+'</div>'+
+      '<h2>'+e.title+'</h2>'+(e.desc?'<div class="sub">'+e.desc+'</div>':'')+
       '<div style="margin-top:10px">'+approvalPill(e)+'</div></div>'+
     '<div class="mbody"><div class="fieldgrid">'+
-      f('Dato',e.date?fmt(e.date)+' 2026':'')+f('Idrett / gruppe',e.sport)+f('Hovedmål',e.mal)+f('Ansvarlig',e.ansvarlig)+
-      f('Landingsside',e.landing,true)+f('Påmelding (Hoopit)',e.hoopit,true)+'</div>'+
-      (e.notat?'<div class="note" style="margin:-4px 0 16px">📝 '+e.notat+'</div>':'')+
-      '<div class="sectionlabel">Publiseringsplan – oppgaver <span class="count">'+(e.posts?e.posts.length:0)+'</span><span style="flex:1"></span><button class="btn sm" onclick="generatePlan('+e.id+')">🪄 Foreslå plan</button> <button class="btn sm" onclick="openTaskForm('+e.id+',null)">＋ Oppgave</button></div>'+postsHtml+
+      f('Dato',e.date?fmt(e.date)+' 2026':'')+f('Idrett / gruppe',e.sport)+f('Hovedmål',e.mal)+f('Ansvarlig',e.ansvarlig)+'</div>'+
+      (chips?'<div class="linkchips">'+chips+'</div>':'')+
+      (e.notat?'<div class="note" style="margin:0 0 18px">📝 '+e.notat+'</div>':'')+
+      '<div class="planhead"><div class="planttl">📅 Publiseringsplan <span class="count">'+(e.posts?e.posts.length:0)+' oppgaver</span></div>'+
+        '<div class="planbtns"><button class="btn solid sm" onclick="generatePlan('+e.id+')">🪄 Foreslå plan</button><button class="btn sm" onclick="openTaskForm('+e.id+',null)">＋ Oppgave</button></div></div>'+
+      postsHtml+
       '<div class="checklist"><h4>Sjekkliste – klar for publisering?</h4>'+checks.map(ch=>'<div class="check '+(ch[1]?'done':'todo')+'"><span class="box">'+(ch[1]?'✓':'')+'</span><span class="lbl">'+ch[0]+'</span></div>').join('')+'</div>'+
       '<div class="links">'+
-        '<button class="btn solid" onclick="openEventForm('+e.id+')">✎ Rediger</button>'+
-        (e.landing?'<a class="btn" href="'+e.landing+'" target="_blank">🌐 Landingsside</a>':'<button class="btn" disabled>🌐 Landingsside mangler</button>')+
-        (e.hoopit?'<a class="btn" href="'+e.hoopit+'" target="_blank">📝 Hoopit påmelding</a>':'')+
         '<button class="btn" onclick="duplicateNextYear('+e.id+')">📅 Dupliser til neste år</button>'+
         '<button class="btn" style="color:#b23535" onclick="deleteEvent('+e.id+')">🗑 Slett</button>'+
       '</div></div>';
   document.getElementById('overlay').classList.add('open');
 }
+function toggleTask(id){const it=document.getElementById('ti'+id);if(it)it.classList.toggle('open');}
 function closeModal(){document.getElementById('overlay').classList.remove('open');}
 document.getElementById('overlay').addEventListener('click',e=>{if(e.target.id==='overlay')closeModal();});
 document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal();});
@@ -493,6 +536,15 @@ async function duplicateNextYear(eventId){
     upsert(card);rerender();openEvent(card.id);
     alert('Kopiert til '+ny+'! Åpne hver oppgave og bruk «🔄 Oppdater for nytt år», så retter AI årstall og årsklasser i teksten.');
   }catch(err){alert(err.message);}
+}
+
+/* flytt oppgave opp/ned (lagrer rekkefølge) */
+async function moveTask(eventId,taskId,dir){
+  const e=DATA.find(x=>x.id===eventId);const order=(e.posts||[]).map(p=>p.id);
+  const i=order.indexOf(taskId);const j=i+dir;if(i<0||j<0||j>=order.length)return;
+  const t=order[i];order[i]=order[j];order[j]=t;
+  try{const card=await api('POST','/events/'+eventId+'/reorder-tasks',{order});upsert(card);rerender();openEvent(eventId);const it=document.getElementById('ti'+taskId);if(it)it.classList.add('open');}
+  catch(err){alert(err.message);}
 }
 
 /* AI-tekstforslag for en oppgave */

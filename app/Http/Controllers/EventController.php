@@ -104,4 +104,21 @@ class EventController extends Controller
 
         return response()->json($copy->fresh()->toCard(), 201);
     }
+
+    /**
+     * Endre rekkefølgen på oppgavene i et event (drag/flytt opp-ned).
+     */
+    public function reorderTasks(Request $request, Event $event)
+    {
+        $data = $request->validate([
+            'order' => ['required', 'array'],
+            'order.*' => ['integer'],
+        ]);
+
+        foreach ($data['order'] as $index => $taskId) {
+            $event->tasks()->where('id', $taskId)->update(['sort_order' => $index]);
+        }
+
+        return response()->json($event->fresh()->toCard());
+    }
 }
