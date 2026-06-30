@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AiController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\EventController;
 use App\Http\Controllers\TaskController;
@@ -54,4 +55,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/events/{event}/tasks', [TaskController::class, 'store']);
     Route::put('/tasks/{task}', [TaskController::class, 'update']);
     Route::delete('/tasks/{task}', [TaskController::class, 'destroy']);
+
+    Route::post('/events/{event}/generate-plan', [EventController::class, 'generatePlan']);
+    Route::post('/ai/suggest', [AiController::class, 'suggest']);
 });

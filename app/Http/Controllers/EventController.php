@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Event;
+use App\Models\PostType;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 
@@ -47,5 +48,34 @@ class EventController extends Controller
         $event->delete();
 
         return response()->json(['ok' => true]);
+    }
+
+    /**
+     * Foreslå en publiseringsplan: lager oppgaver ut fra posttype-biblioteket,
+     * med datoer beregnet fra eventdatoen (f.eks. teaser −35 dager, påminnelse −7).
+     */
+    public function generatePlan(Event $event)
+    {
+        $types = PostType::whereNotNull('default_offset_days')
+            ->orderBy('sort_order')
+            ->get();
+
+        $order = (int) ($event->tasks()->max('sort_order') ?? 0);
+
+        foreach ($types as $pt) {
+            $date = $event->event_date
+                ? $event->event_date->copy()->addDays($pt->default_offset_days)
+                : null;
+
+            $event->tasks()->create([
+                'post_type_id' => $pt->id,
+                'label' => $pt->name,
+                'publish_date' => $date,
+                'status' => 'planlagt',
+                'sort_order' => ++$order,
+            ]);
+        }
+
+        return response()->json($event->fresh()->toCard(), 201);
     }
 }

@@ -118,7 +118,9 @@ footer{color:var(--ink-soft);font-size:12.5px;text-align:center;padding:24px 20p
 .btn.solid:hover{background:var(--flik-blue-dark)}
 .btn.sm{padding:6px 10px;font-size:12px}
 form.f label{display:block;font-size:12px;color:var(--ink-soft);margin:10px 0 4px;font-weight:500}
-form.f input,form.f select{width:100%;font-family:inherit;font-size:14px;padding:9px 11px;border:1px solid var(--line);border-radius:9px;background:#fff;color:var(--ink)}
+form.f input,form.f select,form.f textarea{width:100%;font-family:inherit;font-size:14px;padding:9px 11px;border:1px solid var(--line);border-radius:9px;background:#fff;color:var(--ink)}
+form.f textarea{resize:vertical;min-height:120px;line-height:1.55}
+.postbody{margin-top:8px;background:#f7f9fc;border:1px solid var(--line);border-radius:8px;padding:11px 13px;font-size:13.5px;line-height:1.55;white-space:pre-wrap}
 form.f input:focus,form.f select:focus{outline:none;border-color:var(--flik-blue)}
 form.f .two{display:grid;grid-template-columns:1fr 1fr;gap:14px}
 form.f .actions{margin-top:18px;display:flex;gap:10px;justify-content:flex-end}
@@ -176,6 +178,7 @@ form.f .actions{margin-top:18px;display:flex;gap:10px;justify-content:flex-end}
       <input type="text" id="search" placeholder="Søk etter arrangement…">
       <select id="fSport"><option value="">Alle idretter</option></select>
       <select id="fStatus"><option value="">Alle statuser</option></select>
+      <button class="btn" id="archiveBtn" onclick="toggleArchive()">📁 Vis gjennomførte</button>
     </div>
     <div id="listHost"></div>
   </section>
@@ -310,7 +313,9 @@ function populateFilters(){
 }
 function renderList(){
   const q=document.getElementById('search').value.toLowerCase(),fs=document.getElementById('fSport').value,fst=document.getElementById('fStatus').value;
+  const fom=new Date(TODAY.getFullYear(),TODAY.getMonth(),1);
   let evs=DATA.filter(e=>{
+    if(!showArchive&&new Date(e.date)<fom)return false;
     if(fs&&e.sport!==fs)return false;if(fst&&eventState(e).key!==fst)return false;
     if(q&&!((e.title+' '+(e.desc||'')+' '+e.sport).toLowerCase().includes(q)))return false;return true;
   }).slice().sort((a,b)=>new Date(a.date)-new Date(b.date));
@@ -344,8 +349,10 @@ function openEvent(id){
       const stCls=p.status==='Under arbeid'?'st-arbeid':(p.status==='Publisert'?'st-publisert':(p.status==='Klar for publisering'?'st-klar':'st-planlagt'));
       return '<div class="post"><span class="pin" style="border-color:'+c+'"></span>'+
         '<div class="ph"><span class="pd">'+(p.date?fmt(p.date):'dato mangler')+'</span><span class="pt">'+(p.label||'Innlegg')+'</span><span class="pill '+stCls+'">'+p.status+'</span></div>'+
-        '<div class="pmeta">'+pages+' '+(p.text?'<a href="'+p.text+'" target="_blank">Tekstutkast ↗</a>':'')+
-        ' <a style="cursor:pointer" onclick="openTaskForm('+e.id+','+p.id+')">✎ Rediger</a> <a style="cursor:pointer;color:#b23535" onclick="deleteTask('+e.id+','+p.id+')">🗑</a></div></div>';
+        '<div class="pmeta">'+pages+' '+(p.text?'<a href="'+p.text+'" target="_blank">Lenke ↗</a>':'')+
+        ' <a style="cursor:pointer" onclick="openTaskForm('+e.id+','+p.id+')">✎ Rediger</a> <a style="cursor:pointer;color:#b23535" onclick="deleteTask('+e.id+','+p.id+')">🗑</a></div>'+
+        (p.body?'<div class="postbody">'+esc(p.body)+'<div style="margin-top:9px"><button class="btn sm" onclick="copyText(this,'+e.id+','+p.id+')">📋 Kopier tekst</button></div></div>':'')+
+        '</div>';
     }).join('')+'</div>';
   }else{
     postsHtml='<div class="nopost">Ingen oppgaver planlagt ennå.</div>';
@@ -360,7 +367,7 @@ function openEvent(id){
       f('Dato',e.date?fmt(e.date)+' 2026':'')+f('Idrett / gruppe',e.sport)+f('Hovedmål',e.mal)+f('Ansvarlig',e.ansvarlig)+
       f('Landingsside',e.landing,true)+f('Påmelding (Hoopit)',e.hoopit,true)+'</div>'+
       (e.notat?'<div class="note" style="margin:-4px 0 16px">📝 '+e.notat+'</div>':'')+
-      '<div class="sectionlabel">Publiseringsplan – oppgaver <span class="count">'+(e.posts?e.posts.length:0)+'</span><span style="flex:1"></span><button class="btn sm" onclick="openTaskForm('+e.id+',null)">＋ Oppgave</button></div>'+postsHtml+
+      '<div class="sectionlabel">Publiseringsplan – oppgaver <span class="count">'+(e.posts?e.posts.length:0)+'</span><span style="flex:1"></span><button class="btn sm" onclick="generatePlan('+e.id+')">🪄 Foreslå plan</button> <button class="btn sm" onclick="openTaskForm('+e.id+',null)">＋ Oppgave</button></div>'+postsHtml+
       '<div class="checklist"><h4>Sjekkliste – klar for publisering?</h4>'+checks.map(ch=>'<div class="check '+(ch[1]?'done':'todo')+'"><span class="box">'+(ch[1]?'✓':'')+'</span><span class="lbl">'+ch[0]+'</span></div>').join('')+'</div>'+
       '<div class="links">'+
         '<button class="btn solid" onclick="openEventForm('+e.id+')">✎ Rediger</button>'+
@@ -446,20 +453,57 @@ function openTaskForm(eventId,taskId){
       '<div><label>Publiseringsdato</label><input id="t_date" type="date" value="'+(t.date||'')+'"></div></div>'+
       '<label>Status</label><select id="t_status">'+stOpts+'</select>'+
       '<label>FLIK-side(r) / destinasjoner</label><select id="t_dests" multiple size="5" style="height:auto">'+destOpts+'</select>'+
-      '<label>Lenke til tekstutkast (Google Docs)</label><input id="t_text" value="'+esc(t.text)+'">'+
+      '<label style="display:flex;align-items:center;justify-content:space-between;gap:10px">Tekst til innlegget<button type="button" class="btn sm" id="aiBtn" onclick="suggestText('+eventId+')">✨ Foreslå tekst med AI</button></label>'+
+      '<textarea id="t_body" placeholder="Skriv eller la AI foreslå teksten. Denne kan kopieres rett ut til Facebook / Meta Planner.">'+esc(t.body)+'</textarea>'+
+      '<label>Lenke (valgfritt – f.eks. Google Doc)</label><input id="t_text" value="'+esc(t.text)+'">'+
       '<div class="actions"><button type="button" class="btn" onclick="openEvent('+eventId+')">Avbryt</button><button class="btn solid" type="submit">Lagre</button></div>'+
     '</form></div>';
   document.getElementById('overlay').classList.add('open');
 }
 async function saveTaskForm(ev,eventId,taskId){ev.preventDefault();
   const dests=[...document.getElementById('t_dests').selectedOptions].map(o=>parseInt(o.value,10));
-  const body={label:val('t_label'),publish_date:val('t_date')||null,status:val('t_status'),draft_url:val('t_text')||null,destination_ids:dests};
+  const body={label:val('t_label'),publish_date:val('t_date')||null,status:val('t_status'),draft_url:val('t_text')||null,body_draft:val('t_body')||null,destination_ids:dests};
   try{const card=taskId?await api('PUT','/tasks/'+taskId,body):await api('POST','/events/'+eventId+'/tasks',body);upsert(card);rerender();openEvent(eventId);}catch(err){alert(err.message);}
 }
 async function deleteTask(eventId,taskId){
   if(!confirm('Slette denne oppgaven?'))return;
   try{const card=await api('DELETE','/tasks/'+taskId);upsert(card);rerender();openEvent(eventId);}catch(err){alert(err.message);}
 }
+
+/* arkiv-bryter for eventlisten */
+let showArchive=false;
+function toggleArchive(){showArchive=!showArchive;const b=document.getElementById('archiveBtn');if(b)b.textContent=showArchive?'📁 Skjul gjennomførte':'📁 Vis gjennomførte';renderList();}
+
+/* foreslå publiseringsplan ut fra eventdato */
+async function generatePlan(eventId){
+  const e=DATA.find(x=>x.id===eventId);
+  const msg=(e.posts||[]).length?'Legge til en foreslått publiseringsplan i tillegg til de eksisterende oppgavene?':'Lage forslag til publiseringsplan basert på eventdatoen?';
+  if(!confirm(msg))return;
+  try{const card=await api('POST','/events/'+eventId+'/generate-plan');upsert(card);rerender();openEvent(eventId);}catch(err){alert(err.message);}
+}
+
+/* AI-tekstforslag for en oppgave */
+async function suggestText(eventId){
+  const e=DATA.find(x=>x.id===eventId);const btn=document.getElementById('aiBtn');
+  if(btn){btn.disabled=true;btn.textContent='✨ Skriver…';}
+  try{
+    const res=await fetch('/ai/suggest',{method:'POST',headers:{'Content-Type':'application/json','Accept':'application/json','X-CSRF-TOKEN':CSRF},body:JSON.stringify({title:e.title,sport:e.sport,label:val('t_label'),date:val('t_date'),goal:e.mal,extra:e.desc})});
+    const j=await res.json();
+    if(!res.ok)throw new Error(j.error||('Feil '+res.status));
+    document.getElementById('t_body').value=j.text||'';
+  }catch(err){alert('Kunne ikke lage tekst: '+err.message);}
+  if(btn){btn.disabled=false;btn.textContent='✨ Foreslå tekst med AI';}
+}
+
+/* kopier oppgavetekst til utklippstavle */
+function copyText(btn,eventId,taskId){
+  const e=DATA.find(x=>x.id===eventId);const p=(e.posts||[]).find(x=>x.id===taskId);if(!p)return;
+  const t=p.body||'';
+  const done=()=>{const o=btn.textContent;btn.textContent='✓ Kopiert!';setTimeout(()=>{btn.textContent=o;},1500);};
+  if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(t).then(done).catch(()=>fallbackCopy(t,done));}
+  else fallbackCopy(t,done);
+}
+function fallbackCopy(t,done){const ta=document.createElement('textarea');ta.value=t;document.body.appendChild(ta);ta.select();try{document.execCommand('copy');}catch(e){}document.body.removeChild(ta);if(done)done();}
 
 renderStats();renderUrgent();renderUpcoming();populateFilters();
 </script>

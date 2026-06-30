@@ -16,6 +16,7 @@ class TaskController extends Controller
             'publish_date' => ['nullable', 'date'],
             'status' => ['required', Rule::in(['planlagt', 'under_arbeid', 'klar', 'publisert'])],
             'draft_url' => ['nullable', 'string', 'max:500'],
+            'body_draft' => ['nullable', 'string'],
             'destination_ids' => ['array'],
             'destination_ids.*' => ['integer', 'exists:destinations,id'],
         ];
@@ -30,6 +31,7 @@ class TaskController extends Controller
             'publish_date' => $data['publish_date'] ?? null,
             'status' => $data['status'],
             'draft_url' => $data['draft_url'] ?? null,
+            'body_draft' => $data['body_draft'] ?? null,
         ]);
         $task->destinations()->sync($data['destination_ids'] ?? []);
 
@@ -45,6 +47,7 @@ class TaskController extends Controller
             'publish_date' => $data['publish_date'] ?? null,
             'status' => $data['status'],
             'draft_url' => $data['draft_url'] ?? null,
+            'body_draft' => $data['body_draft'] ?? null,
         ]);
         $task->destinations()->sync($data['destination_ids'] ?? []);
 

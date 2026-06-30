@@ -96,6 +96,7 @@ class Event extends Model
                     'pages' => $t->destinations->pluck('name')->all(),
                     'destination_ids' => $t->destinations->pluck('id')->all(),
                     'text' => $t->draft_url,
+                    'body' => $t->body_draft,
                 ];
             })->all(),
         ];
