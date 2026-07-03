@@ -36,9 +36,9 @@ class FlikSeeder extends Seeder
         // ---- Brukere / ansvarspersoner ----
         $people = [
             ['Roger Henriksen', 'roger@havdurdesign.no', true,  'SoMe & innhold (Havdur Design)', 'Innhold / alle kanaler'],
-            ['Helge', 'helge@flik.no', false, 'Daglig leder', 'Hovedside / godkjenning'],
-            ['Karstein', 'fotball@flik.no', false, 'Fotballgruppa', 'Fotball'],
-            ['Siv', 'siv@flik.no', false, 'Frivillig', 'Volleyball'],
+            ['Helge', 'dagligleder@flik.no', false, 'Daglig leder', 'Hovedside / godkjenning'],
+            ['Karstein', 'sportsligansvarlig@flik.no', false, 'Sportslig ansvarlig', 'Sport / alle grupper'],
+            ['Trond', 'leder@flik.no', false, 'Leder hovedstyret', 'Hovedstyret / godkjenning'],
         ];
         $users = [];
         foreach ($people as [$name, $email, $admin, $title, $area]) {
