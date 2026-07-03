@@ -31,7 +31,9 @@ a{color:var(--flik-blue);text-decoration:none}a:hover{text-decoration:underline}
 .tabs{display:flex;gap:4px;max-width:1240px;margin:0 auto;padding:0 20px;flex-wrap:wrap}
 .tab{padding:15px 20px;color:rgba(255,255,255,.72);font-size:14px;font-weight:500;cursor:pointer;border:none;background:none;border-bottom:3px solid transparent}
 .tab:hover{color:#fff}.tab.active{color:#fff;border-bottom-color:var(--accent)}
-main{padding:40px 0 90px}.view{display:none}.view.active{display:block}
+main{padding:48px 0 90px}.view{display:none}.view.active{display:block}
+.ico{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round;flex:none;vertical-align:-2px}
+.ico.chk{width:12px;height:12px;stroke-width:2.6;vertical-align:0}
 .viewhead{display:flex;align-items:center;justify-content:space-between;margin-bottom:26px;gap:16px;flex-wrap:wrap}
 .viewhead h2{font-size:19px;margin:0}
 .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:20px;margin-bottom:34px}
@@ -205,7 +207,7 @@ form.f .actions .btn{padding:11px 22px;font-size:14px}
   </section>
   <section class="view" id="view-wheel">
     <div class="viewhead"><h2>Årshjul 2026</h2>@if($canEdit)<button class="btn solid" onclick="openEventForm()">＋ Nytt arrangement</button>@endif</div>
-    <div class="note">Klikk en prikk i hjulet eller en idrett i forklaringen for å filtrere. 🔁 = årlig gjentakende.</div>
+    <div class="note">Klikk en prikk i hjulet eller en idrett i forklaringen for å filtrere. Årlige, gjentakende arrangement er merket med et eget ikon.</div>
     <div class="wheelwrap">
       <div class="wheelcard"><div id="wheelHost"></div><div class="wheel-hint" id="wheelHint"></div></div>
       <div class="legend" id="legend"></div>
@@ -217,7 +219,7 @@ form.f .actions .btn{padding:11px 22px;font-size:14px}
       <input type="text" id="search" placeholder="Søk etter arrangement…">
       <select id="fSport"><option value="">Alle idretter</option></select>
       <select id="fStatus"><option value="">Alle statuser</option></select>
-      <button class="btn" id="archiveBtn" onclick="toggleArchive()">📁 Vis gjennomførte</button>
+      <button class="btn" id="archiveBtn" onclick="toggleArchive()"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="4" rx="1"/><path d="M5 8v11a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V8M10 12h4"/></svg> Vis gjennomførte</button>
     </div>
     <div id="listHost"></div>
   </section>
@@ -294,7 +296,7 @@ function renderUrgent(){
     .forEach(e=>items.push({e,p:null,dd:daysTo(e.date),missing:true}));
   items.sort((a,b)=>a.dd-b.dd);
   document.getElementById('urgCount').textContent=items.length;
-  if(!items.length){document.getElementById('urgentList').innerHTML='<div class="row" style="cursor:default"><div class="meta"><div class="s">Ingenting forfaller de neste ukene 🎉</div></div></div>';return;}
+  if(!items.length){document.getElementById('urgentList').innerHTML='<div class="row" style="cursor:default"><div class="meta"><div class="s">Ingenting forfaller de neste ukene.</div></div></div>';return;}
   document.getElementById('urgentList').innerHTML=items.map(i=>{
     const when=i.dd<0?'forsinket':(i.dd===0?'i dag':'om '+i.dd+' d'),cls=i.dd<=7?'urgent':(i.dd<=21?'soon':'');
     const label=i.missing?'Mangler oppgaver & tekst':(i.p.label||'Innlegg');
@@ -308,7 +310,7 @@ function renderUpcoming(){
   document.getElementById('upcomingList').innerHTML=up.map(e=>{
     const st=eventState(e),dd=daysTo(e.date);
     return '<div class="row" onclick="openEvent('+e.id+')"><span class="dot" style="background:'+col(e)+'"></span>'+
-      '<div class="meta"><div class="t">'+e.title+' '+(e.recur==='yearly'?'<span class="recur">🔁</span>':'')+'</div><div class="s">'+e.sport+' · '+(e.posts?e.posts.length:0)+' oppgaver</div></div>'+
+      '<div class="meta"><div class="t">'+e.title+' '+(e.recur==='yearly'?'<span class="recur">'+ic('refresh')+'</span>':'')+'</div><div class="s">'+e.sport+' · '+(e.posts?e.posts.length:0)+' oppgaver</div></div>'+
       '<div class="when"><span class="pill '+st.cls+'">'+st.key+'</span><div class="d">'+fmt(e.date)+' · om '+dd+' d</div></div></div>';
   }).join('')||'<div class="row" style="cursor:default"><div class="meta"><div class="s">Ingen flere arrangement i 2026.</div></div></div>';
 }
@@ -375,7 +377,7 @@ function renderList(){
       const st=eventState(e),d=new Date(e.date);
       html+='<div class="erow" onclick="openEvent('+e.id+')">'+
         '<div class="date"><span class="day">'+d.getDate()+'</span>'+MS[m]+'</div>'+
-        '<div class="ti"><span class="sport" style="background:'+col(e)+'">'+e.sport+'</span><span class="nm">'+e.title+'</span> '+(e.recur==='yearly'?'<span class="recur">🔁</span>':'')+'</div>'+
+        '<div class="ti"><span class="sport" style="background:'+col(e)+'">'+e.sport+'</span><span class="nm">'+e.title+'</span> '+(e.recur==='yearly'?'<span class="recur">'+ic('refresh')+'</span>':'')+'</div>'+
         '<div class="muted">'+((e.posts&&e.posts.length)?e.posts.length+' oppgaver':'—')+'</div>'+
         '<span class="pill '+st.cls+'">'+st.key+'</span></div>';
     });
@@ -383,6 +385,28 @@ function renderList(){
   });
   document.getElementById('listHost').innerHTML=html||'<div class="nopost" style="margin:0">Ingen treff.</div>';
 }
+
+/* OUTLINE-IKONER */
+const ICONS={
+  globe:'<circle cx="12" cy="12" r="9"/><path d="M3 12h18"/><path d="M12 3a15 15 0 0 1 0 18a15 15 0 0 1 0-18"/>',
+  doc:'<path d="M6 3h8l4 4v14H6z"/><path d="M14 3v4h4M9 12h6M9 16h4"/>',
+  info:'<circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/>',
+  calendar:'<rect x="4" y="5" width="16" height="16" rx="2"/><path d="M4 9h16M8 3v4M16 3v4"/>',
+  plus:'<path d="M12 5v14M5 12h14"/>',
+  edit:'<path d="M4 20h4L19 9l-4-4L4 16z"/><path d="M14 6l4 4"/>',
+  copy:'<rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h8"/>',
+  trash:'<path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/>',
+  link:'<path d="M10 14a4 4 0 0 0 6 0l3-3a4 4 0 0 0-6-6l-1 1"/><path d="M14 10a4 4 0 0 0-6 0l-3 3a4 4 0 0 0 6 6l1-1"/>',
+  refresh:'<path d="M20 11a8 8 0 0 0-14-4M4 5v4h4"/><path d="M4 13a8 8 0 0 0 14 4M20 19v-4h-4"/>',
+  mail:'<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/>',
+  tag:'<path d="M20 12l-8 8-9-9V3h8z"/><circle cx="7.5" cy="7.5" r="1.5"/>',
+  folder:'<path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>',
+  sparkle:'<path d="M12 4l1.6 5.4L19 11l-5.4 1.6L12 18l-1.6-5.4L5 11l5.4-1.6z"/>',
+  key:'<circle cx="8" cy="15" r="4"/><path d="M11 12l9-9M18 5l2 2M15 8l2 2"/>',
+  archive:'<rect x="3" y="4" width="18" height="4" rx="1"/><path d="M5 8v11a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V8M10 12h4"/>',
+  check:'<path d="M5 12l4 4 10-10"/>'
+};
+function ic(n,cls){return '<svg class="ico'+(cls?' '+cls:'')+'" viewBox="0 0 24 24" aria-hidden="true">'+(ICONS[n]||'')+'</svg>';}
 
 /* EVENT CARD */
 function openEvent(id){
@@ -405,41 +429,41 @@ function openEvent(id){
         '</div>'+
         '<div class="taskdetail">'+
           (p.body?'<div class="postbody">'+esc(p.body)+'</div>':'<div class="muted" style="padding:6px 0 2px">Ingen tekst lagt inn ennå.</div>')+
-          (p.text?'<div style="margin-top:8px;font-size:12.5px"><a href="'+p.text+'" target="_blank">🔗 Lenke ↗</a></div>':'')+
+          (p.text?'<div style="margin-top:8px;font-size:12.5px"><a href="'+p.text+'" target="_blank">'+ic('link')+' Lenke ↗</a></div>':'')+
           '<div class="taskactions">'+
-            (CANEDIT?'<button class="btn sm" onclick="openTaskForm('+e.id+','+p.id+')">✎ Rediger</button>':'')+
-            (p.body?'<button class="btn sm" onclick="copyText(this,'+e.id+','+p.id+')">📋 Kopier tekst</button>':'')+
+            (CANEDIT?'<button class="btn sm" onclick="openTaskForm('+e.id+','+p.id+')">'+ic('edit')+' Rediger</button>':'')+
+            (p.body?'<button class="btn sm" onclick="copyText(this,'+e.id+','+p.id+')">'+ic('copy')+' Kopier tekst</button>':'')+
             '<span style="flex:1"></span>'+
-            (CANEDIT?'<button class="btn sm" title="Flytt opp" onclick="moveTask('+e.id+','+p.id+',-1)">↑</button><button class="btn sm" title="Flytt ned" onclick="moveTask('+e.id+','+p.id+',1)">↓</button><button class="btn sm" style="color:#b23535" title="Slett" onclick="deleteTask('+e.id+','+p.id+')">🗑</button>':'')+
+            (CANEDIT?'<button class="btn sm" title="Flytt opp" onclick="moveTask('+e.id+','+p.id+',-1)">↑</button><button class="btn sm" title="Flytt ned" onclick="moveTask('+e.id+','+p.id+',1)">↓</button><button class="btn sm" style="color:#b23535" title="Slett" onclick="deleteTask('+e.id+','+p.id+')">'+ic('trash')+'</button>':'')+
           '</div>'+
         '</div>'+
       '</div>';
     }).join('')+'</div>';
   }else{
-    postsHtml='<div class="nopost">Ingen oppgaver planlagt ennå. Bruk «🪄 Foreslå plan» for et komplett forslag basert på datoen.</div>';
+    postsHtml='<div class="nopost">Ingen oppgaver planlagt ennå. Bruk «Foreslå plan» for et komplett forslag basert på datoen.</div>';
   }
   const chips=
-    (e.landing?'<a class="linkchip" href="'+e.landing+'" target="_blank">🌐 Landingsside <b>Åpne ↗</b></a>':'')+
-    (e.hoopit?'<a class="linkchip" href="'+e.hoopit+'" target="_blank">📝 Hoopit påmelding <b>Åpne ↗</b></a>':'');
+    (e.landing?'<a class="linkchip" href="'+e.landing+'" target="_blank">'+ic('globe')+' Landingsside <b>Åpne ↗</b></a>':'')+
+    (e.hoopit?'<a class="linkchip" href="'+e.hoopit+'" target="_blank">'+ic('doc')+' Hoopit påmelding <b>Åpne ↗</b></a>':'');
   document.getElementById('modal').innerHTML=
     '<div class="head" style="background:linear-gradient(135deg,'+c+','+c+' 55%,rgba(0,0,0,.35) 160%)">'+
       '<button class="close" onclick="closeModal()">×</button>'+
-      (CANEDIT?'<button class="headbtn" onclick="openEventForm('+e.id+')">✎ Rediger</button>':'')+
-      '<div class="idtag">'+e.type+(e.recur==='yearly'?' · 🔁 årlig':'')+'</div>'+
+      (CANEDIT?'<button class="headbtn" onclick="openEventForm('+e.id+')">'+ic('edit')+' Rediger</button>':'')+
+      '<div class="idtag">'+e.type+(e.recur==='yearly'?' · '+ic('refresh')+' årlig':'')+'</div>'+
       '<h2>'+e.title+'</h2>'+(e.desc?'<div class="sub">'+e.desc+'</div>':'')+
       '<div style="margin-top:10px">'+approvalPill(e)+'</div></div>'+
     '<div class="mbody"><div class="fieldgrid">'+
       f('Dato',e.date?fmt(e.date)+' 2026':'')+f('Idrett / gruppe',e.sport)+f('Hovedmål',e.mal)+f('Ansvarlig',e.ansvarlig)+'</div>'+
       (chips?'<div class="linkchips">'+chips+'</div>':'')+
-      (e.notat?'<div class="note" style="margin:0 0 18px">📝 '+e.notat+'</div>':'')+
-      (e.brief?'<div class="brief">📋 <b>Praktisk info:</b> '+esc(e.brief)+'</div>':'')+
-      '<div class="planhead"><div class="planttl">📅 Publiseringsplan <span class="count">'+(e.posts?e.posts.length:0)+' oppgaver</span></div>'+
-        (CANEDIT?'<div class="planbtns"><button class="btn solid sm" onclick="generatePlan('+e.id+')">🪄 Foreslå plan</button><button class="btn sm" onclick="openTaskForm('+e.id+',null)">＋ Oppgave</button></div>':'')+'</div>'+
+      (e.notat?'<div class="note" style="margin:0 0 18px">'+ic('doc')+' '+e.notat+'</div>':'')+
+      (e.brief?'<div class="brief">'+ic('info')+' <b>Praktisk info:</b> '+esc(e.brief)+'</div>':'')+
+      '<div class="planhead"><div class="planttl">'+ic('calendar')+' Publiseringsplan <span class="count">'+(e.posts?e.posts.length:0)+' oppgaver</span></div>'+
+        (CANEDIT?'<div class="planbtns"><button class="btn solid sm" onclick="generatePlan('+e.id+')">'+ic('sparkle')+' Foreslå plan</button><button class="btn sm" onclick="openTaskForm('+e.id+',null)">'+ic('plus')+' Oppgave</button></div>':'')+'</div>'+
       postsHtml+
-      '<div class="checklist"><h4>Sjekkliste – klar for publisering?</h4>'+checks.map(ch=>'<div class="check '+(ch[1]?'done':'todo')+'"><span class="box">'+(ch[1]?'✓':'')+'</span><span class="lbl">'+ch[0]+'</span></div>').join('')+'</div>'+
+      '<div class="checklist"><h4>Sjekkliste – klar for publisering?</h4>'+checks.map(ch=>'<div class="check '+(ch[1]?'done':'todo')+'"><span class="box">'+(ch[1]?ic('check','chk'):'')+'</span><span class="lbl">'+ch[0]+'</span></div>').join('')+'</div>'+
       (CANEDIT?'<div class="links">'+
-        '<button class="btn" onclick="duplicateNextYear('+e.id+')">📅 Dupliser til neste år</button>'+
-        '<button class="btn" style="color:#b23535" onclick="deleteEvent('+e.id+')">🗑 Slett</button>'+
+        '<button class="btn" onclick="duplicateNextYear('+e.id+')">'+ic('copy')+' Dupliser til neste år</button>'+
+        '<button class="btn" style="color:#b23535" onclick="deleteEvent('+e.id+')">'+ic('trash')+' Slett</button>'+
       '</div>':'')+'</div>';
   document.getElementById('overlay').classList.add('open');
 }
@@ -490,7 +514,7 @@ function openEventForm(id){
       '<div class="two"><div><label>Type</label><select id="f_type">'+typeOpts+'</select></div>'+
       '<div><label>Hovedmål</label><select id="f_goal">'+malOpts+'</select></div></div>'+
       '<div class="two"><div><label>Ansvarlig</label><select id="f_resp">'+memOpts+'</select></div>'+
-      '<div><label>Gjentakelse</label><select id="f_recur"><option value="yearly"'+sel(e.recur,'yearly')+'>🔁 Årlig</option><option value="none"'+sel(e.recur,'none')+'>Engangs</option></select></div></div>'+
+      '<div><label>Gjentakelse</label><select id="f_recur"><option value="yearly"'+sel(e.recur,'yearly')+'>Årlig</option><option value="none"'+sel(e.recur,'none')+'>Engangs</option></select></div></div>'+
       '<div class="two"><div><label>Status</label><select id="f_appr">'+apprOpts+'</select></div><div></div></div>'+
       '<label>Beskrivelse</label><input id="f_desc" value="'+esc(e.desc)+'">'+
       '<label>Notat (intern)</label><input id="f_notat" value="'+esc(e.notat)+'">'+
@@ -524,7 +548,7 @@ function openTaskForm(eventId,taskId){
       '<div><label>Publiseringsdato</label><input id="t_date" type="date" value="'+(t.date||'')+'"></div></div>'+
       '<label>Status</label><select id="t_status">'+stOpts+'</select>'+
       '<label>FLIK-side(r) / destinasjoner</label><select id="t_dests" multiple size="5" style="height:auto">'+destOpts+'</select>'+
-      '<label style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap">Tekst til innlegget<span style="display:flex;gap:6px">'+(t.body?'<button type="button" class="btn sm" id="aiReviseBtn" onclick="suggestText('+eventId+',true)">🔄 Oppdater for nytt år</button>':'')+'<button type="button" class="btn sm" id="aiBtn" onclick="suggestText('+eventId+',false)">✨ Foreslå tekst</button></span></label>'+
+      '<label style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap">Tekst til innlegget<span style="display:flex;gap:6px">'+(t.body?'<button type="button" class="btn sm" id="aiReviseBtn" onclick="suggestText('+eventId+',true)">'+ic('refresh')+' Oppdater for nytt år</button>':'')+'<button type="button" class="btn sm" id="aiBtn" onclick="suggestText('+eventId+',false)">'+ic('sparkle')+' Foreslå tekst</button></span></label>'+
       '<textarea id="t_body" placeholder="Skriv eller la AI foreslå teksten. Denne kan kopieres rett ut til Facebook / Meta Planner.">'+esc(t.body)+'</textarea>'+
       '<label>Lenke (valgfritt – f.eks. Google Doc)</label><input id="t_text" value="'+esc(t.text)+'">'+
       '<div class="actions"><button type="button" class="btn" onclick="openEvent('+eventId+')">Avbryt</button><button class="btn solid" type="submit">Lagre</button></div>'+
@@ -543,7 +567,7 @@ async function deleteTask(eventId,taskId){
 
 /* arkiv-bryter for eventlisten */
 let showArchive=false;
-function toggleArchive(){showArchive=!showArchive;const b=document.getElementById('archiveBtn');if(b)b.textContent=showArchive?'📁 Skjul gjennomførte':'📁 Vis gjennomførte';renderList();}
+function toggleArchive(){showArchive=!showArchive;const b=document.getElementById('archiveBtn');if(b)b.innerHTML=ic('archive')+' '+(showArchive?'Skjul gjennomførte':'Vis gjennomførte');renderList();}
 
 /* foreslå publiseringsplan ut fra eventdato */
 async function generatePlan(eventId){
@@ -561,7 +585,7 @@ async function duplicateNextYear(eventId){
   try{
     const card=await api('POST','/events/'+eventId+'/duplicate-next-year');
     upsert(card);rerender();openEvent(card.id);
-    alert('Kopiert til '+ny+'! Åpne hver oppgave og bruk «🔄 Oppdater for nytt år», så retter AI årstall og årsklasser i teksten.');
+    alert('Kopiert til '+ny+'! Åpne hver oppgave og bruk «Oppdater for nytt år», så retter AI årstall og årsklasser i teksten.');
   }catch(err){alert(err.message);}
 }
 
@@ -578,7 +602,7 @@ async function moveTask(eventId,taskId,dir){
 async function suggestText(eventId,revise){
   const e=DATA.find(x=>x.id===eventId);
   const btn=document.getElementById(revise?'aiReviseBtn':'aiBtn');const orig=btn?btn.textContent:'';
-  if(btn){btn.disabled=true;btn.textContent='✨ Skriver…';}
+  if(btn){btn.disabled=true;btn.innerHTML=ic('sparkle')+' Skriver …';}
   try{
     const payload={title:e.title,sport:e.sport,label:val('t_label'),date:val('t_date'),goal:e.mal,extra:e.desc,brief:e.brief||''};
     if(revise){payload.existing=val('t_body');payload.year=String((new Date(e.date)).getFullYear());}
@@ -610,10 +634,10 @@ function renderTeam(){
       '<div class="pav">'+initials(u.name)+'</div>'+
       '<div style="flex:1;min-width:0">'+
         '<div class="pnm">'+u.name+' '+roleBadge+'</div>'+
-        '<div class="pdet">✉️ '+u.email+(u.title?'<br>📌 '+u.title:'')+(u.area?'<br>🗂 '+u.area:'')+'</div>'+
+        '<div class="pdet">'+ic('mail')+' '+u.email+(u.title?'<br>'+ic('tag')+' '+u.title:'')+(u.area?'<br>'+ic('folder')+' '+u.area:'')+'</div>'+
         '<div class="pact">'+
-          '<button class="btn sm" onclick="openUserEdit('+u.id+')">✏️ Rediger</button>'+
-          '<button class="btn sm" onclick="resetUserPassword('+u.id+',\''+esc(u.name).replace(/\x27/g,"")+'\')">🔑 Nullstill passord</button>'+
+          '<button class="btn sm" onclick="openUserEdit('+u.id+')">'+ic('edit')+' Rediger</button>'+
+          '<button class="btn sm" onclick="resetUserPassword('+u.id+',\''+esc(u.name).replace(/\x27/g,"")+'\')">'+ic('key')+' Nullstill passord</button>'+
           (u.is_platform_admin?'':'<button class="btn sm" onclick="toggleRole('+u.id+',\''+(u.role==='admin'?'medlem':'admin')+'\')">'+(u.role==='admin'?'↓ Gjør til medlem':'↑ Gjør til admin')+'</button>')+
           (u.is_platform_admin?'':'<button class="btn sm" style="color:#b23535" onclick="removeUser('+u.id+',\''+esc(u.name).replace(/\x27/g,"")+'\')">Fjern</button>')+
         '</div>'+
