@@ -31,7 +31,7 @@ a{color:var(--flik-blue);text-decoration:none}a:hover{text-decoration:underline}
 .tabs{display:flex;gap:4px;max-width:1240px;margin:0 auto;padding:0 20px;flex-wrap:wrap}
 .tab{padding:15px 20px;color:rgba(255,255,255,.72);font-size:14px;font-weight:500;cursor:pointer;border:none;background:none;border-bottom:3px solid transparent}
 .tab:hover{color:#fff}.tab.active{color:#fff;border-bottom-color:var(--accent)}
-main{padding:48px 0 90px}.view{display:none}.view.active{display:block}
+main.wrap{padding:44px 28px 90px}.view{display:none}.view.active{display:block}
 .ico{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:none;vertical-align:-3px}
 .ico.chk{width:12px;height:12px;stroke-width:2.5;vertical-align:0}
 .viewhead{display:flex;align-items:center;justify-content:space-between;margin-bottom:26px;gap:16px;flex-wrap:wrap}
@@ -147,7 +147,8 @@ footer{color:var(--ink-soft);font-size:12.5px;text-align:center;padding:24px 20p
 .taskitem.open{box-shadow:var(--shadow);border-color:#dbe7f5}
 .taskrow{display:grid;grid-template-columns:16px 62px minmax(0,1fr) auto auto;gap:12px;align-items:center;padding:15px 17px;cursor:pointer}
 .taskrow:hover{background:#f7faff}
-.caret{color:var(--grey);font-size:11px;transition:transform .15s;display:inline-block}
+.caret{color:var(--grey);display:inline-flex;align-items:center;transition:transform .15s}
+.caret .ico{width:16px;height:16px;vertical-align:0}
 .taskitem.open .caret{transform:rotate(90deg)}
 .tdate{font-size:12px;color:var(--ink-soft);font-weight:500;white-space:nowrap}
 .tlabel{font-weight:500;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -404,7 +405,8 @@ const ICONS={
   sparkle:'<path d="M16 18a2 2 0 0 1 2 2a2 2 0 0 1 2 -2a2 2 0 0 1 -2 -2a2 2 0 0 1 -2 2m0 -12a2 2 0 0 1 2 2a2 2 0 0 1 2 -2a2 2 0 0 1 -2 -2a2 2 0 0 1 -2 2m-7 12a6 6 0 0 1 6 -6a6 6 0 0 1 -6 -6a6 6 0 0 1 -6 6a6 6 0 0 1 6 6" />',
   key:'<path d="M16.555 3.843l3.602 3.602a2.877 2.877 0 0 1 0 4.069l-2.643 2.643a2.877 2.877 0 0 1 -4.069 0l-.301 -.301l-6.558 6.558a2 2 0 0 1 -1.239 .578l-.175 .008h-1.172a1 1 0 0 1 -.993 -.883l-.007 -.117v-1.172a2 2 0 0 1 .467 -1.284l.119 -.13l.414 -.414h2v-2h2v-2l2.144 -2.144l-.301 -.301a2.877 2.877 0 0 1 0 -4.069l2.643 -2.643a2.877 2.877 0 0 1 4.069 0" /><path d="M15 9h.01" />',
   archive:'<path d="M3 6a2 2 0 0 1 2 -2h14a2 2 0 0 1 2 2a2 2 0 0 1 -2 2h-14a2 2 0 0 1 -2 -2" /><path d="M5 8v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2 -2v-10" /><path d="M10 12l4 0" />',
-  check:'<path d="M5 12l5 5l10 -10" />'
+  check:'<path d="M5 12l5 5l10 -10" />',
+  chevron:'<path d="M9 6l6 6l-6 6" />'
 };
 function ic(n,cls){return '<svg class="ico'+(cls?' '+cls:'')+'" viewBox="0 0 24 24" aria-hidden="true">'+(ICONS[n]||'')+'</svg>';}
 
@@ -421,7 +423,7 @@ function openEvent(id){
       const stCls=p.status==='Under arbeid'?'st-arbeid':(p.status==='Publisert'?'st-publisert':(p.status==='Klar for publisering'?'st-klar':'st-planlagt'));
       return '<div class="taskitem" id="ti'+p.id+'">'+
         '<div class="taskrow" onclick="toggleTask('+p.id+')">'+
-          '<span class="caret">▸</span>'+
+          '<span class="caret">'+ic('chevron')+'</span>'+
           '<span class="tdate">'+(p.date?fmt(p.date):'—')+'</span>'+
           '<span class="tlabel">'+(p.label||'Innlegg')+'</span>'+
           '<span class="tchan">'+pages+'</span>'+
