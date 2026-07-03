@@ -69,6 +69,15 @@ svg.wheel{width:100%;height:auto;display:block}
 .note{background:#fff8e6;border:1px solid #f3e2af;color:#7a5b00;font-size:12.5px;padding:10px 14px;border-radius:10px;margin-bottom:18px}
 .brief{background:#eef3fd;border:1px solid #d7e4f8;color:#26344d;font-size:13px;padding:12px 15px;border-radius:12px;margin:0 0 18px;white-space:pre-wrap;line-height:1.55}
 .brief b{color:var(--flik-blue-dark)}
+.teamgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px}
+.person{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);border:1px solid var(--line);padding:16px;display:flex;gap:13px}
+.person .pav{width:46px;height:46px;border-radius:50%;background:var(--flik-blue);color:#fff;display:grid;place-items:center;font-weight:700;flex:none}
+.person .pnm{font-weight:700;font-size:15px}
+.person .pdet{font-size:12.5px;color:var(--ink-soft);margin-top:6px;line-height:1.6}
+.person .pact{margin-top:11px;display:flex;gap:7px;flex-wrap:wrap}
+.rbadge{font-size:10.5px;font-weight:700;padding:2px 7px;border-radius:5px;text-transform:uppercase;letter-spacing:.4px;background:#eef2f7;color:#5b6b86;margin-left:4px}
+.rbadge.admin{background:#e7f0fb;color:#1c5fa8}
+.rbadge.super{background:#1c3155;color:#fff}
 .toolbar{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px;align-items:center}
 .toolbar select,.toolbar input{font-family:inherit;font-size:13px;padding:8px 11px;border:1px solid var(--line);border-radius:9px;background:#fff;color:var(--ink)}
 .toolbar input{flex:1;min-width:160px}
@@ -179,12 +188,13 @@ form.f .actions .btn{padding:11px 22px;font-size:14px}
     <button class="tab active" data-view="dash">Dashboard</button>
     <button class="tab" data-view="wheel">Årshjul</button>
     <button class="tab" data-view="list">Eventliste</button>
+    @if($canEdit)<button class="tab" data-view="team">Brukere</button>@endif
   </div>
 </div>
 
 <main class="wrap">
   <section class="view active" id="view-dash">
-    <div class="viewhead"><h2>Dashboard 2026</h2><button class="btn solid" onclick="openEventForm()">＋ Nytt arrangement</button></div>
+    <div class="viewhead"><h2>Dashboard 2026</h2>@if($canEdit)<button class="btn solid" onclick="openEventForm()">＋ Nytt arrangement</button>@endif</div>
     <div class="stats" id="statRow"></div>
     <div class="grid2">
       <div class="panel"><h3>Haster nå – trenger arbeid <span class="tag" id="urgCount">0</span></h3><div class="body" id="urgentList"></div></div>
@@ -192,7 +202,7 @@ form.f .actions .btn{padding:11px 22px;font-size:14px}
     </div>
   </section>
   <section class="view" id="view-wheel">
-    <div class="viewhead"><h2>Årshjul 2026</h2><button class="btn solid" onclick="openEventForm()">＋ Nytt arrangement</button></div>
+    <div class="viewhead"><h2>Årshjul 2026</h2>@if($canEdit)<button class="btn solid" onclick="openEventForm()">＋ Nytt arrangement</button>@endif</div>
     <div class="note">Klikk en prikk i hjulet eller en idrett i forklaringen for å filtrere. 🔁 = årlig gjentakende.</div>
     <div class="wheelwrap">
       <div class="wheelcard"><div id="wheelHost"></div><div class="wheel-hint" id="wheelHint"></div></div>
@@ -200,7 +210,7 @@ form.f .actions .btn{padding:11px 22px;font-size:14px}
     </div>
   </section>
   <section class="view" id="view-list">
-    <div class="viewhead"><h2>Eventliste</h2><button class="btn solid" onclick="openEventForm()">＋ Nytt arrangement</button></div>
+    <div class="viewhead"><h2>Eventliste</h2>@if($canEdit)<button class="btn solid" onclick="openEventForm()">＋ Nytt arrangement</button>@endif</div>
     <div class="toolbar">
       <input type="text" id="search" placeholder="Søk etter arrangement…">
       <select id="fSport"><option value="">Alle idretter</option></select>
@@ -209,6 +219,13 @@ form.f .actions .btn{padding:11px 22px;font-size:14px}
     </div>
     <div id="listHost"></div>
   </section>
+  @if($canEdit)
+  <section class="view" id="view-team">
+    <div class="viewhead"><h2>Brukere &amp; tilgang</h2><button class="btn solid" onclick="openUserForm()">＋ Legg til bruker</button></div>
+    <div class="note">Admin kan opprette/endre alt. Medlem kan kun se og kopiere tekster. Bruk «Nullstill passord» når noen skal få nytt passord.</div>
+    <div class="teamgrid" id="teamHost"></div>
+  </section>
+  @endif
 </main>
 
 <footer>Vivu Planner · live på ekte data · Farsund og Lista Idrettsklubb · Havdur Design</footer>
@@ -220,6 +237,8 @@ window.ME = @json(['name' => $user->name]);
 window.CATS = @json($categories);
 window.MEMBERS = @json($members);
 window.DESTS = @json($destinations);
+window.CANEDIT = @json($canEdit);
+window.TEAM = @json($teamUsers);
 window.CSRF = '{{ csrf_token() }}';
 </script>
 @verbatim
@@ -386,12 +405,10 @@ function openEvent(id){
           (p.body?'<div class="postbody">'+esc(p.body)+'</div>':'<div class="muted" style="padding:6px 0 2px">Ingen tekst lagt inn ennå.</div>')+
           (p.text?'<div style="margin-top:8px;font-size:12.5px"><a href="'+p.text+'" target="_blank">🔗 Lenke ↗</a></div>':'')+
           '<div class="taskactions">'+
-            '<button class="btn sm" onclick="openTaskForm('+e.id+','+p.id+')">✎ Rediger</button>'+
+            (CANEDIT?'<button class="btn sm" onclick="openTaskForm('+e.id+','+p.id+')">✎ Rediger</button>':'')+
             (p.body?'<button class="btn sm" onclick="copyText(this,'+e.id+','+p.id+')">📋 Kopier tekst</button>':'')+
             '<span style="flex:1"></span>'+
-            '<button class="btn sm" title="Flytt opp" onclick="moveTask('+e.id+','+p.id+',-1)">↑</button>'+
-            '<button class="btn sm" title="Flytt ned" onclick="moveTask('+e.id+','+p.id+',1)">↓</button>'+
-            '<button class="btn sm" style="color:#b23535" title="Slett" onclick="deleteTask('+e.id+','+p.id+')">🗑</button>'+
+            (CANEDIT?'<button class="btn sm" title="Flytt opp" onclick="moveTask('+e.id+','+p.id+',-1)">↑</button><button class="btn sm" title="Flytt ned" onclick="moveTask('+e.id+','+p.id+',1)">↓</button><button class="btn sm" style="color:#b23535" title="Slett" onclick="deleteTask('+e.id+','+p.id+')">🗑</button>':'')+
           '</div>'+
         '</div>'+
       '</div>';
@@ -405,7 +422,7 @@ function openEvent(id){
   document.getElementById('modal').innerHTML=
     '<div class="head" style="background:linear-gradient(135deg,'+c+','+c+' 55%,rgba(0,0,0,.35) 160%)">'+
       '<button class="close" onclick="closeModal()">×</button>'+
-      '<button class="headbtn" onclick="openEventForm('+e.id+')">✎ Rediger</button>'+
+      (CANEDIT?'<button class="headbtn" onclick="openEventForm('+e.id+')">✎ Rediger</button>':'')+
       '<div class="idtag">'+e.type+(e.recur==='yearly'?' · 🔁 årlig':'')+'</div>'+
       '<h2>'+e.title+'</h2>'+(e.desc?'<div class="sub">'+e.desc+'</div>':'')+
       '<div style="margin-top:10px">'+approvalPill(e)+'</div></div>'+
@@ -415,13 +432,13 @@ function openEvent(id){
       (e.notat?'<div class="note" style="margin:0 0 18px">📝 '+e.notat+'</div>':'')+
       (e.brief?'<div class="brief">📋 <b>Praktisk info:</b> '+esc(e.brief)+'</div>':'')+
       '<div class="planhead"><div class="planttl">📅 Publiseringsplan <span class="count">'+(e.posts?e.posts.length:0)+' oppgaver</span></div>'+
-        '<div class="planbtns"><button class="btn solid sm" onclick="generatePlan('+e.id+')">🪄 Foreslå plan</button><button class="btn sm" onclick="openTaskForm('+e.id+',null)">＋ Oppgave</button></div></div>'+
+        (CANEDIT?'<div class="planbtns"><button class="btn solid sm" onclick="generatePlan('+e.id+')">🪄 Foreslå plan</button><button class="btn sm" onclick="openTaskForm('+e.id+',null)">＋ Oppgave</button></div>':'')+'</div>'+
       postsHtml+
       '<div class="checklist"><h4>Sjekkliste – klar for publisering?</h4>'+checks.map(ch=>'<div class="check '+(ch[1]?'done':'todo')+'"><span class="box">'+(ch[1]?'✓':'')+'</span><span class="lbl">'+ch[0]+'</span></div>').join('')+'</div>'+
-      '<div class="links">'+
+      (CANEDIT?'<div class="links">'+
         '<button class="btn" onclick="duplicateNextYear('+e.id+')">📅 Dupliser til neste år</button>'+
         '<button class="btn" style="color:#b23535" onclick="deleteEvent('+e.id+')">🗑 Slett</button>'+
-      '</div></div>';
+      '</div>':'')+'</div>';
   document.getElementById('overlay').classList.add('open');
 }
 function toggleTask(id){const it=document.getElementById('ti'+id);if(it)it.classList.toggle('open');}
@@ -436,11 +453,13 @@ document.querySelectorAll('.tab').forEach(t=>t.addEventListener('click',()=>{
   t.classList.add('active');document.getElementById('view-'+t.dataset.view).classList.add('active');
   if(t.dataset.view==='wheel'){renderWheel();renderLegend();}
   if(t.dataset.view==='list')renderList();
+  if(t.dataset.view==='team')renderTeam();
 }));
 ['search','fSport','fStatus'].forEach(id=>document.getElementById(id).addEventListener('input',renderList));
 
 /* ---- REDIGERING (CRUD via fetch) ---- */
 const CSRF=window.CSRF, CATS=window.CATS||[], MEMBERS=window.MEMBERS||[], DESTS=window.DESTS||[];
+const CANEDIT=!!window.CANEDIT, TEAM=window.TEAM||[];
 function esc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');}
 function val(id){const el=document.getElementById(id);return el?el.value.trim():'';}
 async function api(method,url,body){
@@ -579,6 +598,55 @@ function copyText(btn,eventId,taskId){
   else fallbackCopy(t,done);
 }
 function fallbackCopy(t,done){const ta=document.createElement('textarea');ta.value=t;document.body.appendChild(ta);ta.select();try{document.execCommand('copy');}catch(e){}document.body.removeChild(ta);if(done)done();}
+
+/* ---- BRUKERE & TILGANG ---- */
+function renderTeam(){
+  const host=document.getElementById('teamHost');if(!host)return;
+  host.innerHTML=TEAM.map(u=>{
+    const roleBadge=u.is_platform_admin?'<span class="rbadge super">superadmin</span>':(u.role==='admin'?'<span class="rbadge admin">admin</span>':'<span class="rbadge">medlem</span>');
+    return '<div class="person">'+
+      '<div class="pav">'+initials(u.name)+'</div>'+
+      '<div style="flex:1;min-width:0">'+
+        '<div class="pnm">'+u.name+' '+roleBadge+'</div>'+
+        '<div class="pdet">✉️ '+u.email+(u.title?'<br>📌 '+u.title:'')+(u.area?'<br>🗂 '+u.area:'')+'</div>'+
+        '<div class="pact">'+
+          '<button class="btn sm" onclick="resetUserPassword('+u.id+',\''+esc(u.name).replace(/\x27/g,"")+'\')">🔑 Nullstill passord</button>'+
+          (u.is_platform_admin?'':'<button class="btn sm" onclick="toggleRole('+u.id+',\''+(u.role==='admin'?'medlem':'admin')+'\')">'+(u.role==='admin'?'↓ Gjør til medlem':'↑ Gjør til admin')+'</button>')+
+          (u.is_platform_admin?'':'<button class="btn sm" style="color:#b23535" onclick="removeUser('+u.id+',\''+esc(u.name).replace(/\x27/g,"")+'\')">Fjern</button>')+
+        '</div>'+
+      '</div></div>';
+  }).join('')||'<div class="nopost" style="margin:0">Ingen brukere.</div>';
+}
+function openUserForm(){
+  const roleOpts='<option value="medlem">Medlem (kun se & kopiere)</option><option value="admin">Admin (kan redigere alt)</option>';
+  document.getElementById('modal').innerHTML=
+    '<div class="head" style="background:linear-gradient(135deg,var(--flik-blue),var(--flik-blue-deep))"><button class="close" onclick="closeModal()">×</button><h2>Legg til bruker</h2><div class="sub">Brukeren logger inn med e-post og passordet du setter</div></div>'+
+    '<div class="mbody"><form class="f" onsubmit="saveUserForm(event)">'+
+      '<div class="two"><div><label>Navn *</label><input id="u_name" required></div><div><label>E-post *</label><input id="u_email" type="email" required></div></div>'+
+      '<div class="two"><div><label>Rolle</label><select id="u_role">'+roleOpts+'</select></div><div><label>Tittel</label><input id="u_title" placeholder="f.eks. Daglig leder"></div></div>'+
+      '<label>Ansvarsområde</label><input id="u_area" placeholder="f.eks. Fotball">'+
+      '<label>Midlertidig passord * (minst 8 tegn)</label><input id="u_pass" required minlength="8">'+
+      '<div class="actions"><button type="button" class="btn" onclick="closeModal()">Avbryt</button><button class="btn solid" type="submit">Opprett bruker</button></div>'+
+    '</form></div>';
+  document.getElementById('overlay').classList.add('open');
+}
+async function saveUserForm(ev){ev.preventDefault();
+  const body={name:val('u_name'),email:val('u_email'),role:val('u_role'),title:val('u_title')||null,area:val('u_area')||null,password:document.getElementById('u_pass').value};
+  try{await api('POST','/users',body);alert('Bruker opprettet. Last siden på nytt for å se den i lista.');closeModal();}catch(err){alert(err.message);}
+}
+async function resetUserPassword(id,name){
+  const pw=prompt('Nytt passord for '+name+' (minst 8 tegn):');
+  if(!pw)return;
+  if(pw.length<8){alert('Passordet må være minst 8 tegn.');return;}
+  try{await api('POST','/users/'+id+'/reset-password',{password:pw});alert('Passord oppdatert for '+name+'.');}catch(err){alert(err.message);}
+}
+async function toggleRole(id,role){
+  try{await api('PUT','/users/'+id+'/role',{role});const u=TEAM.find(x=>x.id===id);if(u)u.role=role;renderTeam();}catch(err){alert(err.message);}
+}
+async function removeUser(id,name){
+  if(!confirm('Fjerne '+name+' fra klubben?'))return;
+  try{await api('DELETE','/users/'+id);const i=TEAM.findIndex(x=>x.id===id);if(i>=0)TEAM.splice(i,1);renderTeam();}catch(err){alert(err.message);}
+}
 
 renderStats();renderUrgent();renderUpcoming();populateFilters();
 </script>

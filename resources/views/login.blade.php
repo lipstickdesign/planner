@@ -31,6 +31,9 @@ button:hover{background:#2557b8}
   <h1>Vivu Planner</h1>
   <div class="sub">Årshjul – Farsund og Lista Idrettsklubb</div>
 
+  @if (session('status'))
+    <div style="background:#dff3e4;color:#1f7a42;font-size:13px;border-radius:9px;padding:10px 12px;margin-bottom:14px">{{ session('status') }}</div>
+  @endif
   @if ($errors->any())
     <div class="err">{{ $errors->first() }}</div>
   @endif
@@ -42,7 +45,7 @@ button:hover{background:#2557b8}
     <label class="rem"><input type="checkbox" name="remember" value="1"> Husk meg</label>
     <button type="submit">Logg inn</button>
   </form>
-
+  <a href="{{ route('password.request') }}" style="display:inline-block;margin-top:15px;font-size:13px;color:#5b6b86;text-decoration:none">Glemt passord?</a>
 </div>
 </body>
 </html>

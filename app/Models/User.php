@@ -35,7 +35,25 @@ class User extends Authenticatable
     public function companies(): BelongsToMany
     {
         return $this->belongsToMany(Company::class)
-            ->withPivot(['title', 'phone', 'area', 'is_agency', 'status'])
+            ->withPivot(['title', 'phone', 'area', 'is_agency', 'status', 'role'])
             ->withTimestamps();
+    }
+
+    /**
+     * Er brukeren admin (kan redigere) i det aktive selskapet?
+     * Plattform-superadmin har alltid full tilgang.
+     */
+    public function isCompanyAdmin(): bool
+    {
+        if ($this->is_platform_admin) {
+            return true;
+        }
+        $company = app()->bound('currentCompany') ? app('currentCompany') : null;
+        if (! $company) {
+            return false;
+        }
+        $membership = $this->companies()->where('companies.id', $company->id)->first();
+
+        return $membership && ($membership->pivot->role ?? 'medlem') === 'admin';
     }
 }

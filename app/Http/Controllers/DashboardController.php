@@ -23,13 +23,29 @@ class DashboardController extends Controller
             ->map(fn (Event $e) => $e->toCard())
             ->values();
 
+        $user = auth()->user();
+
+        $teamUsers = $company
+            ? $company->users()->orderBy('name')->get()->map(fn ($u) => [
+                'id' => $u->id,
+                'name' => $u->name,
+                'email' => $u->email,
+                'title' => $u->pivot->title,
+                'area' => $u->pivot->area,
+                'role' => $u->pivot->role ?? 'medlem',
+                'is_platform_admin' => (bool) $u->is_platform_admin,
+            ])->values()
+            : collect();
+
         return view('dashboard', [
             'company' => $company,
             'events' => $events,
-            'user' => auth()->user(),
+            'user' => $user,
+            'canEdit' => $user->isCompanyAdmin(),
             'categories' => Category::orderBy('sort_order')->get(['id', 'name', 'color']),
             'members' => $company ? $company->users()->orderBy('name')->get(['users.id', 'name']) : collect(),
             'destinations' => Destination::orderBy('name')->get(['id', 'name']),
+            'teamUsers' => $teamUsers,
         ]);
     }
 }
