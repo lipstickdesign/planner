@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Category;
 use App\Models\Company;
 use App\Models\ContentIdea;
+use App\Models\DashboardLayout;
 use App\Models\Destination;
 use App\Models\Event;
 use App\Models\KlubblivPost;
@@ -59,6 +60,13 @@ class DashboardController extends Controller
             ->map(fn (TrainingSchedule $t) => $t->card())
             ->values();
 
+        // Dashboard-oppsett: brukerens eget → selskaps-standard → innebygd standard
+        $builtinDefault = ['a' => ['tellere', 'publiser', 'utenplan', 'travle', 'tomrom'], 'b' => ['idag', 'tips']];
+        $companyDefault = DashboardLayout::whereNull('user_id')->first();
+        $userLayout = DashboardLayout::where('user_id', $user->id)->first();
+        $resolvedDefault = $companyDefault ? $companyDefault->layout : $builtinDefault;
+        $layout = $userLayout ? $userLayout->layout : $resolvedDefault;
+
         return view('dashboard', [
             'company' => $company,
             'events' => $events,
@@ -72,6 +80,10 @@ class DashboardController extends Controller
             'ideas' => $ideas,
             'training' => $training,
             'weather' => $weather->week(),
+            'layout' => $layout,
+            'layoutDefault' => $resolvedDefault,
+            'hasUserLayout' => (bool) $userLayout,
+            'isSuperadmin' => (bool) $user->is_platform_admin,
         ]);
     }
 }

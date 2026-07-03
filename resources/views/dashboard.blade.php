@@ -117,6 +117,35 @@ svg.wheel{width:100%;height:auto;display:block}
 .dchks{display:flex;flex-wrap:wrap;gap:8px 16px;margin-top:4px}
 .dchk{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--ink)}
 .dchk input{width:auto}
+/* Tannhjul i topp */
+.iconbtn{background:rgba(255,255,255,.16);border:none;color:#fff;width:36px;height:36px;border-radius:50%;cursor:pointer;display:grid;place-items:center;margin-right:4px}
+.iconbtn:hover{background:rgba(255,255,255,.3)}
+.iconbtn svg{width:19px;height:19px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+/* Konfigurerbart dashboard */
+.homebar{display:flex;gap:8px;flex-wrap:wrap}
+.modcol{display:flex;flex-direction:column}
+.modwrap{position:relative}
+.modbar{display:flex;align-items:center;gap:7px;background:#eef3fd;border:1px dashed #b9d0ef;border-radius:10px;padding:7px 10px;margin-bottom:8px;font-size:12.5px;color:#1c3155}
+.modbar .mh{cursor:grab;color:#6a86ad;font-size:14px;line-height:1}
+.modbar .mt{font-weight:600;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.modbar button{background:#fff;border:1px solid #cddcf0;border-radius:7px;min-width:26px;height:26px;cursor:pointer;color:#2f6fd6;font-size:13px;flex:none}
+.modbar button:hover{background:#e0ecfb}.modbar button.rem{color:#b23535}
+.modbar select{font-family:inherit;font-size:12px;padding:3px 6px;border:1px solid #cddcf0;border-radius:7px;background:#fff}
+.homeedit .modwrap .weekcard{pointer-events:none;opacity:.97}
+.homeedit .modcol{min-height:64px;border:2px dashed #e0e6f0;border-radius:16px;padding:8px;transition:border-color .12s,background .12s}
+.homeedit .modcol.dragover{border-color:var(--flik-blue);background:#f2f7ff}
+.modtray{grid-column:1/-1;margin-top:4px;background:#f7f9fc;border:1px solid var(--line);border-radius:14px;padding:14px 16px}
+.modtray .lbl{margin-bottom:10px}
+.traychip{display:inline-flex;align-items:center;gap:6px;background:#fff;border:1px solid #cddcf0;border-radius:20px;padding:7px 13px;font-size:13px;color:var(--flik-blue);cursor:grab;margin:0 8px 8px 0}
+.traychip:hover{background:#eef3fd}
+.ministats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.ministat{background:#f6f9fd;border:1px solid var(--line);border-radius:12px;padding:12px 10px;text-align:center}
+.ministat .mn{font-size:24px;font-weight:700;line-height:1}
+.ministat .ml{font-size:11px;color:var(--ink-soft);margin-top:4px}
+.weathergrid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.rrow.click{cursor:pointer}.rrow.click:hover{background:#f7faff}
+.rchev{color:var(--grey);display:flex;flex:none;align-items:center}
+@media(max-width:880px){.ministats{grid-template-columns:repeat(2,1fr)}.weathergrid{grid-template-columns:repeat(3,1fr)}.modtray{grid-column:auto}}
 .legend .item{display:flex;align-items:center;gap:9px;font-size:13px;padding:6px 0;cursor:pointer;border-radius:6px}
 .legend .item:hover{background:#f5f8fc}.legend .item.off{opacity:.32}
 .legend .sw{width:12px;height:12px;border-radius:3px;flex:none}.legend .c{margin-left:auto;font-size:12px;color:var(--ink-soft)}
@@ -232,6 +261,7 @@ form.f .actions .btn{padding:11px 22px;font-size:14px}
       </div>
     </div>
     <div class="spacer"></div>
+    @if($canEdit)<button class="iconbtn" title="Innstillinger" onclick="openSettings()"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10.325 4.317c.426 -1.756 2.924 -1.756 3.35 0a1.724 1.724 0 0 0 2.573 1.066c1.543 -.94 3.31 .826 2.37 2.37a1.724 1.724 0 0 0 1.065 2.572c1.756 .426 1.756 2.924 0 3.35a1.724 1.724 0 0 0 -1.066 2.573c.94 1.543 -.826 3.31 -2.37 2.37a1.724 1.724 0 0 0 -2.572 1.065c-.426 1.756 -2.924 1.756 -3.35 0a1.724 1.724 0 0 0 -2.573 -1.066c-1.543 .94 -3.31 -.826 -2.37 -2.37a1.724 1.724 0 0 0 -1.065 -2.572c-1.756 -.426 -1.756 -2.924 0 -3.35a1.724 1.724 0 0 0 1.066 -2.573c-.94 -1.543 .826 -3.31 2.37 -2.37c1 .608 2.296 .07 2.572 -1.065z"/><path d="M9 12a3 3 0 1 0 6 0a3 3 0 0 0 -6 0"/></svg></button>@endif
     <div class="userchip"><span>{{ $user->name }}</span></div>
     <form method="POST" action="{{ route('logout') }}" style="margin:0">
       @csrf
@@ -241,8 +271,7 @@ form.f .actions .btn{padding:11px 22px;font-size:14px}
 </div>
 <div class="tabbar">
   <div class="tabs">
-    <button class="tab active" data-view="week">Denne uka</button>
-    <button class="tab" data-view="dash">Dashboard</button>
+    <button class="tab active" data-view="home">Dashboard</button>
     <button class="tab" data-view="wheel">Årshjul</button>
     <button class="tab" data-view="list">Eventliste</button>
     <button class="tab" data-view="klubbliv">Klubbliv</button>
@@ -251,17 +280,9 @@ form.f .actions .btn{padding:11px 22px;font-size:14px}
 </div>
 
 <main class="wrap">
-  <section class="view active" id="view-week">
-    <div class="viewhead"><h2>Denne uka anbefaler Vivu</h2>@if($canEdit)<button class="btn" onclick="openTrainingMgr()"><svg class="ico" viewBox="0 0 24 24"><path d="M4 7a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2l0 -12"/><path d="M16 3l0 4M8 3l0 4M4 11l16 0"/></svg> Treningstider</button>@endif</div>
-    <div id="weekHost"></div>
-  </section>
-  <section class="view" id="view-dash">
-    <div class="viewhead"><h2>Dashboard</h2>@if($canEdit)<button class="btn solid" onclick="openEventForm()">＋ Nytt arrangement</button>@endif</div>
-    <div class="stats" id="statRow"></div>
-    <div class="grid2">
-      <div class="panel"><h3>Haster nå – trenger arbeid <span class="tag" id="urgCount">0</span></h3><div class="body" id="urgentList"></div></div>
-      <div class="panel"><h3>Neste arrangement <span class="tag cool">kommende</span></h3><div class="body" id="upcomingList"></div></div>
-    </div>
+  <section class="view active" id="view-home">
+    <div class="viewhead"><h2>Dashboard</h2><div id="homeActions"></div></div>
+    <div id="homeHost"></div>
   </section>
   <section class="view" id="view-wheel">
     <div class="viewhead"><h2>Årshjul 2026</h2>@if($canEdit)<button class="btn solid" onclick="openEventForm()">＋ Nytt arrangement</button>@endif</div>
@@ -295,7 +316,7 @@ form.f .actions .btn{padding:11px 22px;font-size:14px}
   @endif
 </main>
 
-<footer>Vivu Planner · live på ekte data · Farsund og Lista Idrettsklubb · Havdur Design</footer>
+<footer>Vivu Planner · Farsund og Lista Idrettsklubb · Laget av <a href="https://havdurdesign.no" target="_blank" rel="nofollow noopener sponsored">Havdur Design</a></footer>
 <div class="overlay" id="overlay"><div class="modal" id="modal"></div></div>
 
 <script>
@@ -310,6 +331,10 @@ window.KLUBBLIV = @json($klubbliv);
 window.IDEAS = @json($ideas);
 window.TRAINING = @json($training);
 window.WEATHER = @json($weather);
+window.LAYOUT = @json($layout);
+window.LAYOUT_DEFAULT = @json($layoutDefault);
+window.HAS_USER_LAYOUT = @json($hasUserLayout);
+window.IS_SUPERADMIN = @json($isSuperadmin);
 window.CSRF = '{{ csrf_token() }}';
 </script>
 @verbatim
@@ -566,7 +591,7 @@ document.querySelectorAll('.tab').forEach(t=>t.addEventListener('click',()=>{
   document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
   document.querySelectorAll('.view').forEach(x=>x.classList.remove('active'));
   t.classList.add('active');document.getElementById('view-'+t.dataset.view).classList.add('active');
-  if(t.dataset.view==='week')renderWeek();
+  if(t.dataset.view==='home')renderHome();
   if(t.dataset.view==='wheel'){renderWheel();renderLegend();}
   if(t.dataset.view==='list')renderList();
   if(t.dataset.view==='klubbliv')renderKlubbliv();
@@ -586,7 +611,7 @@ async function api(method,url,body){
   return r.status===204?null:r.json();
 }
 function upsert(card){const i=DATA.findIndex(x=>x.id===card.id);if(i>=0)DATA[i]=card;else DATA.push(card);}
-function rerender(){renderStats();renderUrgent();renderUpcoming();const a=document.querySelector('.tab.active');if(a&&a.dataset.view==='wheel'){renderWheel();renderLegend();}if(a&&a.dataset.view==='list')renderList();}
+function rerender(){renderHome();const a=document.querySelector('.tab.active');if(a&&a.dataset.view==='wheel'){renderWheel();renderLegend();}if(a&&a.dataset.view==='list')renderList();}
 
 function openEventForm(id){
   const e=id?DATA.find(x=>x.id===id):{};
@@ -810,50 +835,155 @@ function allPosts(){
   KLUBBLIV.forEach(k=>{if(k.date)arr.push({date:k.date,kind:'klubbliv',id:k.id,title:k.title,ctx:'Klubbliv',channels:(k.channels||[]).join(' · '),status:k.status});});
   return arr;
 }
+function wc(icon,title,ctCls,ct,inner){return '<div class="weekcard"><h3>'+ic(icon)+' '+title+(ct!=null?' <span class="ct '+(ctCls||'')+'">'+ct+'</span>':'')+'</h3>'+inner+'</div>';}
+function chev(){return '<span class="rchev">'+ic('chevron')+'</span>';}
+function cd(dd){return dd===0?'i dag':(dd>0?'om '+dd+' dg':Math.abs(dd)+' dg siden');}
 function rrow(p){
   const open=p.kind==='event'?'openEvent('+p.eventId+')':'openKlubblivForm('+p.id+')';
-  return '<div class="rrow"><span class="rd">'+fmt(p.date)+'</span><span class="rt">'+esc(p.title)+'<small>'+esc(p.ctx)+(p.channels?' · '+esc(p.channels):'')+'</small></span><span class="ra"><button class="btn sm" onclick="'+open+'">Åpne</button></span></div>';
+  return '<div class="rrow click" onclick="'+open+'"><span class="rd">'+fmt(p.date)+'</span><span class="rt">'+esc(p.title)+'<small>'+esc(p.ctx)+(p.channels?' · '+esc(p.channels):'')+' · '+cd(daysTo(p.date))+'</small></span>'+chev()+'</div>';
 }
-function renderWeek(){
-  const host=document.getElementById('weekHost');if(!host)return;
-  const today=new Date();today.setHours(0,0,0,0);
-  const in7=addDays(today,7);
-  const posts=allPosts();
-  const wc=(icon,title,ctCls,ct,inner)=>'<div class="weekcard"><h3>'+ic(icon)+' '+title+(ct!=null?' <span class="ct '+(ctCls||'')+'">'+ct+'</span>':'')+'</h3>'+inner+'</div>';
-
-  /* ===== Kolonne A (2/3) ===== */
-  let a='';
-  const due=posts.filter(p=>{const d=addDays(p.date,0);return d>=addDays(today,-2)&&d<=in7&&p.status!=='Publisert';}).sort((x,y)=>new Date(x.date)-new Date(y.date));
-  a+=wc('sparkle','Publiser nå','',due.length, due.length?due.map(rrow).join(''):'<div class="emptyrec">Ingenting som haster de neste dagene – fint å ligge i forkant!</div>');
-
+function eventRow(e){
+  const posts=e.posts?e.posts.length:0;
+  return '<div class="rrow click" onclick="openEvent('+e.id+')"><span class="rd">'+fmt(e.date)+'</span><span class="rt">'+esc(e.title)+'<small>'+esc(e.sport||'')+' · '+posts+' poster · '+cd(daysTo(e.date))+'</small></span>'+chev()+'</div>';
+}
+/* ---- Moduler ---- */
+function mod_publiser(){
+  const today=new Date();today.setHours(0,0,0,0);const in7=addDays(today,7);
+  const due=allPosts().filter(p=>{const d=addDays(p.date,0);return d>=addDays(today,-2)&&d<=in7&&p.status!=='Publisert';}).sort((x,y)=>new Date(x.date)-new Date(y.date));
+  return wc('sparkle','Publiser nå','',due.length, due.length?due.map(rrow).join(''):'<div class="emptyrec">Ingenting som haster de neste dagene – fint å ligge i forkant!</div>');
+}
+function mod_utenplan(){
   const noplan=DATA.filter(e=>{const dd=daysTo(e.date);return dd>=0&&dd<=90&&(!e.posts||!e.posts.length)&&e.type!=='Administrasjon'&&!/ikke markedsf|ikke skal/i.test(e.notat||'');}).sort((x,y)=>new Date(x.date)-new Date(y.date));
-  a+=wc('calendar','Arrangement uten plan','warn',noplan.length, noplan.length?noplan.map(e=>'<div class="rrow"><span class="rd">'+fmt(e.date)+'</span><span class="rt">'+esc(e.title)+'<small>'+esc(e.sport||'')+'</small></span><span class="ra"><button class="btn sm" onclick="openEvent('+e.id+')">Åpne</button></span></div>').join(''):'<div class="emptyrec">Alle kommende arrangement har en plan.</div>');
-
+  return wc('calendar','Arrangement uten plan','warn',noplan.length, noplan.length?noplan.map(eventRow).join(''):'<div class="emptyrec">Alle kommende arrangement har en plan.</div>');
+}
+function mod_travle(){
+  const today=new Date();today.setHours(0,0,0,0);const posts=allPosts();
   const cnt={};posts.forEach(p=>{const d=addDays(p.date,0);if(d>=today&&d<=addDays(today,28)){const k=ymd(p.date);cnt[k]=(cnt[k]||0)+1;}});
   const over=Object.keys(cnt).filter(k=>cnt[k]>=2).sort();
-  a+=wc('info','Travle dager','red',over.length, over.length?over.map(k=>'<div class="rrow"><span class="rd">'+fmt(k)+'</span><span class="rt">'+cnt[k]+' poster samme dag<small>Vurder å flytte en til en roligere dag</small></span></div>').join(''):'<div class="emptyrec">Ingen dager med for mange poster.</div>');
-
+  return wc('info','Travle dager','red',over.length, over.length?over.map(k=>'<div class="rrow"><span class="rd">'+fmt(k)+'</span><span class="rt">'+cnt[k]+' poster samme dag<small>Vurder å flytte en til en roligere dag</small></span></div>').join(''):'<div class="emptyrec">Ingen dager med for mange poster.</div>');
+}
+function mod_tomrom(){
+  const today=new Date();today.setHours(0,0,0,0);const posts=allPosts();
   const gaps=[];const actIdeas=IDEAS.filter(i=>i.is_active!==false);
   for(let wk=0;wk<6;wk++){const ws=addDays(startOfWeek(today),wk*7);const we=addDays(ws,6);const has=posts.some(p=>{const d=addDays(p.date,0);return d>=ws&&d<=we;});if(!has){const idea=actIdeas.length?actIdeas[gaps.length%actIdeas.length]:null;gaps.push({ws,we,idea});}}
-  a+=wc('doc','Tomrom – fyll med Klubbliv','gap',gaps.length, gaps.length?gaps.map(g=>'<div class="rrow"><span class="rd">Uke '+isoWeek(g.ws)+'</span><span class="rt">'+fmt(ymd(g.ws))+'–'+fmt(ymd(g.we))+': ingen innhold planlagt'+(g.idea?'<small>Forslag: '+esc(g.idea.title)+'</small>':'')+'</span>'+(CANEDIT&&g.idea?'<span class="ra"><button class="btn sm" onclick="klubblivFromIdea('+g.idea.id+',\''+ymd(addDays(g.ws,2))+'\')">Lag post</button></span>':'')+'</div>').join(''):'<div class="emptyrec">Ingen tomme uker de neste seks ukene.</div>');
-
-  /* ===== Kolonne B (1/3) ===== */
-  let b='';
-  const dow=isoDow(today);
+  return wc('doc','Tomrom – fyll med Klubbliv','gap',gaps.length, gaps.length?gaps.map(g=>'<div class="rrow"><span class="rd">Uke '+isoWeek(g.ws)+'</span><span class="rt">'+fmt(ymd(g.ws))+'–'+fmt(ymd(g.we))+': ingen innhold planlagt'+(g.idea?'<small>Forslag: '+esc(g.idea.title)+'</small>':'')+'</span>'+(CANEDIT&&g.idea?'<span class="ra"><button class="btn sm" onclick="klubblivFromIdea('+g.idea.id+',\''+ymd(addDays(g.ws,2))+'\')">Lag post</button></span>':'')+'</div>').join(''):'<div class="emptyrec">Ingen tomme uker de neste seks ukene.</div>');
+}
+function mod_idag(){
+  const today=new Date();today.setHours(0,0,0,0);const dow=isoDow(today);
   const todayTrain=TRAINING.filter(t=>t.weekday===dow);
   const wToday=(WEATHER||[]).find(w=>ymd(w.date)===ymd(today));
-  b+=wc('calendar','I dag – '+WD[dow-1],null,null,
+  return wc('calendar','I dag – '+WD[dow-1],null,null,
     '<div class="lbl" style="margin-bottom:6px">Trener i dag</div>'+
     (todayTrain.length?todayTrain.map(t=>'<div class="trainline"><span class="sw" style="background:'+(t.color||'#8795a3')+'"></span>'+esc(t.category||t.group||'Trening')+(t.start?' · '+t.start+(t.end?'–'+t.end:''):'')+(t.location?' · '+esc(t.location):'')+'</div>').join(''):'<div class="emptyrec">Ingen trening registrert i dag.</div>')+
     (wToday?'<div class="lbl" style="margin:12px 0 4px">Vær i dag</div><div class="trainline">'+(wToday.temp!=null?wToday.temp+'° · ':'')+esc(wToday.label||'')+'</div>':''));
-
-  if(WEATHER&&WEATHER.length){
-    b+=wc('info','Været i Farsund',null,null,'<div class="weatherstrip">'+WEATHER.slice(0,7).map(w=>'<div class="wday'+(ymd(w.date)===ymd(today)?' today':'')+'"><div class="wd">'+WD[isoDow(w.date)-1].slice(0,3)+'</div><div class="wt">'+(w.temp!=null?w.temp+'°':'–')+'</div><div class="wl">'+esc(w.label||'')+'</div></div>').join('')+'</div>');
-  }
-
-  b+=wc('sparkle','Dagens tips',null,null,'<div id="tipBox"><div class="emptyrec">La Vivu foreslå noe å publisere i dag – ut fra vær, trening og hva som er på gang.</div>'+(CANEDIT?'<button class="btn solid sm" style="margin-top:10px" onclick="dagensTips()">'+ic('sparkle')+' Foreslå noe å publisere</button>':'')+'</div>');
-
-  host.innerHTML='<div class="weekcols"><div>'+a+'</div><div>'+b+'</div></div>';
+}
+function mod_vaer(opts){
+  const mode=(opts&&opts.mode)||'week';
+  const today=new Date();today.setHours(0,0,0,0);
+  if(!WEATHER||!WEATHER.length)return wc('info','Vær i Farsund',null,null,'<div class="emptyrec">Ingen værdata akkurat nå.</div>');
+  if(mode==='today'){const w=WEATHER.find(x=>ymd(x.date)===ymd(today))||WEATHER[0];return wc('info','Vær i dag',null,null,'<div class="trainline" style="font-size:15px">'+(w.temp!=null?w.temp+'° · ':'')+esc(w.label||'')+'</div>');}
+  return wc('info','Været i Farsund',null,null,'<div class="weathergrid">'+WEATHER.slice(0,8).map(w=>'<div class="wday'+(ymd(w.date)===ymd(today)?' today':'')+'"><div class="wd">'+WD[isoDow(w.date)-1].slice(0,3)+'</div><div class="wt">'+(w.temp!=null?w.temp+'°':'–')+'</div><div class="wl">'+esc(w.label||'')+'</div></div>').join('')+'</div>');
+}
+function mod_tips(){
+  return wc('sparkle','Dagens tips',null,null,'<div id="tipBox"><div class="emptyrec">La Vivu foreslå noe å publisere i dag – ut fra vær, trening og hva som er på gang.</div>'+(CANEDIT?'<button class="btn solid sm" style="margin-top:10px" onclick="dagensTips()">'+ic('sparkle')+' Foreslå noe å publisere</button>':'')+'</div>');
+}
+function mod_neste(){
+  const up=DATA.filter(e=>daysTo(e.date)>=0).sort((x,y)=>new Date(x.date)-new Date(y.date)).slice(0,5);
+  return wc('calendar','Neste arrangement',null,null, up.length?up.map(eventRow).join(''):'<div class="emptyrec">Ingen kommende arrangement.</div>');
+}
+function mod_tellere(){
+  const totalPosts=DATA.reduce((s,e)=>s+(e.posts?e.posts.length:0),0);
+  const upcoming=DATA.filter(e=>new Date(e.date)>=TODAY);
+  const needsWork=upcoming.filter(e=>eventState(e).key==='Mangler innhold').length;
+  const toApprove=DATA.filter(e=>e.approval==='Til godkjenning').length;
+  const cells=[[DATA.length,'Arrangement'],[totalPosts,'Oppgaver'],[needsWork,'Uten innhold'],[toApprove,'Til godkjenning']];
+  return wc('info','Nøkkeltall',null,null,'<div class="ministats">'+cells.map(c=>'<div class="ministat"><div class="mn">'+c[0]+'</div><div class="ml">'+c[1]+'</div></div>').join('')+'</div>');
+}
+const MODREG={
+  tellere:{t:'Nøkkeltall',render:mod_tellere},
+  publiser:{t:'Publiser nå',render:mod_publiser},
+  utenplan:{t:'Arrangement uten plan',render:mod_utenplan},
+  travle:{t:'Travle dager',render:mod_travle},
+  tomrom:{t:'Tomrom',render:mod_tomrom},
+  idag:{t:'I dag',render:mod_idag},
+  vaer:{t:'Vær',render:mod_vaer},
+  tips:{t:'Dagens tips',render:mod_tips},
+  neste:{t:'Neste arrangement',render:mod_neste}
+};
+function normLayout(l){
+  const norm=arr=>(Array.isArray(arr)?arr:[]).map(x=>typeof x==='string'?{id:x,opts:{}}:{id:x.id,opts:x.opts||{}}).filter(x=>MODREG[x.id]);
+  l=l||{};return {a:norm(l.a),b:norm(l.b)};
+}
+let LAYOUT=normLayout(window.LAYOUT), LAYOUT_DEFAULT=normLayout(window.LAYOUT_DEFAULT), LAYOUT_SAVED=JSON.parse(JSON.stringify(LAYOUT));
+let editMode=false; const IS_SUPERADMIN=!!window.IS_SUPERADMIN; let _drag=null;
+function findItem(id){for(const c of ['a','b']){const i=LAYOUT[c].findIndex(x=>x.id===id);if(i>=0)return{col:c,idx:i,item:LAYOUT[c][i]};}return null;}
+function layoutRemove(id){const f=findItem(id);if(f){LAYOUT[f.col].splice(f.idx,1);renderHome();}}
+function layoutAdd(id,col){if(findItem(id))return;LAYOUT[col].push({id,opts:{}});renderHome();}
+function layoutMoveDir(id,dir){const f=findItem(id);if(!f)return;const arr=LAYOUT[f.col];const j=f.idx+dir;if(j<0||j>=arr.length)return;const tmp=arr[f.idx];arr[f.idx]=arr[j];arr[j]=tmp;renderHome();}
+function layoutSwitchCol(id){const f=findItem(id);if(!f)return;const it=LAYOUT[f.col].splice(f.idx,1)[0];LAYOUT[f.col==='a'?'b':'a'].push(it);renderHome();}
+function layoutSetOpt(id,k,v){const f=findItem(id);if(f){f.item.opts=f.item.opts||{};f.item.opts[k]=v;renderHome();}}
+function modBar(it){
+  const m=MODREG[it.id];
+  let opt='';
+  if(it.id==='vaer'){const mode=(it.opts&&it.opts.mode)||'week';opt='<select onchange="layoutSetOpt(\'vaer\',\'mode\',this.value)"><option value="today"'+(mode==='today'?' selected':'')+'>I dag</option><option value="week"'+(mode==='week'?' selected':'')+'>Hele uka</option></select>';}
+  return '<div class="modbar"><span class="mh">⠿</span><span class="mt">'+m.t+'</span>'+opt+
+    '<button title="Flytt opp" onclick="layoutMoveDir(\''+it.id+'\',-1)">↑</button>'+
+    '<button title="Flytt ned" onclick="layoutMoveDir(\''+it.id+'\',1)">↓</button>'+
+    '<button title="Bytt kolonne" onclick="layoutSwitchCol(\''+it.id+'\')">⇄</button>'+
+    '<button class="rem" title="Fjern" onclick="layoutRemove(\''+it.id+'\')">✕</button></div>';
+}
+function modTray(){
+  const used=new Set([...LAYOUT.a,...LAYOUT.b].map(x=>x.id));
+  const hidden=Object.keys(MODREG).filter(id=>!used.has(id));
+  return '<div class="modtray"><div class="lbl">Skjulte moduler – dra inn, eller klikk for å legge til</div>'+(hidden.length?hidden.map(id=>'<button class="traychip" draggable="true" data-id="'+id+'" onclick="layoutAdd(\''+id+'\',\'a\')">+ '+MODREG[id].t+'</button>').join(''):'<span class="emptyrec">Alle moduler er i bruk.</span>')+'</div>';
+}
+function renderHome(){
+  const host=document.getElementById('homeHost');if(!host)return;
+  renderHomeActions();
+  const colHtml=(items,col)=>items.map(it=>{
+    const m=MODREG[it.id];if(!m)return '';
+    let inner='';try{inner=m.render(it.opts||{});}catch(e){inner='<div class="weekcard"><div class="emptyrec">Kunne ikke vise modulen.</div></div>';}
+    return '<div class="modwrap" data-id="'+it.id+'" data-col="'+col+'"'+(editMode?' draggable="true"':'')+'>'+(editMode?modBar(it):'')+inner+'</div>';
+  }).join('');
+  let html='<div class="weekcols'+(editMode?' homeedit':'')+'" id="homeCols"><div class="modcol" data-col="a">'+colHtml(LAYOUT.a,'a')+'</div><div class="modcol" data-col="b">'+colHtml(LAYOUT.b,'b')+'</div>';
+  if(editMode)html+=modTray();
+  html+='</div>';
+  host.innerHTML=html;
+  if(editMode)bindDnD();
+}
+function renderHomeActions(){
+  const el=document.getElementById('homeActions');if(!el)return;
+  if(!CANEDIT){el.innerHTML='';return;}
+  if(!editMode){el.innerHTML='<div class="homebar"><button class="btn solid" onclick="openEventForm()">'+ic('plus')+' Nytt arrangement</button><button class="btn" onclick="toggleConfig()">'+ic('edit')+' Konfigurer</button></div>';return;}
+  el.innerHTML='<div class="homebar"><button class="btn solid" onclick="saveConfig()">'+ic('check')+' Lagre</button><button class="btn" onclick="cancelConfig()">Avbryt</button><button class="btn" onclick="resetConfig()">'+ic('refresh')+' Nullstill til standard</button>'+(IS_SUPERADMIN?'<button class="btn" onclick="saveDefaultConfig()">'+ic('archive')+' Lagre som klubbstandard</button>':'')+'</div>';
+}
+function bindDnD(){
+  const host=document.getElementById('homeHost');
+  host.querySelectorAll('[draggable="true"]').forEach(el=>{el.addEventListener('dragstart',e=>{_drag=el.dataset.id;e.dataTransfer.effectAllowed='move';try{e.dataTransfer.setData('text/plain',el.dataset.id);}catch(_){}});});
+  host.querySelectorAll('.modcol').forEach(col=>{
+    col.addEventListener('dragover',e=>{e.preventDefault();col.classList.add('dragover');});
+    col.addEventListener('dragleave',()=>col.classList.remove('dragover'));
+    col.addEventListener('drop',e=>{e.preventDefault();col.classList.remove('dragover');if(!_drag)return;
+      const c=col.dataset.col;const wraps=[...col.querySelectorAll('.modwrap')];let idx=wraps.length;
+      for(let i=0;i<wraps.length;i++){const r=wraps[i].getBoundingClientRect();if(e.clientY<r.top+r.height/2){idx=i;break;}}
+      const f=findItem(_drag);const it=f?f.item:{id:_drag,opts:{}};
+      if(f){LAYOUT[f.col].splice(f.idx,1);if(f.col===c&&f.idx<idx)idx--;}
+      if(idx>LAYOUT[c].length)idx=LAYOUT[c].length;LAYOUT[c].splice(idx,0,it);_drag=null;renderHome();
+    });
+  });
+  const tr=host.querySelector('.modtray');
+  if(tr){tr.addEventListener('dragover',e=>e.preventDefault());tr.addEventListener('drop',e=>{e.preventDefault();if(_drag){layoutRemove(_drag);_drag=null;}});}
+}
+function toggleConfig(){editMode=true;renderHome();}
+function cancelConfig(){LAYOUT=JSON.parse(JSON.stringify(LAYOUT_SAVED));editMode=false;renderHome();}
+async function saveConfig(){try{await api('POST','/dashboard-layout',{layout:LAYOUT});LAYOUT_SAVED=JSON.parse(JSON.stringify(LAYOUT));editMode=false;renderHome();}catch(err){alert(err.message);}}
+async function resetConfig(){if(!confirm('Nullstille til standardoppsettet?'))return;try{await api('DELETE','/dashboard-layout');}catch(err){}LAYOUT=JSON.parse(JSON.stringify(LAYOUT_DEFAULT));LAYOUT_SAVED=JSON.parse(JSON.stringify(LAYOUT));editMode=false;renderHome();}
+async function saveDefaultConfig(){if(!confirm('Lagre dette som standardoppsett for hele klubben?'))return;try{await api('POST','/dashboard-layout/default',{layout:LAYOUT});LAYOUT_DEFAULT=JSON.parse(JSON.stringify(LAYOUT));alert('Lagret som standard for klubben.');}catch(err){alert(err.message);}}
+function openSettings(){
+  document.getElementById('modal').innerHTML=
+    KHEAD+'<h2>Innstillinger</h2><div class="sub">Klubbens oppsett</div></div>'+
+    '<div class="mbody"><div class="idearow"><span class="it">Treningstider<small>Hvem trener når – brukes på dashbordet</small></span><button class="btn sm" onclick="openTrainingMgr()">Åpne</button></div></div>';
+  document.getElementById('overlay').classList.add('open');
 }
 async function dagensTips(){
   const box=document.getElementById('tipBox');if(!box)return;
@@ -946,10 +1076,10 @@ async function saveKlubbliv(ev,id){ev.preventDefault();
     let card;
     if(id){card=await api('PUT','/klubbliv/'+id,body);const i=KLUBBLIV.findIndex(x=>x.id===id);if(i>=0)KLUBBLIV[i]=card;}
     else{card=await api('POST','/klubbliv',body);KLUBBLIV.push(card);}
-    closeModal();renderKlubbliv();renderWeek();
+    closeModal();renderKlubbliv();renderHome();
   }catch(err){alert(err.message);}
 }
-async function deleteKlubbliv(id){if(!confirm('Slette denne klubbliv-posten?'))return;try{await api('DELETE','/klubbliv/'+id);KLUBBLIV=KLUBBLIV.filter(x=>x.id!==id);renderKlubbliv();renderWeek();}catch(err){alert(err.message);}}
+async function deleteKlubbliv(id){if(!confirm('Slette denne klubbliv-posten?'))return;try{await api('DELETE','/klubbliv/'+id);KLUBBLIV=KLUBBLIV.filter(x=>x.id!==id);renderKlubbliv();renderHome();}catch(err){alert(err.message);}}
 function copyKlubbliv(id){const k=KLUBBLIV.find(x=>x.id===id);if(!k||!k.body)return;if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(k.body);}
 function openIdeaForm(id){
   const i=id?IDEAS.find(x=>x.id===id):null;
@@ -967,7 +1097,7 @@ function openIdeaForm(id){
 }
 async function saveIdea(ev,id){ev.preventDefault();
   const body={group:val('i_group'),title:val('i_title'),description:document.getElementById('i_desc').value.trim()||null,is_active:true};
-  try{let card;if(id){card=await api('PUT','/content-ideas/'+id,body);const i=IDEAS.findIndex(x=>x.id===id);if(i>=0)IDEAS[i]=card;}else{card=await api('POST','/content-ideas',body);IDEAS.push(card);}closeModal();renderKlubbliv();renderWeek();}catch(err){alert(err.message);}
+  try{let card;if(id){card=await api('PUT','/content-ideas/'+id,body);const i=IDEAS.findIndex(x=>x.id===id);if(i>=0)IDEAS[i]=card;}else{card=await api('POST','/content-ideas',body);IDEAS.push(card);}closeModal();renderKlubbliv();renderHome();}catch(err){alert(err.message);}
 }
 async function deleteIdea(id){if(!confirm('Slette denne idéen fra biblioteket?'))return;try{await api('DELETE','/content-ideas/'+id);IDEAS=IDEAS.filter(x=>x.id!==id);renderKlubbliv();}catch(err){alert(err.message);}}
 /* ---- TRENINGSTIDER ---- */
@@ -995,11 +1125,11 @@ function openTrainingForm(id){
 }
 async function saveTraining(ev,id){ev.preventDefault();
   const body={category_id:(+document.getElementById('t_cat').value||null),weekday:+document.getElementById('t_wd').value,start_time:val('t_start')||null,end_time:val('t_end')||null,location:val('t_loc')||null,group_label:val('t_group')||null};
-  try{let card;if(id){card=await api('PUT','/training-schedules/'+id,body);const i=TRAINING.findIndex(x=>x.id===id);if(i>=0)TRAINING[i]=card;}else{card=await api('POST','/training-schedules',body);TRAINING.push(card);}renderTrainingModal();renderWeek();}catch(err){alert(err.message);}
+  try{let card;if(id){card=await api('PUT','/training-schedules/'+id,body);const i=TRAINING.findIndex(x=>x.id===id);if(i>=0)TRAINING[i]=card;}else{card=await api('POST','/training-schedules',body);TRAINING.push(card);}renderTrainingModal();renderHome();}catch(err){alert(err.message);}
 }
-async function deleteTraining(id){if(!confirm('Slette denne treningstiden?'))return;try{await api('DELETE','/training-schedules/'+id);TRAINING=TRAINING.filter(x=>x.id!==id);renderTrainingModal();renderWeek();}catch(err){alert(err.message);}}
+async function deleteTraining(id){if(!confirm('Slette denne treningstiden?'))return;try{await api('DELETE','/training-schedules/'+id);TRAINING=TRAINING.filter(x=>x.id!==id);renderTrainingModal();renderHome();}catch(err){alert(err.message);}}
 
-renderStats();renderUrgent();renderUpcoming();populateFilters();renderWeek();
+populateFilters();renderHome();
 </script>
 @endverbatim
 </body>

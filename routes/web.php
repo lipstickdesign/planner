@@ -3,6 +3,7 @@
 use App\Http\Controllers\AiController;
 use App\Http\Controllers\ContentIdeaController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\DashboardLayoutController;
 use App\Http\Controllers\EventController;
 use App\Http\Controllers\KlubblivPostController;
 use App\Http\Controllers\TaskController;
@@ -94,8 +95,14 @@ Route::post('/reset-password', function (Request $request) {
 Route::middleware('auth')->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
+    // Personlig dashboard-oppsett (alle innloggede kan styre sitt eget)
+    Route::post('/dashboard-layout', [DashboardLayoutController::class, 'save']);
+    Route::delete('/dashboard-layout', [DashboardLayoutController::class, 'reset']);
+
     // Skrive-/adminoperasjoner – kun admin/superadmin
     Route::middleware('company.admin')->group(function () {
+        Route::post('/dashboard-layout/default', [DashboardLayoutController::class, 'saveDefault']);
+
         Route::post('/events', [EventController::class, 'store']);
         Route::put('/events/{event}', [EventController::class, 'update']);
         Route::delete('/events/{event}', [EventController::class, 'destroy']);
