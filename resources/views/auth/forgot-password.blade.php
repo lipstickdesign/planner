@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Glemt passord – Vivu Planner</title>
+<link rel="icon" type="image/jpeg" href="/favicon.jpg">
 <link href="https://fonts.googleapis.com/css?family=Ubuntu:300,400,500,700&display=swap" rel="stylesheet">
 <style>
 *{box-sizing:border-box}
