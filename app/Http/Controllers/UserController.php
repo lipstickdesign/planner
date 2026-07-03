@@ -48,6 +48,36 @@ class UserController extends Controller
         return response()->json(['ok' => true]);
     }
 
+    public function update(Request $request, User $user)
+    {
+        $data = $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'email' => ['required', 'email', 'max:255', Rule::unique('users', 'email')->ignore($user->id)],
+            'title' => ['nullable', 'string', 'max:255'],
+            'area' => ['nullable', 'string', 'max:255'],
+            'role' => ['nullable', Rule::in(['admin', 'medlem'])],
+        ]);
+
+        $user->name = $data['name'];
+        $user->email = $data['email'];
+        $user->save();
+
+        $company = $this->company();
+        if ($company) {
+            $pivot = [
+                'title' => $data['title'] ?? null,
+                'area' => $data['area'] ?? null,
+            ];
+            // Rolle kan ikke endres for plattform-superadmin
+            if (! $user->is_platform_admin && ! empty($data['role'])) {
+                $pivot['role'] = $data['role'];
+            }
+            $company->users()->updateExistingPivot($user->id, $pivot);
+        }
+
+        return response()->json(['ok' => true]);
+    }
+
     public function resetPassword(Request $request, User $user)
     {
         $data = $request->validate(['password' => ['required', 'string', 'min:8']]);

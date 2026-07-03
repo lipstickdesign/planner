@@ -612,6 +612,7 @@ function renderTeam(){
         '<div class="pnm">'+u.name+' '+roleBadge+'</div>'+
         '<div class="pdet">✉️ '+u.email+(u.title?'<br>📌 '+u.title:'')+(u.area?'<br>🗂 '+u.area:'')+'</div>'+
         '<div class="pact">'+
+          '<button class="btn sm" onclick="openUserEdit('+u.id+')">✏️ Rediger</button>'+
           '<button class="btn sm" onclick="resetUserPassword('+u.id+',\''+esc(u.name).replace(/\x27/g,"")+'\')">🔑 Nullstill passord</button>'+
           (u.is_platform_admin?'':'<button class="btn sm" onclick="toggleRole('+u.id+',\''+(u.role==='admin'?'medlem':'admin')+'\')">'+(u.role==='admin'?'↓ Gjør til medlem':'↑ Gjør til admin')+'</button>')+
           (u.is_platform_admin?'':'<button class="btn sm" style="color:#b23535" onclick="removeUser('+u.id+',\''+esc(u.name).replace(/\x27/g,"")+'\')">Fjern</button>')+
@@ -635,6 +636,36 @@ function openUserForm(){
 async function saveUserForm(ev){ev.preventDefault();
   const body={name:val('u_name'),email:val('u_email'),role:val('u_role'),title:val('u_title')||null,area:val('u_area')||null,password:document.getElementById('u_pass').value};
   try{await api('POST','/users',body);alert('Bruker opprettet. Last siden på nytt for å se den i lista.');closeModal();}catch(err){alert(err.message);}
+}
+function openUserEdit(id){
+  const u=TEAM.find(x=>x.id===id);if(!u)return;
+  const isSuper=u.is_platform_admin;
+  const roleField=isSuper
+    ?'<input value="Superadmin" disabled>'
+    :'<select id="e_role"><option value="medlem">Medlem (kun se & kopiere)</option><option value="admin">Admin (kan redigere alt)</option></select>';
+  document.getElementById('modal').innerHTML=
+    '<div class="head" style="background:linear-gradient(135deg,var(--flik-blue),var(--flik-blue-deep))"><button class="close" onclick="closeModal()">×</button><h2>Rediger bruker</h2><div class="sub">Endre navn, e-post, rolle og ansvar</div></div>'+
+    '<div class="mbody"><form class="f" onsubmit="saveUserEdit(event,'+id+')">'+
+      '<div class="two"><div><label>Navn *</label><input id="e_name" required></div><div><label>E-post *</label><input id="e_email" type="email" required></div></div>'+
+      '<div class="two"><div><label>Rolle</label>'+roleField+'</div><div><label>Tittel</label><input id="e_title" placeholder="f.eks. Daglig leder"></div></div>'+
+      '<label>Ansvarsområde</label><input id="e_area" placeholder="f.eks. Fotball">'+
+      '<div class="actions"><button type="button" class="btn" onclick="closeModal()">Avbryt</button><button class="btn solid" type="submit">Lagre endringer</button></div>'+
+    '</form></div>';
+  document.getElementById('overlay').classList.add('open');
+  document.getElementById('e_name').value=u.name;
+  document.getElementById('e_email').value=u.email;
+  document.getElementById('e_title').value=u.title||'';
+  document.getElementById('e_area').value=u.area||'';
+  if(!isSuper)document.getElementById('e_role').value=(u.role==='admin'?'admin':'medlem');
+}
+async function saveUserEdit(ev,id){ev.preventDefault();
+  const u=TEAM.find(x=>x.id===id);
+  const body={name:val('e_name'),email:val('e_email'),title:val('e_title')||null,area:val('e_area')||null};
+  if(u&&!u.is_platform_admin)body.role=val('e_role');
+  try{await api('PUT','/users/'+id,body);
+    if(u){u.name=body.name;u.email=body.email;u.title=body.title;u.area=body.area;if(body.role)u.role=body.role;}
+    closeModal();renderTeam();
+  }catch(err){alert(err.message);}
 }
 async function resetUserPassword(id,name){
   const pw=prompt('Nytt passord for '+name+' (minst 8 tegn):');

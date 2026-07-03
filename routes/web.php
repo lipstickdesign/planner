@@ -108,6 +108,7 @@ Route::middleware('auth')->group(function () {
 
         // Brukeradministrasjon
         Route::post('/users', [UserController::class, 'store']);
+        Route::put('/users/{user}', [UserController::class, 'update']);
         Route::post('/users/{user}/reset-password', [UserController::class, 'resetPassword']);
         Route::put('/users/{user}/role', [UserController::class, 'updateRole']);
         Route::delete('/users/{user}', [UserController::class, 'destroy']);
