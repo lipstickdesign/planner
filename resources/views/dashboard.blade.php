@@ -62,10 +62,18 @@ main.wrap{padding:44px 28px 90px}.view{display:none}.view.active{display:block}
 .st-avlyst{background:#eceff2;color:#69788a}.st-mangler{background:#fde3e3;color:#b23535}
 .st-godkjent{background:#dff3e4;color:#1f7a42}.st-tilgodkj{background:#fdf0d6;color:#9a6b00}
 .wheelwrap{display:grid;grid-template-columns:1fr 320px;gap:24px;align-items:start}
-.wheelcard{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);border:1px solid var(--line);padding:16px}
+.wheelcard{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);border:1px solid var(--line);padding:16px;position:relative}
+.wheeltip{position:absolute;pointer-events:none;background:#1c3155;color:#fff;font-size:12px;padding:7px 11px;border-radius:9px;box-shadow:0 8px 22px rgba(20,40,80,.28);opacity:0;transition:opacity .12s;white-space:nowrap;z-index:5;max-width:240px}
+.wheeltip.on{opacity:1}
+.wheeltip .tt{font-weight:600}
+.wheeltip .td{color:#cfe0f2;font-size:11px;margin-top:1px}
 svg.wheel{width:100%;height:auto;display:block}
 .legend{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);border:1px solid var(--line);padding:22px 22px}
 .legend h4{margin:0 0 14px;font-size:14px}
+.legendhead{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:14px}
+.legendhead h4{margin:0}
+.toggleall{font-family:inherit;font-size:12px;font-weight:500;color:var(--flik-blue);background:#f1f6fc;border:1px solid #dbe7f5;border-radius:8px;padding:5px 10px;cursor:pointer;white-space:nowrap}
+.toggleall:hover{background:#e7f0fb}
 .legend .item{display:flex;align-items:center;gap:9px;font-size:13px;padding:6px 0;cursor:pointer;border-radius:6px}
 .legend .item:hover{background:#f5f8fc}.legend .item.off{opacity:.32}
 .legend .sw{width:12px;height:12px;border-radius:3px;flex:none}.legend .c{margin-left:auto;font-size:12px;color:var(--ink-soft)}
@@ -210,7 +218,7 @@ form.f .actions .btn{padding:11px 22px;font-size:14px}
     <div class="viewhead"><h2>Årshjul 2026</h2>@if($canEdit)<button class="btn solid" onclick="openEventForm()">＋ Nytt arrangement</button>@endif</div>
     <div class="note">Klikk en prikk i hjulet eller en idrett i forklaringen for å filtrere. Årlige, gjentakende arrangement er merket med et eget ikon.</div>
     <div class="wheelwrap">
-      <div class="wheelcard"><div id="wheelHost"></div><div class="wheel-hint" id="wheelHint"></div></div>
+      <div class="wheelcard"><div id="wheelHost"></div><div class="wheel-hint" id="wheelHint"></div><div id="wheelTip" class="wheeltip"></div></div>
       <div class="legend" id="legend"></div>
     </div>
   </section>
@@ -342,19 +350,40 @@ function renderWheel(){
       const am=((+m+(n===1?0.5:(0.18+0.64*i/Math.max(1,n-1))))*30-90)*Math.PI/180;
       const rr=rI+30+(i%3)*30;
       const px=cx+rr*Math.cos(am),py=cy+rr*Math.sin(am);
-      svg+='<circle cx="'+px+'" cy="'+py+'" r="8.5" fill="'+col(e)+'" stroke="#fff" stroke-width="2" style="cursor:pointer" onclick="openEvent('+e.id+')"><title>'+e.title+' · '+fmt(e.date)+'</title></circle>';
+      svg+='<circle cx="'+px+'" cy="'+py+'" r="8.5" fill="'+col(e)+'" stroke="#fff" stroke-width="2" style="cursor:pointer" onclick="openEvent('+e.id+')" onmousemove="wheelTip(event,'+e.id+')" onmouseleave="hideWheelTip()"></circle>';
     });
   });
   svg+='</svg>';
   document.getElementById('wheelHost').innerHTML=svg;
 }
+function wheelTip(ev,id){
+  const e=DATA.find(x=>x.id===id);if(!e)return;
+  const tip=document.getElementById('wheelTip');if(!tip)return;
+  const box=tip.parentElement.getBoundingClientRect();
+  tip.innerHTML='<div class="tt">'+esc(e.title)+'</div><div class="td">'+e.sport+' · '+fmt(e.date)+'</div>';
+  tip.classList.add('on');
+  let x=ev.clientX-box.left+14, y=ev.clientY-box.top+14;
+  if(x+tip.offsetWidth>box.width-6)x=ev.clientX-box.left-tip.offsetWidth-12;
+  tip.style.left=x+'px';tip.style.top=y+'px';
+}
+function hideWheelTip(){const t=document.getElementById('wheelTip');if(t)t.classList.remove('on');}
 function renderLegend(){
   const counts={},colors={};
   DATA.forEach(e=>{counts[e.sport]=(counts[e.sport]||0)+1;colors[e.sport]=col(e);});
-  document.getElementById('legend').innerHTML='<h4>Idretter / grupper</h4>'+Object.keys(counts).sort().map(s=>
-    '<div class="item '+(hidden.has(s)?'off':'')+'" onclick="toggleSport(\''+s.replace(/'/g,"\\'")+'\')"><span class="sw" style="background:'+colors[s]+'"></span>'+s+'<span class="c">'+counts[s]+'</span></div>').join('');
+  const keys=Object.keys(counts).sort();
+  const allHidden=keys.length>0&&keys.every(s=>hidden.has(s));
+  document.getElementById('legend').innerHTML=
+    '<div class="legendhead"><h4>Idretter / grupper</h4><button class="toggleall" onclick="toggleAllSports()">'+(allHidden?'Vis alle':'Vis ingen')+'</button></div>'+
+    keys.map(s=>
+      '<div class="item '+(hidden.has(s)?'off':'')+'" onclick="toggleSport(\''+s.replace(/'/g,"\\'")+'\')"><span class="sw" style="background:'+colors[s]+'"></span>'+s+'<span class="c">'+counts[s]+'</span></div>').join('');
 }
 function toggleSport(s){hidden.has(s)?hidden.delete(s):hidden.add(s);renderWheel();renderLegend();}
+function toggleAllSports(){
+  const keys=Object.keys(DATA.reduce((a,e)=>{a[e.sport]=1;return a;},{}));
+  const allHidden=keys.length>0&&keys.every(s=>hidden.has(s));
+  if(allHidden){hidden.clear();}else{keys.forEach(s=>hidden.add(s));}
+  renderWheel();renderLegend();
+}
 
 /* LIST */
 function populateFilters(){
