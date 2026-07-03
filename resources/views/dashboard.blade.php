@@ -109,6 +109,7 @@ svg.wheel{width:100%;height:auto;display:block}
 .idealib h4{margin:0 0 10px;font-size:14px;overflow:hidden}
 .idearow{display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid #eef2f7;font-size:13px}
 .idearow:last-child{border-bottom:none}.idearow .it{flex:1;min-width:0}
+.idearow .gpill{width:104px;text-align:center;box-sizing:border-box;flex:none}
 .idearow .it small{color:var(--ink-soft);display:block;font-size:12px}
 .dchks{display:flex;flex-wrap:wrap;gap:8px 16px;margin-top:4px}
 .dchk{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--ink)}
