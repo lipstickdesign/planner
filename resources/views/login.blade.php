@@ -43,7 +43,6 @@ button:hover{background:#2557b8}
     <button type="submit">Logg inn</button>
   </form>
 
-  <div class="hint">Demo: roger@havdurdesign.no · passord: <b>password</b></div>
 </div>
 </body>
 </html>
