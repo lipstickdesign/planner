@@ -4,12 +4,16 @@ namespace App\Http\Controllers;
 
 use App\Models\Category;
 use App\Models\Company;
+use App\Models\ContentIdea;
 use App\Models\Destination;
 use App\Models\Event;
+use App\Models\KlubblivPost;
+use App\Models\TrainingSchedule;
+use App\Services\WeatherService;
 
 class DashboardController extends Controller
 {
-    public function index()
+    public function index(WeatherService $weather)
     {
         $company = Company::where('slug', 'flik')->first();
 
@@ -37,6 +41,24 @@ class DashboardController extends Controller
             ])->values()
             : collect();
 
+        $destMap = Destination::pluck('name', 'id')->all();
+
+        $klubbliv = KlubblivPost::orderBy('publish_date')
+            ->get()
+            ->map(fn (KlubblivPost $p) => $p->card($destMap))
+            ->values();
+
+        $ideas = ContentIdea::orderBy('group')->orderBy('sort_order')
+            ->get()
+            ->map(fn (ContentIdea $i) => $i->card())
+            ->values();
+
+        $training = TrainingSchedule::with('category')
+            ->orderBy('weekday')->orderBy('start_time')
+            ->get()
+            ->map(fn (TrainingSchedule $t) => $t->card())
+            ->values();
+
         return view('dashboard', [
             'company' => $company,
             'events' => $events,
@@ -46,6 +68,10 @@ class DashboardController extends Controller
             'members' => $company ? $company->users()->orderBy('name')->get(['users.id', 'name']) : collect(),
             'destinations' => Destination::orderBy('name')->get(['id', 'name']),
             'teamUsers' => $teamUsers,
+            'klubbliv' => $klubbliv,
+            'ideas' => $ideas,
+            'training' => $training,
+            'weather' => $weather->week(),
         ]);
     }
 }

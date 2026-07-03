@@ -1,9 +1,12 @@
 <?php
 
 use App\Http\Controllers\AiController;
+use App\Http\Controllers\ContentIdeaController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\EventController;
+use App\Http\Controllers\KlubblivPostController;
 use App\Http\Controllers\TaskController;
+use App\Http\Controllers\TrainingScheduleController;
 use App\Http\Controllers\UserController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -112,5 +115,20 @@ Route::middleware('auth')->group(function () {
         Route::post('/users/{user}/reset-password', [UserController::class, 'resetPassword']);
         Route::put('/users/{user}/role', [UserController::class, 'updateRole']);
         Route::delete('/users/{user}', [UserController::class, 'destroy']);
+
+        // Klubbliv-bibliotek (innholdsidéer)
+        Route::post('/content-ideas', [ContentIdeaController::class, 'store']);
+        Route::put('/content-ideas/{contentIdea}', [ContentIdeaController::class, 'update']);
+        Route::delete('/content-ideas/{contentIdea}', [ContentIdeaController::class, 'destroy']);
+
+        // Klubbliv-poster (planlagt innhold utenom arrangement)
+        Route::post('/klubbliv', [KlubblivPostController::class, 'store']);
+        Route::put('/klubbliv/{klubblivPost}', [KlubblivPostController::class, 'update']);
+        Route::delete('/klubbliv/{klubblivPost}', [KlubblivPostController::class, 'destroy']);
+
+        // Treningstider
+        Route::post('/training-schedules', [TrainingScheduleController::class, 'store']);
+        Route::put('/training-schedules/{trainingSchedule}', [TrainingScheduleController::class, 'update']);
+        Route::delete('/training-schedules/{trainingSchedule}', [TrainingScheduleController::class, 'destroy']);
     });
 });

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Event;
 use App\Models\PostType;
+use App\Services\PublishingPlanner;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 
@@ -55,18 +56,23 @@ class EventController extends Controller
      * Foreslå en publiseringsplan: lager oppgaver ut fra posttype-biblioteket,
      * med datoer beregnet fra eventdatoen (f.eks. teaser −35 dager, påminnelse −7).
      */
-    public function generatePlan(Event $event)
+    public function generatePlan(Event $event, PublishingPlanner $planner)
     {
         $types = PostType::whereNotNull('default_offset_days')
             ->orderBy('sort_order')
             ->get();
 
         $order = (int) ($event->tasks()->max('sort_order') ?? 0);
+        $planner->loadCalendar();
 
         foreach ($types as $pt) {
-            $date = $event->event_date
-                ? $event->event_date->copy()->addDays($pt->default_offset_days)
-                : null;
+            $date = null;
+            if ($event->event_date) {
+                // Ønsket dato fra posttypens standard-offset, deretter spredt
+                // kalender-bevisst så det ikke klumper med resten av planen.
+                $desired = $event->event_date->copy()->addDays($pt->default_offset_days);
+                $date = $planner->suggestDate($desired);
+            }
 
             $event->tasks()->create([
                 'post_type_id' => $pt->id,

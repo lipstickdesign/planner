@@ -74,6 +74,45 @@ svg.wheel{width:100%;height:auto;display:block}
 .legendhead h4{margin:0}
 .toggleall{font-family:inherit;font-size:12px;font-weight:500;color:var(--flik-blue);background:#f1f6fc;border:1px solid #dbe7f5;border-radius:8px;padding:5px 10px;cursor:pointer;white-space:nowrap}
 .toggleall:hover{background:#e7f0fb}
+/* Denne uka + Klubbliv */
+.weekcard{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);border:1px solid var(--line);padding:20px 22px;margin-bottom:20px}
+.weekcard h3{margin:0 0 14px;font-size:15px;display:flex;align-items:center;gap:8px}
+.weekcard h3 .ct{font-size:11px;font-weight:600;color:#fff;background:var(--flik-blue);border-radius:20px;padding:1px 9px}
+.weekcard h3 .ct.warn{background:var(--amber)}.weekcard h3 .ct.red{background:var(--red)}.weekcard h3 .ct.gap{background:var(--teal)}
+.weatherstrip{display:flex;gap:10px;flex-wrap:wrap}
+.wday{flex:1;min-width:76px;background:#f6f9fd;border:1px solid var(--line);border-radius:12px;padding:10px 8px;text-align:center}
+.wday .wd{font-size:11px;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.4px}
+.wday .wt{font-size:18px;font-weight:700;margin:3px 0 1px}
+.wday .wl{font-size:10.5px;color:var(--ink-soft);line-height:1.25}
+.wday.today{border-color:var(--flik-blue);background:#eef3fd}
+.todayrow{display:flex;gap:24px;flex-wrap:wrap}
+.todaycol{flex:1;min-width:220px}
+.todaycol .lbl{font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:var(--ink-soft);margin-bottom:6px}
+.trainline{display:flex;align-items:center;gap:8px;font-size:13px;padding:4px 0}
+.trainline .sw{width:10px;height:10px;border-radius:3px;flex:none}
+.rrow{display:flex;align-items:center;gap:12px;padding:11px 0;border-bottom:1px solid var(--line)}
+.rrow:last-child{border-bottom:none}
+.rrow .rd{font-size:12px;font-weight:600;color:var(--flik-blue);white-space:nowrap;min-width:58px}
+.rrow .rt{flex:1;min-width:0;font-size:13.5px;font-weight:500}
+.rrow .rt small{display:block;font-weight:400;color:var(--ink-soft);font-size:12px;margin-top:1px}
+.rrow .ra{flex:none}
+.emptyrec{font-size:13px;color:var(--ink-soft);padding:4px 0}
+.kpost{display:flex;align-items:center;gap:12px;padding:13px 16px;border:1px solid var(--line);border-radius:12px;background:#fff;margin-bottom:10px}
+.kpost .kd{font-size:12px;font-weight:600;color:var(--flik-blue);min-width:58px;white-space:nowrap}
+.kpost .kt{flex:1;min-width:0}
+.kpost .kt .knm{font-weight:500;font-size:14px}
+.kpost .kt .kmeta{font-size:12px;color:var(--ink-soft);margin-top:1px}
+.gpill{display:inline-block;font-size:10.5px;font-weight:600;text-transform:uppercase;letter-spacing:.3px;padding:2px 8px;border-radius:20px;background:#eef2f7;color:#5b6b86}
+.gpill.verving{background:#fdeee7;color:#b4531f}.gpill.engasjement{background:#e9f2fb;color:#1c5fa8}.gpill.praktisk{background:#e7f3ef;color:#177a5f}
+.gpill.motivasjon{background:#f3ecfb;color:#7b3fb0}.gpill.sesong{background:#fdf3d8;color:#8a6300}.gpill.medlem{background:#fbe9f1;color:#a41f5f}
+.idealib{margin-top:18px;background:#f7f9fc;border:1px solid var(--line);border-radius:14px;padding:16px 18px}
+.idealib h4{margin:0 0 10px;font-size:14px;overflow:hidden}
+.idearow{display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid #eef2f7;font-size:13px}
+.idearow:last-child{border-bottom:none}.idearow .it{flex:1;min-width:0}
+.idearow .it small{color:var(--ink-soft);display:block;font-size:12px}
+.dchks{display:flex;flex-wrap:wrap;gap:8px 16px;margin-top:4px}
+.dchk{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--ink)}
+.dchk input{width:auto}
 .legend .item{display:flex;align-items:center;gap:9px;font-size:13px;padding:6px 0;cursor:pointer;border-radius:6px}
 .legend .item:hover{background:#f5f8fc}.legend .item.off{opacity:.32}
 .legend .sw{width:12px;height:12px;border-radius:3px;flex:none}.legend .c{margin-left:auto;font-size:12px;color:var(--ink-soft)}
@@ -198,15 +237,21 @@ form.f .actions .btn{padding:11px 22px;font-size:14px}
 </div>
 <div class="tabbar">
   <div class="tabs">
-    <button class="tab active" data-view="dash">Dashboard</button>
+    <button class="tab active" data-view="week">Denne uka</button>
+    <button class="tab" data-view="dash">Dashboard</button>
     <button class="tab" data-view="wheel">Årshjul</button>
     <button class="tab" data-view="list">Eventliste</button>
+    <button class="tab" data-view="klubbliv">Klubbliv</button>
     @if($canEdit)<button class="tab" data-view="team">Brukere</button>@endif
   </div>
 </div>
 
 <main class="wrap">
-  <section class="view active" id="view-dash">
+  <section class="view active" id="view-week">
+    <div class="viewhead"><h2>Denne uka anbefaler Vivu</h2>@if($canEdit)<button class="btn" onclick="openTrainingMgr()"><svg class="ico" viewBox="0 0 24 24"><path d="M4 7a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2l0 -12"/><path d="M16 3l0 4M8 3l0 4M4 11l16 0"/></svg> Treningstider</button>@endif</div>
+    <div id="weekHost"></div>
+  </section>
+  <section class="view" id="view-dash">
     <div class="viewhead"><h2>Dashboard 2026</h2>@if($canEdit)<button class="btn solid" onclick="openEventForm()">＋ Nytt arrangement</button>@endif</div>
     <div class="stats" id="statRow"></div>
     <div class="grid2">
@@ -232,6 +277,11 @@ form.f .actions .btn{padding:11px 22px;font-size:14px}
     </div>
     <div id="listHost"></div>
   </section>
+  <section class="view" id="view-klubbliv">
+    <div class="viewhead"><h2>Klubbliv</h2>@if($canEdit)<button class="btn solid" onclick="openKlubblivForm(null)"><svg class="ico" viewBox="0 0 24 24"><path d="M12 5l0 14M5 12l14 0"/></svg> Ny klubbliv-post</button>@endif</div>
+    <div class="note">Innhold mellom arrangementene – verving, engasjement og praktisk info. Nederst kan du redigere idé-biblioteket.</div>
+    <div id="klubblivHost"></div>
+  </section>
   @if($canEdit)
   <section class="view" id="view-team">
     <div class="viewhead"><h2>Brukere &amp; tilgang</h2><button class="btn solid" onclick="openUserForm()">＋ Legg til bruker</button></div>
@@ -252,6 +302,10 @@ window.MEMBERS = @json($members);
 window.DESTS = @json($destinations);
 window.CANEDIT = @json($canEdit);
 window.TEAM = @json($teamUsers);
+window.KLUBBLIV = @json($klubbliv);
+window.IDEAS = @json($ideas);
+window.TRAINING = @json($training);
+window.WEATHER = @json($weather);
 window.CSRF = '{{ csrf_token() }}';
 </script>
 @verbatim
@@ -508,8 +562,10 @@ document.querySelectorAll('.tab').forEach(t=>t.addEventListener('click',()=>{
   document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
   document.querySelectorAll('.view').forEach(x=>x.classList.remove('active'));
   t.classList.add('active');document.getElementById('view-'+t.dataset.view).classList.add('active');
+  if(t.dataset.view==='week')renderWeek();
   if(t.dataset.view==='wheel'){renderWheel();renderLegend();}
   if(t.dataset.view==='list')renderList();
+  if(t.dataset.view==='klubbliv')renderKlubbliv();
   if(t.dataset.view==='team')renderTeam();
 }));
 ['search','fSport','fStatus'].forEach(id=>document.getElementById(id).addEventListener('input',renderList));
@@ -736,7 +792,196 @@ async function removeUser(id,name){
   try{await api('DELETE','/users/'+id);const i=TEAM.findIndex(x=>x.id===id);if(i>=0)TEAM.splice(i,1);renderTeam();}catch(err){alert(err.message);}
 }
 
-renderStats();renderUrgent();renderUpcoming();populateFilters();
+/* ===== DENNE UKA + KLUBBLIV + TRENINGSTIDER ===== */
+let KLUBBLIV=window.KLUBBLIV||[], IDEAS=window.IDEAS||[], TRAINING=window.TRAINING||[], WEATHER=window.WEATHER||[];
+const WD=['Mandag','Tirsdag','Onsdag','Torsdag','Fredag','Lørdag','Søndag'];
+const isoDow=d=>{const g=new Date(d).getDay();return g===0?7:g;};
+function ymd(d){const x=new Date(d);return x.getFullYear()+'-'+String(x.getMonth()+1).padStart(2,'0')+'-'+String(x.getDate()).padStart(2,'0');}
+function addDays(d,n){const x=new Date(d);x.setHours(0,0,0,0);x.setDate(x.getDate()+n);return x;}
+function startOfWeek(d){const x=new Date(d);x.setHours(0,0,0,0);const g=(x.getDay()+6)%7;x.setDate(x.getDate()-g);return x;}
+function isoWeek(d){const x=new Date(d);x.setHours(0,0,0,0);x.setDate(x.getDate()+3-((x.getDay()+6)%7));const w1=new Date(x.getFullYear(),0,4);return 1+Math.round(((x-w1)/86400000-3+((w1.getDay()+6)%7))/7);}
+function allPosts(){
+  const arr=[];
+  DATA.forEach(e=>(e.posts||[]).forEach(p=>{if(p.date)arr.push({date:p.date,kind:'event',id:p.id,eventId:e.id,title:p.label||'Innlegg',ctx:e.title,channels:(p.pages||[]).join(' · '),status:p.status});}));
+  KLUBBLIV.forEach(k=>{if(k.date)arr.push({date:k.date,kind:'klubbliv',id:k.id,title:k.title,ctx:'Klubbliv',channels:(k.channels||[]).join(' · '),status:k.status});});
+  return arr;
+}
+function rrow(p){
+  const open=p.kind==='event'?'openEvent('+p.eventId+')':'openKlubblivForm('+p.id+')';
+  return '<div class="rrow"><span class="rd">'+fmt(p.date)+'</span><span class="rt">'+esc(p.title)+'<small>'+esc(p.ctx)+(p.channels?' · '+esc(p.channels):'')+'</small></span><span class="ra"><button class="btn sm" onclick="'+open+'">Åpne</button></span></div>';
+}
+function renderWeek(){
+  const host=document.getElementById('weekHost');if(!host)return;
+  const today=new Date();today.setHours(0,0,0,0);
+  const in7=addDays(today,7);
+  let html='';
+  if(WEATHER&&WEATHER.length){
+    html+='<div class="weekcard"><h3>'+ic('info')+' Været i Farsund</h3><div class="weatherstrip">'+
+      WEATHER.slice(0,7).map(w=>'<div class="wday'+(ymd(w.date)===ymd(today)?' today':'')+'"><div class="wd">'+WD[isoDow(w.date)-1].slice(0,3)+'</div><div class="wt">'+(w.temp!=null?w.temp+'°':'–')+'</div><div class="wl">'+esc(w.label||'')+'</div></div>').join('')+
+      '</div></div>';
+  }
+  const dow=isoDow(today);
+  const todayTrain=TRAINING.filter(t=>t.weekday===dow);
+  const wToday=(WEATHER||[]).find(w=>ymd(w.date)===ymd(today));
+  html+='<div class="weekcard"><h3>'+ic('calendar')+' I dag – '+WD[dow-1]+'</h3><div class="todayrow">'+
+    '<div class="todaycol"><div class="lbl">Trener i dag</div>'+
+      (todayTrain.length?todayTrain.map(t=>'<div class="trainline"><span class="sw" style="background:'+(t.color||'#8795a3')+'"></span>'+esc(t.category||t.group||'Trening')+(t.start?' · '+t.start+(t.end?'–'+t.end:''):'')+(t.location?' · '+esc(t.location):'')+'</div>').join(''):'<div class="emptyrec">Ingen trening registrert i dag.</div>')+
+    '</div>'+
+    '<div class="todaycol"><div class="lbl">Vær i dag</div>'+(wToday?'<div class="trainline">'+(wToday.temp!=null?wToday.temp+'° · ':'')+esc(wToday.label||'')+'</div>':'<div class="emptyrec">Ingen værdata akkurat nå.</div>')+'</div>'+
+  '</div></div>';
+  const posts=allPosts();
+  const due=posts.filter(p=>{const d=addDays(p.date,0);return d>=addDays(today,-2)&&d<=in7&&p.status!=='Publisert';}).sort((a,b)=>new Date(a.date)-new Date(b.date));
+  html+='<div class="weekcard"><h3>'+ic('sparkle')+' Publiser nå <span class="ct">'+due.length+'</span></h3>'+
+    (due.length?due.map(rrow).join(''):'<div class="emptyrec">Ingenting som haster de neste dagene – fint å ligge i forkant!</div>')+'</div>';
+  const noplan=DATA.filter(e=>{const dd=daysTo(e.date);return dd>=0&&dd<=90&&(!e.posts||!e.posts.length)&&e.type!=='Administrasjon'&&!/ikke markedsf|ikke skal/i.test(e.notat||'');}).sort((a,b)=>new Date(a.date)-new Date(b.date));
+  if(noplan.length){
+    html+='<div class="weekcard"><h3>'+ic('calendar')+' Arrangement uten plan <span class="ct warn">'+noplan.length+'</span></h3>'+
+      noplan.map(e=>'<div class="rrow"><span class="rd">'+fmt(e.date)+'</span><span class="rt">'+esc(e.title)+'<small>'+esc(e.sport||'')+'</small></span><span class="ra"><button class="btn sm" onclick="openEvent('+e.id+')">Åpne</button></span></div>').join('')+'</div>';
+  }
+  const cnt={};posts.forEach(p=>{const d=addDays(p.date,0);if(d>=today&&d<=addDays(today,28)){const k=ymd(p.date);cnt[k]=(cnt[k]||0)+1;}});
+  const over=Object.keys(cnt).filter(k=>cnt[k]>=2).sort();
+  if(over.length){
+    html+='<div class="weekcard"><h3>'+ic('info')+' Travle dager – vurder å spre <span class="ct red">'+over.length+'</span></h3>'+
+      over.map(k=>'<div class="rrow"><span class="rd">'+fmt(k)+'</span><span class="rt">'+cnt[k]+' poster samme dag<small>Vurder å flytte en til en roligere dag</small></span></div>').join('')+'</div>';
+  }
+  const gaps=[];const actIdeas=IDEAS.filter(i=>i.is_active!==false);
+  for(let wk=0;wk<6;wk++){
+    const ws=addDays(startOfWeek(today),wk*7);const we=addDays(ws,6);
+    const has=posts.some(p=>{const d=addDays(p.date,0);return d>=ws&&d<=we;});
+    if(!has){const idea=actIdeas.length?actIdeas[gaps.length%actIdeas.length]:null;gaps.push({ws,we,idea});}
+  }
+  if(gaps.length){
+    html+='<div class="weekcard"><h3>'+ic('doc')+' Tomrom – fyll med Klubbliv <span class="ct gap">'+gaps.length+'</span></h3>'+
+      gaps.map(g=>'<div class="rrow"><span class="rd">Uke '+isoWeek(g.ws)+'</span><span class="rt">'+fmt(ymd(g.ws))+'–'+fmt(ymd(g.we))+': ingen innhold planlagt'+(g.idea?'<small>Forslag: '+esc(g.idea.title)+'</small>':'')+'</span>'+(CANEDIT&&g.idea?'<span class="ra"><button class="btn sm" onclick="klubblivFromIdea('+g.idea.id+',\''+ymd(addDays(g.ws,2))+'\')">Lag post</button></span>':'')+'</div>').join('')+'</div>';
+  }
+  host.innerHTML=html;
+}
+/* ---- KLUBBLIV ---- */
+function renderKlubbliv(){
+  const host=document.getElementById('klubblivHost');if(!host)return;
+  let html='';
+  const posts=[...KLUBBLIV].sort((a,b)=>(a.date||'9999-99-99')>(b.date||'9999-99-99')?1:-1);
+  html+='<div class="sectionlabel" style="margin:0 0 12px">Planlagte klubbliv-poster <span class="count">'+posts.length+'</span></div>';
+  html+=posts.length?posts.map(k=>{
+    const g=k.idea_group||'';
+    return '<div class="kpost"><span class="kd">'+(k.date?fmt(k.date):'—')+'</span><span class="kt"><div class="knm">'+esc(k.title)+(g?' <span class="gpill '+g+'">'+g+'</span>':'')+'</div><div class="kmeta">'+((k.channels&&k.channels.length)?esc(k.channels.join(' · ')):'Ingen kanal valgt')+' · '+esc(k.status||'planlagt')+'</div></span>'+
+      (CANEDIT?'<span style="display:flex;gap:6px">'+(k.body?'<button class="btn sm" onclick="copyKlubbliv('+k.id+')">'+ic('copy')+' Kopier</button>':'')+'<button class="btn sm" onclick="openKlubblivForm('+k.id+')">'+ic('edit')+' Rediger</button><button class="btn sm" style="color:#b23535" onclick="deleteKlubbliv('+k.id+')">'+ic('trash')+'</button></span>':'')+
+    '</div>';
+  }).join(''):'<div class="nopost">Ingen klubbliv-poster planlagt ennå.'+(CANEDIT?' Bruk «Ny klubbliv-post» eller forslagene i «Denne uka».':'')+'</div>';
+  if(CANEDIT){
+    html+='<div class="idealib"><h4>Idé-bibliotek <button class="btn sm" style="float:right" onclick="openIdeaForm(null)">'+ic('plus')+' Ny idé</button></h4>'+
+      (IDEAS.length?IDEAS.map(i=>'<div class="idearow"><span class="gpill '+i.group+'">'+i.group+'</span><span class="it">'+esc(i.title)+(i.description?'<small>'+esc(i.description)+'</small>':'')+'</span><button class="btn sm" onclick="klubblivFromIdea('+i.id+',null)">Bruk</button><button class="btn sm" onclick="openIdeaForm('+i.id+')">'+ic('edit')+'</button><button class="btn sm" style="color:#b23535" onclick="deleteIdea('+i.id+')">'+ic('trash')+'</button></div>').join(''):'<div class="emptyrec">Ingen idéer ennå.</div>')+
+    '</div>';
+  }
+  host.innerHTML=html;
+}
+const KHEAD='<div class="head" style="background:linear-gradient(135deg,var(--flik-blue),var(--flik-blue-deep))"><button class="close" onclick="closeModal()">×</button>';
+function openKlubblivForm(id){
+  const k=id?KLUBBLIV.find(x=>x.id===id):null;
+  const ideaOpts='<option value="">– ingen –</option>'+IDEAS.map(i=>'<option value="'+i.id+'">'+esc(i.title)+'</option>').join('');
+  const destChecks=DESTS.map(d=>'<label class="dchk"><input type="checkbox" value="'+d.id+'"> '+esc(d.name)+'</label>').join('');
+  document.getElementById('modal').innerHTML=
+    KHEAD+'<h2>'+(k?'Rediger klubbliv-post':'Ny klubbliv-post')+'</h2><div class="sub">Innhold mellom arrangementene</div></div>'+
+    '<div class="mbody"><form class="f" onsubmit="saveKlubbliv(event,'+(id||'null')+')">'+
+      '<div class="two"><div><label>Tittel *</label><input id="k_title" required></div><div><label>Fra idé (valgfritt)</label><select id="k_idea" onchange="klubblivIdeaPick()">'+ideaOpts+'</select></div></div>'+
+      '<div class="two"><div><label>Publiseringsdato <span style="color:var(--ink-soft);font-weight:400">(tom = foreslå selv)</span></label><input id="k_date" type="date"></div><div><label>Status</label><select id="k_status"><option value="planlagt">Planlagt</option><option value="under_arbeid">Under arbeid</option><option value="klar">Klar for publisering</option><option value="publisert">Publisert</option></select></div></div>'+
+      '<label>Kanaler</label><div class="dchks">'+(destChecks||'<span class="emptyrec">Ingen kanaler.</span>')+'</div>'+
+      '<label style="display:flex;align-items:center;justify-content:space-between;gap:8px">Tekst<span><button type="button" class="btn sm" id="kAiBtn" onclick="suggestKlubbliv()">'+ic('sparkle')+' Foreslå tekst</button></span></label><textarea id="k_body" placeholder="Skriv teksten, eller la AI foreslå ut fra idéen."></textarea>'+
+      '<div class="actions"><button type="button" class="btn" onclick="closeModal()">Avbryt</button><button class="btn solid" type="submit">Lagre</button></div>'+
+    '</form></div>';
+  document.getElementById('overlay').classList.add('open');
+  if(k){
+    document.getElementById('k_title').value=k.title;
+    document.getElementById('k_idea').value=k.content_idea_id||'';
+    if(k.date)document.getElementById('k_date').value=k.date;
+    if(k.status)document.getElementById('k_status').value=k.status;
+    if(k.body)document.getElementById('k_body').value=k.body;
+    (k.destination_ids||[]).forEach(did=>{const c=document.querySelector('#modal .dchks input[value="'+did+'"]');if(c)c.checked=true;});
+  }
+}
+function klubblivIdeaPick(){const id=+document.getElementById('k_idea').value;const i=IDEAS.find(x=>x.id===id);if(i&&!val('k_title'))document.getElementById('k_title').value=i.title;}
+function klubblivFromIdea(ideaId,date){
+  openKlubblivForm(null);
+  const i=IDEAS.find(x=>x.id===ideaId);
+  if(i){document.getElementById('k_idea').value=ideaId;document.getElementById('k_title').value=i.title;}
+  if(date)document.getElementById('k_date').value=date;
+}
+async function suggestKlubbliv(){
+  const btn=document.getElementById('kAiBtn');const title=val('k_title');
+  if(!title){alert('Skriv en tittel først.');return;}
+  const i=IDEAS.find(x=>x.id===(+document.getElementById('k_idea').value));
+  const draft=document.getElementById('k_body').value.trim();
+  if(btn){btn.disabled=true;btn.innerHTML=ic('sparkle')+' Skriver …';}
+  try{
+    const body={title:title,label:'Klubbliv',extra:(i&&i.description)?i.description:''};
+    if(draft)body.draft=draft;
+    const r=await api('POST','/ai/suggest',body);
+    document.getElementById('k_body').value=r.text||'';
+  }catch(err){alert(err.message);}
+  if(btn){btn.disabled=false;btn.innerHTML=ic('sparkle')+' Foreslå tekst';}
+}
+async function saveKlubbliv(ev,id){ev.preventDefault();
+  const dests=[...document.querySelectorAll('#modal .dchks input:checked')].map(c=>+c.value);
+  const body={title:val('k_title'),content_idea_id:(+document.getElementById('k_idea').value||null),publish_date:val('k_date')||null,status:val('k_status')||'planlagt',destination_ids:dests,body_draft:document.getElementById('k_body').value.trim()||null};
+  if(!body.publish_date)body.auto_date=true;
+  try{
+    let card;
+    if(id){card=await api('PUT','/klubbliv/'+id,body);const i=KLUBBLIV.findIndex(x=>x.id===id);if(i>=0)KLUBBLIV[i]=card;}
+    else{card=await api('POST','/klubbliv',body);KLUBBLIV.push(card);}
+    closeModal();renderKlubbliv();renderWeek();
+  }catch(err){alert(err.message);}
+}
+async function deleteKlubbliv(id){if(!confirm('Slette denne klubbliv-posten?'))return;try{await api('DELETE','/klubbliv/'+id);KLUBBLIV=KLUBBLIV.filter(x=>x.id!==id);renderKlubbliv();renderWeek();}catch(err){alert(err.message);}}
+function copyKlubbliv(id){const k=KLUBBLIV.find(x=>x.id===id);if(!k||!k.body)return;if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(k.body);}
+function openIdeaForm(id){
+  const i=id?IDEAS.find(x=>x.id===id):null;
+  const groups=['verving','engasjement','praktisk','motivasjon','sesong','medlem'];
+  const gOpts=groups.map(g=>'<option value="'+g+'">'+g+'</option>').join('');
+  document.getElementById('modal').innerHTML=
+    KHEAD+'<h2>'+(i?'Rediger idé':'Ny idé')+'</h2><div class="sub">Del av Klubbliv-biblioteket</div></div>'+
+    '<div class="mbody"><form class="f" onsubmit="saveIdea(event,'+(id||'null')+')">'+
+      '<div class="two"><div><label>Tittel *</label><input id="i_title" required></div><div><label>Gruppe</label><select id="i_group">'+gOpts+'</select></div></div>'+
+      '<label>Stikkord / brief til AI</label><textarea id="i_desc" placeholder="Hva skal posten handle om?"></textarea>'+
+      '<div class="actions"><button type="button" class="btn" onclick="closeModal()">Avbryt</button><button class="btn solid" type="submit">Lagre</button></div>'+
+    '</form></div>';
+  document.getElementById('overlay').classList.add('open');
+  if(i){document.getElementById('i_title').value=i.title;document.getElementById('i_group').value=i.group;document.getElementById('i_desc').value=i.description||'';}
+}
+async function saveIdea(ev,id){ev.preventDefault();
+  const body={group:val('i_group'),title:val('i_title'),description:document.getElementById('i_desc').value.trim()||null,is_active:true};
+  try{let card;if(id){card=await api('PUT','/content-ideas/'+id,body);const i=IDEAS.findIndex(x=>x.id===id);if(i>=0)IDEAS[i]=card;}else{card=await api('POST','/content-ideas',body);IDEAS.push(card);}closeModal();renderKlubbliv();renderWeek();}catch(err){alert(err.message);}
+}
+async function deleteIdea(id){if(!confirm('Slette denne idéen fra biblioteket?'))return;try{await api('DELETE','/content-ideas/'+id);IDEAS=IDEAS.filter(x=>x.id!==id);renderKlubbliv();}catch(err){alert(err.message);}}
+/* ---- TRENINGSTIDER ---- */
+function openTrainingMgr(){renderTrainingModal();document.getElementById('overlay').classList.add('open');}
+function renderTrainingModal(){
+  const rows=[...TRAINING].sort((a,b)=>a.weekday-b.weekday||String(a.start||'').localeCompare(String(b.start||'')));
+  const list=rows.length?rows.map(t=>'<div class="idearow"><span class="gpill" style="background:'+(t.color||'#8795a3')+';color:#fff">'+WD[t.weekday-1].slice(0,3)+'</span><span class="it">'+esc(t.category||t.group||'Trening')+'<small>'+(t.start?t.start+(t.end?'–'+t.end:''):'')+(t.location?' · '+esc(t.location):'')+'</small></span><button class="btn sm" onclick="openTrainingForm('+t.id+')">'+ic('edit')+'</button><button class="btn sm" style="color:#b23535" onclick="deleteTraining('+t.id+')">'+ic('trash')+'</button></div>').join(''):'<div class="emptyrec">Ingen treningstider lagt inn ennå.</div>';
+  document.getElementById('modal').innerHTML=
+    KHEAD+'<h2>Treningstider</h2><div class="sub">Brukes i «Denne uka» for å vise hvem som trener</div></div>'+
+    '<div class="mbody"><div style="text-align:right;margin-bottom:10px"><button class="btn solid sm" onclick="openTrainingForm(null)">'+ic('plus')+' Ny treningstid</button></div>'+list+'</div>';
+}
+function openTrainingForm(id){
+  const t=id?TRAINING.find(x=>x.id===id):null;
+  const catOpts='<option value="">– idrett –</option>'+CATS.map(c=>'<option value="'+c.id+'">'+esc(c.name)+'</option>').join('');
+  const wdOpts=WD.map((w,idx)=>'<option value="'+(idx+1)+'">'+w+'</option>').join('');
+  document.getElementById('modal').innerHTML=
+    KHEAD+'<h2>'+(t?'Rediger treningstid':'Ny treningstid')+'</h2><div class="sub">Treningstider</div></div>'+
+    '<div class="mbody"><form class="f" onsubmit="saveTraining(event,'+(id||'null')+')">'+
+      '<div class="two"><div><label>Idrett</label><select id="t_cat">'+catOpts+'</select></div><div><label>Ukedag</label><select id="t_wd">'+wdOpts+'</select></div></div>'+
+      '<div class="two"><div><label>Fra</label><input id="t_start" type="time"></div><div><label>Til</label><input id="t_end" type="time"></div></div>'+
+      '<div class="two"><div><label>Sted</label><input id="t_loc"></div><div><label>Gruppe (valgfritt)</label><input id="t_group" placeholder="f.eks. G10"></div></div>'+
+      '<div class="actions"><button type="button" class="btn" onclick="renderTrainingModal()">Tilbake</button><button class="btn solid" type="submit">Lagre</button></div>'+
+    '</form></div>';
+  if(t){if(t.category_id)document.getElementById('t_cat').value=t.category_id;document.getElementById('t_wd').value=t.weekday;if(t.start)document.getElementById('t_start').value=t.start;if(t.end)document.getElementById('t_end').value=t.end;if(t.location)document.getElementById('t_loc').value=t.location;if(t.group)document.getElementById('t_group').value=t.group;}
+}
+async function saveTraining(ev,id){ev.preventDefault();
+  const body={category_id:(+document.getElementById('t_cat').value||null),weekday:+document.getElementById('t_wd').value,start_time:val('t_start')||null,end_time:val('t_end')||null,location:val('t_loc')||null,group_label:val('t_group')||null};
+  try{let card;if(id){card=await api('PUT','/training-schedules/'+id,body);const i=TRAINING.findIndex(x=>x.id===id);if(i>=0)TRAINING[i]=card;}else{card=await api('POST','/training-schedules',body);TRAINING.push(card);}renderTrainingModal();renderWeek();}catch(err){alert(err.message);}
+}
+async function deleteTraining(id){if(!confirm('Slette denne treningstiden?'))return;try{await api('DELETE','/training-schedules/'+id);TRAINING=TRAINING.filter(x=>x.id!==id);renderTrainingModal();renderWeek();}catch(err){alert(err.message);}}
+
+renderStats();renderUrgent();renderUpcoming();populateFilters();renderWeek();
 </script>
 @endverbatim
 </body>
