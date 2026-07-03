@@ -79,6 +79,9 @@ svg.wheel{width:100%;height:auto;display:block}
 .weekcard h3{margin:0 0 14px;font-size:15px;display:flex;align-items:center;gap:8px}
 .weekcard h3 .ct{font-size:11px;font-weight:600;color:#fff;background:var(--flik-blue);border-radius:20px;padding:1px 9px}
 .weekcard h3 .ct.warn{background:var(--amber)}.weekcard h3 .ct.red{background:var(--red)}.weekcard h3 .ct.gap{background:var(--teal)}
+.weekcols{display:grid;grid-template-columns:2fr 1fr;gap:20px;align-items:start}
+.weekcard .lbl{font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:var(--ink-soft)}
+@media(max-width:880px){.weekcols{grid-template-columns:1fr}}
 .weatherstrip{display:flex;gap:10px;flex-wrap:wrap}
 .wday{flex:1;min-width:76px;background:#f6f9fd;border:1px solid var(--line);border-radius:12px;padding:10px 8px;text-align:center}
 .wday .wd{font-size:11px;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.4px}
@@ -253,7 +256,7 @@ form.f .actions .btn{padding:11px 22px;font-size:14px}
     <div id="weekHost"></div>
   </section>
   <section class="view" id="view-dash">
-    <div class="viewhead"><h2>Dashboard 2026</h2>@if($canEdit)<button class="btn solid" onclick="openEventForm()">＋ Nytt arrangement</button>@endif</div>
+    <div class="viewhead"><h2>Dashboard</h2>@if($canEdit)<button class="btn solid" onclick="openEventForm()">＋ Nytt arrangement</button>@endif</div>
     <div class="stats" id="statRow"></div>
     <div class="grid2">
       <div class="panel"><h3>Haster nå – trenger arbeid <span class="tag" id="urgCount">0</span></h3><div class="body" id="urgentList"></div></div>
@@ -815,48 +818,62 @@ function renderWeek(){
   const host=document.getElementById('weekHost');if(!host)return;
   const today=new Date();today.setHours(0,0,0,0);
   const in7=addDays(today,7);
-  let html='';
-  if(WEATHER&&WEATHER.length){
-    html+='<div class="weekcard"><h3>'+ic('info')+' Været i Farsund</h3><div class="weatherstrip">'+
-      WEATHER.slice(0,7).map(w=>'<div class="wday'+(ymd(w.date)===ymd(today)?' today':'')+'"><div class="wd">'+WD[isoDow(w.date)-1].slice(0,3)+'</div><div class="wt">'+(w.temp!=null?w.temp+'°':'–')+'</div><div class="wl">'+esc(w.label||'')+'</div></div>').join('')+
-      '</div></div>';
-  }
+  const posts=allPosts();
+  const wc=(icon,title,ctCls,ct,inner)=>'<div class="weekcard"><h3>'+ic(icon)+' '+title+(ct!=null?' <span class="ct '+(ctCls||'')+'">'+ct+'</span>':'')+'</h3>'+inner+'</div>';
+
+  /* ===== Kolonne A (2/3) ===== */
+  let a='';
+  const due=posts.filter(p=>{const d=addDays(p.date,0);return d>=addDays(today,-2)&&d<=in7&&p.status!=='Publisert';}).sort((x,y)=>new Date(x.date)-new Date(y.date));
+  a+=wc('sparkle','Publiser nå','',due.length, due.length?due.map(rrow).join(''):'<div class="emptyrec">Ingenting som haster de neste dagene – fint å ligge i forkant!</div>');
+
+  const noplan=DATA.filter(e=>{const dd=daysTo(e.date);return dd>=0&&dd<=90&&(!e.posts||!e.posts.length)&&e.type!=='Administrasjon'&&!/ikke markedsf|ikke skal/i.test(e.notat||'');}).sort((x,y)=>new Date(x.date)-new Date(y.date));
+  a+=wc('calendar','Arrangement uten plan','warn',noplan.length, noplan.length?noplan.map(e=>'<div class="rrow"><span class="rd">'+fmt(e.date)+'</span><span class="rt">'+esc(e.title)+'<small>'+esc(e.sport||'')+'</small></span><span class="ra"><button class="btn sm" onclick="openEvent('+e.id+')">Åpne</button></span></div>').join(''):'<div class="emptyrec">Alle kommende arrangement har en plan.</div>');
+
+  const cnt={};posts.forEach(p=>{const d=addDays(p.date,0);if(d>=today&&d<=addDays(today,28)){const k=ymd(p.date);cnt[k]=(cnt[k]||0)+1;}});
+  const over=Object.keys(cnt).filter(k=>cnt[k]>=2).sort();
+  a+=wc('info','Travle dager','red',over.length, over.length?over.map(k=>'<div class="rrow"><span class="rd">'+fmt(k)+'</span><span class="rt">'+cnt[k]+' poster samme dag<small>Vurder å flytte en til en roligere dag</small></span></div>').join(''):'<div class="emptyrec">Ingen dager med for mange poster.</div>');
+
+  const gaps=[];const actIdeas=IDEAS.filter(i=>i.is_active!==false);
+  for(let wk=0;wk<6;wk++){const ws=addDays(startOfWeek(today),wk*7);const we=addDays(ws,6);const has=posts.some(p=>{const d=addDays(p.date,0);return d>=ws&&d<=we;});if(!has){const idea=actIdeas.length?actIdeas[gaps.length%actIdeas.length]:null;gaps.push({ws,we,idea});}}
+  a+=wc('doc','Tomrom – fyll med Klubbliv','gap',gaps.length, gaps.length?gaps.map(g=>'<div class="rrow"><span class="rd">Uke '+isoWeek(g.ws)+'</span><span class="rt">'+fmt(ymd(g.ws))+'–'+fmt(ymd(g.we))+': ingen innhold planlagt'+(g.idea?'<small>Forslag: '+esc(g.idea.title)+'</small>':'')+'</span>'+(CANEDIT&&g.idea?'<span class="ra"><button class="btn sm" onclick="klubblivFromIdea('+g.idea.id+',\''+ymd(addDays(g.ws,2))+'\')">Lag post</button></span>':'')+'</div>').join(''):'<div class="emptyrec">Ingen tomme uker de neste seks ukene.</div>');
+
+  /* ===== Kolonne B (1/3) ===== */
+  let b='';
   const dow=isoDow(today);
   const todayTrain=TRAINING.filter(t=>t.weekday===dow);
   const wToday=(WEATHER||[]).find(w=>ymd(w.date)===ymd(today));
-  html+='<div class="weekcard"><h3>'+ic('calendar')+' I dag – '+WD[dow-1]+'</h3><div class="todayrow">'+
-    '<div class="todaycol"><div class="lbl">Trener i dag</div>'+
-      (todayTrain.length?todayTrain.map(t=>'<div class="trainline"><span class="sw" style="background:'+(t.color||'#8795a3')+'"></span>'+esc(t.category||t.group||'Trening')+(t.start?' · '+t.start+(t.end?'–'+t.end:''):'')+(t.location?' · '+esc(t.location):'')+'</div>').join(''):'<div class="emptyrec">Ingen trening registrert i dag.</div>')+
-    '</div>'+
-    '<div class="todaycol"><div class="lbl">Vær i dag</div>'+(wToday?'<div class="trainline">'+(wToday.temp!=null?wToday.temp+'° · ':'')+esc(wToday.label||'')+'</div>':'<div class="emptyrec">Ingen værdata akkurat nå.</div>')+'</div>'+
-  '</div></div>';
-  const posts=allPosts();
-  const due=posts.filter(p=>{const d=addDays(p.date,0);return d>=addDays(today,-2)&&d<=in7&&p.status!=='Publisert';}).sort((a,b)=>new Date(a.date)-new Date(b.date));
-  html+='<div class="weekcard"><h3>'+ic('sparkle')+' Publiser nå <span class="ct">'+due.length+'</span></h3>'+
-    (due.length?due.map(rrow).join(''):'<div class="emptyrec">Ingenting som haster de neste dagene – fint å ligge i forkant!</div>')+'</div>';
-  const noplan=DATA.filter(e=>{const dd=daysTo(e.date);return dd>=0&&dd<=90&&(!e.posts||!e.posts.length)&&e.type!=='Administrasjon'&&!/ikke markedsf|ikke skal/i.test(e.notat||'');}).sort((a,b)=>new Date(a.date)-new Date(b.date));
-  if(noplan.length){
-    html+='<div class="weekcard"><h3>'+ic('calendar')+' Arrangement uten plan <span class="ct warn">'+noplan.length+'</span></h3>'+
-      noplan.map(e=>'<div class="rrow"><span class="rd">'+fmt(e.date)+'</span><span class="rt">'+esc(e.title)+'<small>'+esc(e.sport||'')+'</small></span><span class="ra"><button class="btn sm" onclick="openEvent('+e.id+')">Åpne</button></span></div>').join('')+'</div>';
+  b+=wc('calendar','I dag – '+WD[dow-1],null,null,
+    '<div class="lbl" style="margin-bottom:6px">Trener i dag</div>'+
+    (todayTrain.length?todayTrain.map(t=>'<div class="trainline"><span class="sw" style="background:'+(t.color||'#8795a3')+'"></span>'+esc(t.category||t.group||'Trening')+(t.start?' · '+t.start+(t.end?'–'+t.end:''):'')+(t.location?' · '+esc(t.location):'')+'</div>').join(''):'<div class="emptyrec">Ingen trening registrert i dag.</div>')+
+    (wToday?'<div class="lbl" style="margin:12px 0 4px">Vær i dag</div><div class="trainline">'+(wToday.temp!=null?wToday.temp+'° · ':'')+esc(wToday.label||'')+'</div>':''));
+
+  if(WEATHER&&WEATHER.length){
+    b+=wc('info','Været i Farsund',null,null,'<div class="weatherstrip">'+WEATHER.slice(0,7).map(w=>'<div class="wday'+(ymd(w.date)===ymd(today)?' today':'')+'"><div class="wd">'+WD[isoDow(w.date)-1].slice(0,3)+'</div><div class="wt">'+(w.temp!=null?w.temp+'°':'–')+'</div><div class="wl">'+esc(w.label||'')+'</div></div>').join('')+'</div>');
   }
-  const cnt={};posts.forEach(p=>{const d=addDays(p.date,0);if(d>=today&&d<=addDays(today,28)){const k=ymd(p.date);cnt[k]=(cnt[k]||0)+1;}});
-  const over=Object.keys(cnt).filter(k=>cnt[k]>=2).sort();
-  if(over.length){
-    html+='<div class="weekcard"><h3>'+ic('info')+' Travle dager – vurder å spre <span class="ct red">'+over.length+'</span></h3>'+
-      over.map(k=>'<div class="rrow"><span class="rd">'+fmt(k)+'</span><span class="rt">'+cnt[k]+' poster samme dag<small>Vurder å flytte en til en roligere dag</small></span></div>').join('')+'</div>';
-  }
-  const gaps=[];const actIdeas=IDEAS.filter(i=>i.is_active!==false);
-  for(let wk=0;wk<6;wk++){
-    const ws=addDays(startOfWeek(today),wk*7);const we=addDays(ws,6);
-    const has=posts.some(p=>{const d=addDays(p.date,0);return d>=ws&&d<=we;});
-    if(!has){const idea=actIdeas.length?actIdeas[gaps.length%actIdeas.length]:null;gaps.push({ws,we,idea});}
-  }
-  if(gaps.length){
-    html+='<div class="weekcard"><h3>'+ic('doc')+' Tomrom – fyll med Klubbliv <span class="ct gap">'+gaps.length+'</span></h3>'+
-      gaps.map(g=>'<div class="rrow"><span class="rd">Uke '+isoWeek(g.ws)+'</span><span class="rt">'+fmt(ymd(g.ws))+'–'+fmt(ymd(g.we))+': ingen innhold planlagt'+(g.idea?'<small>Forslag: '+esc(g.idea.title)+'</small>':'')+'</span>'+(CANEDIT&&g.idea?'<span class="ra"><button class="btn sm" onclick="klubblivFromIdea('+g.idea.id+',\''+ymd(addDays(g.ws,2))+'\')">Lag post</button></span>':'')+'</div>').join('')+'</div>';
-  }
-  host.innerHTML=html;
+
+  b+=wc('sparkle','Dagens tips',null,null,'<div id="tipBox"><div class="emptyrec">La Vivu foreslå noe å publisere i dag – ut fra vær, trening og hva som er på gang.</div>'+(CANEDIT?'<button class="btn solid sm" style="margin-top:10px" onclick="dagensTips()">'+ic('sparkle')+' Foreslå noe å publisere</button>':'')+'</div>');
+
+  host.innerHTML='<div class="weekcols"><div>'+a+'</div><div>'+b+'</div></div>';
 }
+async function dagensTips(){
+  const box=document.getElementById('tipBox');if(!box)return;
+  box.innerHTML='<div class="emptyrec">'+ic('sparkle')+' Skriver …</div>';
+  const t0=new Date();t0.setHours(0,0,0,0);const dow=isoDow(t0);
+  const tr=TRAINING.filter(t=>t.weekday===dow).map(t=>(t.category||t.group||'trening')+(t.start?' '+t.start:'')).join(', ');
+  const w=(WEATHER||[]).find(x=>ymd(x.date)===ymd(t0));
+  const next=DATA.filter(e=>daysTo(e.date)>=0).sort((x,y)=>new Date(x.date)-new Date(y.date))[0];
+  let ctx='I dag er det '+WD[dow-1]+'.';
+  if(w)ctx+=' Vær: '+(w.label||'')+(w.temp!=null?', '+w.temp+'°':'')+'.';
+  if(tr)ctx+=' Trener i dag: '+tr+'.';
+  if(next)ctx+=' Nærmeste arrangement: '+next.title+' ('+(next.sport||'')+') om '+daysTo(next.date)+' dager.';
+  try{
+    const r=await api('POST','/ai/suggest',{title:'Dagens innlegg fra FLIK',label:'Klubbliv',extra:ctx});
+    window.__tip=r.text||'';
+    box.innerHTML='<div class="postbody">'+esc(window.__tip)+'</div><div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap"><button class="btn sm" onclick="copyTip()">'+ic('copy')+' Kopier</button><button class="btn sm" onclick="tipToKlubbliv()">'+ic('plus')+' Lag Klubbliv-post</button><button class="btn sm" onclick="dagensTips()">'+ic('refresh')+' Nytt forslag</button></div>';
+  }catch(err){box.innerHTML='<div class="emptyrec" style="color:#b23535">'+esc(err.message)+'</div><button class="btn sm" style="margin-top:8px" onclick="dagensTips()">Prøv igjen</button>';}
+}
+function copyTip(){if(window.__tip&&navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(window.__tip);}
+function tipToKlubbliv(){openKlubblivForm(null);const t=document.getElementById('k_title');if(t)t.value='Dagens innlegg';const b=document.getElementById('k_body');if(b)b.value=window.__tip||'';const d=document.getElementById('k_date');if(d)d.value=ymd(new Date());}
 /* ---- KLUBBLIV ---- */
 function renderKlubbliv(){
   const host=document.getElementById('klubblivHost');if(!host)return;
