@@ -144,6 +144,8 @@ svg.wheel{width:100%;height:auto;display:block}
 .ministat .ml{font-size:11px;color:var(--ink-soft);margin-top:4px}
 .weathergrid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
 .rrow.click{cursor:pointer}.rrow.click:hover{background:#f7faff}
+.travday{padding:4px 0 6px;border-bottom:1px solid var(--line)}.travday:last-child{border-bottom:none;padding-bottom:0}
+.travhead{font-size:12.5px;font-weight:600;color:#c25a00;margin:6px 0 2px}
 .rchev{color:var(--grey);display:flex;flex:none;align-items:center}
 @media(max-width:880px){.ministats{grid-template-columns:repeat(2,1fr)}.weathergrid{grid-template-columns:repeat(3,1fr)}.modtray{grid-column:auto}}
 .legend .item{display:flex;align-items:center;gap:9px;font-size:13px;padding:6px 0;cursor:pointer;border-radius:6px}
@@ -838,6 +840,12 @@ function allPosts(){
 function wc(icon,title,ctCls,ct,inner){return '<div class="weekcard"><h3>'+ic(icon)+' '+title+(ct!=null?' <span class="ct '+(ctCls||'')+'">'+ct+'</span>':'')+'</h3>'+inner+'</div>';}
 function chev(){return '<span class="rchev">'+ic('chevron')+'</span>';}
 function cd(dd){return dd===0?'i dag':(dd>0?'om '+dd+' dg':Math.abs(dd)+' dg siden');}
+function dayOfYear(d){const x=new Date(d);const s=new Date(x.getFullYear(),0,0);return Math.floor((x-s)/86400000);}
+function ideaOfDay(){const act=IDEAS.filter(i=>i.is_active!==false);return act.length?act[dayOfYear(new Date())%act.length]:null;}
+function convRow(p){
+  const open=p.kind==='event'?'openEvent('+p.eventId+')':'openKlubblivForm('+p.id+')';
+  return '<div class="rrow click" style="padding:8px 0" onclick="'+open+'"><span class="rt">'+esc(p.title)+'<small>'+esc(p.ctx)+(p.channels?' · '+esc(p.channels):'')+'</small></span>'+chev()+'</div>';
+}
 function rrow(p){
   const open=p.kind==='event'?'openEvent('+p.eventId+')':'openKlubblivForm('+p.id+')';
   return '<div class="rrow click" onclick="'+open+'"><span class="rd">'+fmt(p.date)+'</span><span class="rt">'+esc(p.title)+'<small>'+esc(p.ctx)+(p.channels?' · '+esc(p.channels):'')+' · '+cd(daysTo(p.date))+'</small></span>'+chev()+'</div>';
@@ -848,9 +856,17 @@ function eventRow(e){
 }
 /* ---- Moduler ---- */
 function mod_publiser(){
-  const today=new Date();today.setHours(0,0,0,0);const in7=addDays(today,7);
-  const due=allPosts().filter(p=>{const d=addDays(p.date,0);return d>=addDays(today,-2)&&d<=in7&&p.status!=='Publisert';}).sort((x,y)=>new Date(x.date)-new Date(y.date));
-  return wc('sparkle','Publiser nå','',due.length, due.length?due.map(rrow).join(''):'<div class="emptyrec">Ingenting som haster de neste dagene – fint å ligge i forkant!</div>');
+  const today=new Date();today.setHours(0,0,0,0);const in7=addDays(today,7);const posts=allPosts();
+  const due=posts.filter(p=>{const d=addDays(p.date,0);return d>=addDays(today,-2)&&d<=in7&&p.status!=='Publisert';}).sort((x,y)=>new Date(x.date)-new Date(y.date));
+  if(due.length)return wc('sparkle','Publiser nå','',due.length,due.map(rrow).join(''));
+  // Dynamisk fallback – hold brukeren i forkant selv når ingenting haster
+  const next=posts.filter(p=>{const d=addDays(p.date,0);return d>addDays(today,7)&&p.status!=='Publisert';}).sort((x,y)=>new Date(x.date)-new Date(y.date)).slice(0,3);
+  const idea=ideaOfDay();
+  let inner='<div class="emptyrec" style="padding:2px 0 6px">Ingenting som haster de neste dagene – godt jobba! Her er det som holder deg i forkant:</div>';
+  if(next.length)inner+='<div class="lbl" style="margin:4px 0 2px">Neste på tur</div>'+next.map(rrow).join('');
+  if(CANEDIT&&idea)inner+='<div class="lbl" style="margin:12px 0 2px">Fyll en rolig dag</div><div class="rrow"><span class="rt">'+esc(idea.title)+'<small>Klubbliv · '+esc(idea.group)+'</small></span><span class="ra"><button class="btn sm" onclick="klubblivFromIdea('+idea.id+',\''+ymd(today)+'\')">Lag post</button></span></div>';
+  if(!next.length&&!(CANEDIT&&idea))inner+='<div class="emptyrec">Ingen planlagte poster ennå. Lag en Klubbliv-post for å komme i gang.</div>';
+  return wc('sparkle','Publiser nå',null,null,inner);
 }
 function mod_utenplan(){
   const noplan=DATA.filter(e=>{const dd=daysTo(e.date);return dd>=0&&dd<=90&&(!e.posts||!e.posts.length)&&e.type!=='Administrasjon'&&!/ikke markedsf|ikke skal/i.test(e.notat||'');}).sort((x,y)=>new Date(x.date)-new Date(y.date));
@@ -858,9 +874,10 @@ function mod_utenplan(){
 }
 function mod_travle(){
   const today=new Date();today.setHours(0,0,0,0);const posts=allPosts();
-  const cnt={};posts.forEach(p=>{const d=addDays(p.date,0);if(d>=today&&d<=addDays(today,28)){const k=ymd(p.date);cnt[k]=(cnt[k]||0)+1;}});
-  const over=Object.keys(cnt).filter(k=>cnt[k]>=2).sort();
-  return wc('info','Travle dager','red',over.length, over.length?over.map(k=>'<div class="rrow"><span class="rd">'+fmt(k)+'</span><span class="rt">'+cnt[k]+' poster samme dag<small>Vurder å flytte en til en roligere dag</small></span></div>').join(''):'<div class="emptyrec">Ingen dager med for mange poster.</div>');
+  const byDay={};posts.forEach(p=>{const d=addDays(p.date,0);if(d>=today&&d<=addDays(today,28)){const k=ymd(p.date);(byDay[k]=byDay[k]||[]).push(p);}});
+  const days=Object.keys(byDay).filter(k=>byDay[k].length>=2).sort();
+  const inner=days.length?days.map(k=>'<div class="travday"><div class="travhead">'+fmt(k)+' · '+byDay[k].length+' poster samme dag – vurder å flytte en</div>'+byDay[k].slice().sort((x,y)=>String(x.ctx).localeCompare(String(y.ctx))).map(convRow).join('')+'</div>').join(''):'<div class="emptyrec">Ingen dager med for mange poster.</div>';
+  return wc('info','Travle dager','red',days.length,inner);
 }
 function mod_tomrom(){
   const today=new Date();today.setHours(0,0,0,0);const posts=allPosts();
