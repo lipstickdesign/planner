@@ -100,6 +100,8 @@ svg.wheel{width:100%;height:auto;display:block}
 .rrow .rt small{display:block;font-weight:400;color:var(--ink-soft);font-size:12px;margin-top:1px}
 .rrow .ra{flex:none}
 .emptyrec{font-size:13px;color:var(--ink-soft);padding:4px 0}
+.tiphint{width:100%;font-family:inherit;font-size:13px;padding:8px 11px;border:1px solid #e6ebf2;border-radius:9px;background:#fbfcfe;color:var(--ink)}
+.tiphint:focus{outline:none;border-color:var(--flik-blue);box-shadow:0 0 0 3px rgba(47,111,214,.14)}
 .kpost{display:flex;align-items:center;gap:12px;padding:13px 16px;border:1px solid var(--line);border-radius:12px;background:#fff;margin-bottom:10px}
 .kpost .kd{font-size:12px;font-weight:600;color:var(--flik-blue);min-width:58px;white-space:nowrap}
 .kpost .kt{flex:1;min-width:0}
@@ -902,7 +904,10 @@ function mod_vaer(opts){
   return wc('info','Været i Farsund',null,null,'<div class="weathergrid">'+WEATHER.slice(0,8).map(w=>'<div class="wday'+(ymd(w.date)===ymd(today)?' today':'')+'"><div class="wd">'+WD[isoDow(w.date)-1].slice(0,3)+'</div><div class="wt">'+(w.temp!=null?w.temp+'°':'–')+'</div><div class="wl">'+esc(w.label||'')+'</div></div>').join('')+'</div>');
 }
 function mod_tips(){
-  return wc('sparkle','Dagens tips',null,null,'<div id="tipBox"><div class="emptyrec">La Vivu foreslå noe å publisere i dag – ut fra vær, trening og hva som er på gang.</div>'+(CANEDIT?'<button class="btn solid sm" style="margin-top:10px" onclick="dagensTips()">'+ic('sparkle')+' Foreslå noe å publisere</button>':'')+'</div>');
+  return wc('sparkle','Dagens tips',null,null,
+    '<div class="emptyrec" style="padding:0 0 8px">La Vivu foreslå noe å publisere i dag – ut fra vær, trening og planen. Skriv gjerne et tema for et enda mer treffsikkert forslag.</div>'+
+    (CANEDIT?'<input id="tipHint" class="tiphint" placeholder="Valgfritt: tema eller stikkord …"><button class="btn solid sm" style="margin-top:8px" onclick="dagensTips()">'+ic('sparkle')+' Foreslå noe å publisere</button>':'')+
+    '<div id="tipResult"></div>');
 }
 function mod_neste(){
   const up=DATA.filter(e=>daysTo(e.date)>=0).sort((x,y)=>new Date(x.date)-new Date(y.date)).slice(0,5);
@@ -1003,8 +1008,9 @@ function openSettings(){
   document.getElementById('overlay').classList.add('open');
 }
 async function dagensTips(){
-  const box=document.getElementById('tipBox');if(!box)return;
-  box.innerHTML='<div class="emptyrec">'+ic('sparkle')+' Skriver …</div>';
+  const box=document.getElementById('tipResult');if(!box)return;
+  box.innerHTML='<div class="emptyrec" style="padding-top:10px">'+ic('sparkle')+' Skriver …</div>';
+  const hint=document.getElementById('tipHint')?document.getElementById('tipHint').value.trim():'';
   const t0=new Date();t0.setHours(0,0,0,0);const dow=isoDow(t0);
   const tr=TRAINING.filter(t=>t.weekday===dow).map(t=>(t.category||t.group||'trening')+(t.start?' '+t.start:'')).join(', ');
   const w=(WEATHER||[]).find(x=>ymd(x.date)===ymd(t0));
@@ -1013,11 +1019,12 @@ async function dagensTips(){
   if(w)ctx+=' Vær: '+(w.label||'')+(w.temp!=null?', '+w.temp+'°':'')+'.';
   if(tr)ctx+=' Trener i dag: '+tr+'.';
   if(next)ctx+=' Nærmeste arrangement: '+next.title+' ('+(next.sport||'')+') om '+daysTo(next.date)+' dager.';
+  if(hint)ctx+=' Ønsket tema/vinkling fra brukeren (prioriter dette): '+hint+'.';
   try{
     const r=await api('POST','/ai/suggest',{title:'Dagens innlegg fra FLIK',label:'Klubbliv',extra:ctx});
     window.__tip=r.text||'';
-    box.innerHTML='<div class="postbody">'+esc(window.__tip)+'</div><div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap"><button class="btn sm" onclick="copyTip()">'+ic('copy')+' Kopier</button><button class="btn sm" onclick="tipToKlubbliv()">'+ic('plus')+' Lag Klubbliv-post</button><button class="btn sm" onclick="dagensTips()">'+ic('refresh')+' Nytt forslag</button></div>';
-  }catch(err){box.innerHTML='<div class="emptyrec" style="color:#b23535">'+esc(err.message)+'</div><button class="btn sm" style="margin-top:8px" onclick="dagensTips()">Prøv igjen</button>';}
+    box.innerHTML='<div class="postbody" style="margin-top:10px">'+esc(window.__tip)+'</div><div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap"><button class="btn sm" onclick="copyTip()">'+ic('copy')+' Kopier</button><button class="btn sm" onclick="tipToKlubbliv()">'+ic('plus')+' Lag Klubbliv-post</button><button class="btn sm" onclick="dagensTips()">'+ic('refresh')+' Nytt forslag</button></div>';
+  }catch(err){box.innerHTML='<div class="emptyrec" style="color:#b23535;padding-top:10px">'+esc(err.message)+'</div>';}
 }
 function copyTip(){if(window.__tip&&navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(window.__tip);}
 function tipToKlubbliv(){openKlubblivForm(null);const t=document.getElementById('k_title');if(t)t.value='Dagens innlegg';const b=document.getElementById('k_body');if(b)b.value=window.__tip||'';const d=document.getElementById('k_date');if(d)d.value=ymd(new Date());}
