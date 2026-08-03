@@ -15,6 +15,7 @@ class Task extends Model
     protected $fillable = [
         'company_id', 'event_id', 'post_type_id', 'label', 'body_draft',
         'draft_url', 'publish_date', 'scheduled_time', 'status',
+        'platform', 'format',
         'approval_status', 'responsible_user_id', 'sort_order',
     ];
 

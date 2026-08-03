@@ -94,6 +94,8 @@ class Event extends Model
                     'date' => optional($t->publish_date)->format('Y-m-d'),
                     'status' => self::STATUS_LABELS[$t->status] ?? 'Planlagt',
                     'status_raw' => $t->status,
+                    'platform' => $t->platform,
+                    'format' => $t->format,
                     'pages' => $t->destinations->pluck('name')->all(),
                     'destination_ids' => $t->destinations->pluck('id')->all(),
                     'text' => $t->draft_url,

@@ -55,8 +55,9 @@ class FlikSeeder extends Seeder
         // ---- Kategorier (idretter) ----
         $catColors = [
             'Fotball' => '#2e8b40', 'Håndball' => '#c62828', 'Volleyball' => '#f2a516',
-            'Friidrett' => '#1565c0', 'Turn' => '#7b3fb0', 'Frisbeegolf' => '#0f8f8f',
-            'Bue' => '#7a5232', 'VIA' => '#c2185b', 'Administrasjon' => '#5a7184',
+            'Sandvolleyball' => '#e2725b', 'Friidrett' => '#1565c0', 'Turn' => '#7b3fb0',
+            'Frisbeegolf' => '#0f8f8f', 'Bue' => '#7a5232', 'VIA' => '#c2185b',
+            'Administrasjon' => '#5a7184',
         ];
         $cats = [];
         $i = 0;
@@ -75,6 +76,7 @@ class FlikSeeder extends Seeder
         )->id;
         $destMap = [
             'FLIK Fotball' => 'Fotball', 'FLIK Håndball' => 'Håndball', 'FLIK Volleyball' => 'Volleyball',
+            'FLIK Sandvolleyball' => 'Sandvolleyball',
             'FLIK Friidrett' => 'Friidrett', 'FLIK Turn' => 'Turn', 'FLIK Frisbeegolf' => 'Frisbeegolf',
             'FLIK Bueskyting' => 'Bue', 'FLIK VIA' => 'VIA',
         ];

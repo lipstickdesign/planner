@@ -235,7 +235,12 @@ footer{color:var(--ink-soft);font-size:12.5px;text-align:center;padding:24px 20p
 .caret .ico{width:16px;height:16px;vertical-align:0}
 .taskitem.open .caret{transform:rotate(90deg)}
 .tdate{font-size:12px;color:var(--ink-soft);font-weight:500;white-space:nowrap}
-.tlabel{font-weight:500;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tlabel{display:flex;align-items:center;gap:8px;min-width:0;font-weight:500;font-size:14px}
+.tl-txt{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.platchip{flex:none;font-size:10.5px;font-weight:600;padding:2px 8px;border-radius:20px;white-space:nowrap}
+.statussel{font-family:inherit;font-size:11px;font-weight:500;border:none;border-radius:20px;padding:4px 10px;cursor:pointer;-webkit-appearance:none;appearance:none;max-width:150px}
+.statussel.st-planlagt{background:#e7f0fb;color:#1c5fa8}.statussel.st-arbeid{background:#fdf0d6;color:#9a6b00}
+.statussel.st-klar{background:#dcf3ee;color:#137a6e}.statussel.st-publisert{background:#dff3e4;color:#1f7a42}
 .tchan{font-size:11px;color:var(--ink-soft);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:170px;text-align:right}
 .taskdetail{display:none;padding:2px 15px 15px}
 .taskitem.open .taskdetail{display:block}
@@ -525,6 +530,22 @@ const ICONS={
   chevron:'<path d="M9 6l6 6l-6 6" />'
 };
 function ic(n,cls){return '<svg class="ico'+(cls?' '+cls:'')+'" viewBox="0 0 24 24" aria-hidden="true">'+(ICONS[n]||'')+'</svg>';}
+/* Oppgave-status og plattform */
+const TSTATUS={planlagt:['Planlagt','st-planlagt'],under_arbeid:['Under arbeid','st-arbeid'],klar:['Klar for publisering','st-klar'],publisert:['Publisert','st-publisert']};
+const PLATFORMS={facebook:['Facebook','1877F2'],instagram:['Instagram','C13584'],tiktok:['TikTok','111111'],snapchat:['Snapchat','9A8600'],linkedin:['LinkedIn','0A66C2'],youtube:['YouTube','C4302B']};
+function statusSel(p,eid){
+  const cur=p.status_raw||'planlagt';const cls=(TSTATUS[cur]||TSTATUS.planlagt)[1];
+  return '<select class="statussel '+cls+'" onclick="event.stopPropagation()" onchange="setTaskStatus('+eid+','+p.id+',this.value)">'+
+    Object.keys(TSTATUS).map(k=>'<option value="'+k+'"'+(k===cur?' selected':'')+'>'+TSTATUS[k][0]+'</option>').join('')+'</select>';
+}
+function platChip(p){
+  if(!p.platform||!PLATFORMS[p.platform])return '';
+  const pl=PLATFORMS[p.platform];const fmt=p.format==='story'?' · Story':'';
+  return '<span class="platchip" style="background:#'+pl[1]+'22;color:#'+pl[1]+'">'+pl[0]+fmt+'</span>';
+}
+async function setTaskStatus(eventId,taskId,status){
+  try{const card=await api('PUT','/tasks/'+taskId+'/status',{status});upsert(card);rerender();openEvent(eventId);}catch(err){alert(err.message);}
+}
 
 /* EVENT CARD */
 function openEvent(id){
@@ -541,9 +562,9 @@ function openEvent(id){
         '<div class="taskrow" onclick="toggleTask('+p.id+')">'+
           '<span class="caret">'+ic('chevron')+'</span>'+
           '<span class="tdate">'+(p.date?fmt(p.date):'—')+'</span>'+
-          '<span class="tlabel">'+(p.label||'Innlegg')+'</span>'+
+          '<span class="tlabel"><span class="tl-txt">'+(p.label||'Innlegg')+'</span>'+platChip(p)+'</span>'+
           '<span class="tchan">'+pages+'</span>'+
-          '<span class="pill '+stCls+'">'+p.status+'</span>'+
+          (CANEDIT?statusSel(p,e.id):'<span class="pill '+stCls+'">'+p.status+'</span>')+
         '</div>'+
         '<div class="taskdetail">'+
           (p.body?'<div class="postbody">'+esc(p.body)+'</div>':'<div class="muted" style="padding:6px 0 2px">Ingen tekst lagt inn ennå.</div>')+
@@ -667,6 +688,8 @@ function openTaskForm(eventId,taskId){
       '<div class="two"><div><label>Hva slags post *</label><input id="t_label" required value="'+esc(t.label)+'" placeholder="f.eks. Teaser – hold av datoen"></div>'+
       '<div><label>Publiseringsdato</label><input id="t_date" type="date" value="'+(t.date||'')+'"></div></div>'+
       '<label>Status</label><select id="t_status">'+stOpts+'</select>'+
+      '<div class="two"><div><label>Plattform</label><select id="t_platform"><option value="">– velg –</option>'+Object.keys(PLATFORMS).map(k=>'<option value="'+k+'"'+sel(t.platform||'',k)+'>'+PLATFORMS[k][0]+'</option>').join('')+'</select></div>'+
+      '<div><label>Format</label><select id="t_format"><option value="">–</option><option value="post"'+sel(t.format||'','post')+'>Post</option><option value="story"'+sel(t.format||'','story')+'>Story</option></select></div></div>'+
       '<label>FLIK-side(r) / destinasjoner</label><select id="t_dests" multiple size="5" style="height:auto">'+destOpts+'</select>'+
       '<label style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap">Tekst til innlegget<span style="display:flex;gap:6px">'+(t.body?'<button type="button" class="btn sm" id="aiReviseBtn" onclick="suggestText('+eventId+',true)">'+ic('refresh')+' Oppdater for nytt år</button>':'')+'<button type="button" class="btn sm" id="aiBtn" onclick="suggestText('+eventId+',false)">'+ic('sparkle')+' Foreslå tekst</button></span></label>'+
       '<textarea id="t_body" placeholder="Skriv eller la AI foreslå teksten. Denne kan kopieres rett ut til Facebook / Meta Planner.">'+esc(t.body)+'</textarea>'+
@@ -677,7 +700,7 @@ function openTaskForm(eventId,taskId){
 }
 async function saveTaskForm(ev,eventId,taskId){ev.preventDefault();
   const dests=[...document.getElementById('t_dests').selectedOptions].map(o=>parseInt(o.value,10));
-  const body={label:val('t_label'),publish_date:val('t_date')||null,status:val('t_status'),draft_url:val('t_text')||null,body_draft:val('t_body')||null,destination_ids:dests};
+  const body={label:val('t_label'),publish_date:val('t_date')||null,status:val('t_status'),platform:val('t_platform')||null,format:val('t_format')||null,draft_url:val('t_text')||null,body_draft:val('t_body')||null,destination_ids:dests};
   try{const card=taskId?await api('PUT','/tasks/'+taskId,body):await api('POST','/events/'+eventId+'/tasks',body);upsert(card);rerender();openEvent(eventId);}catch(err){alert(err.message);}
 }
 async function deleteTask(eventId,taskId){
