@@ -1097,6 +1097,7 @@ function openKlubblivForm(id){
     '<div class="mbody"><form class="f" onsubmit="saveKlubbliv(event,'+(id||'null')+')">'+
       '<div class="two"><div><label>Tittel *</label><input id="k_title" required></div><div><label>Fra idé (valgfritt)</label><select id="k_idea" onchange="klubblivIdeaPick()">'+ideaOpts+'</select></div></div>'+
       '<div class="two"><div><label>Publiseringsdato <span style="color:var(--ink-soft);font-weight:400">(tom = foreslå selv)</span></label><input id="k_date" type="date"></div><div><label>Status</label><select id="k_status"><option value="planlagt">Planlagt</option><option value="under_arbeid">Under arbeid</option><option value="klar">Klar for publisering</option><option value="publisert">Publisert</option></select></div></div>'+
+      (k?'':'<div class="two"><div><label>Gjenta</label><select id="k_repeat" onchange="klubblivRepeatToggle()"><option value="">Ingen</option><option value="monthly">Månedlig</option><option value="quarterly">Kvartalsvis</option><option value="yearly">Årlig</option></select></div><div id="k_countwrap" style="display:none"><label>Antall ganger</label><input id="k_count" type="number" min="1" max="24" value="4"></div></div>')+
       '<label>Kanaler</label><div class="dchks">'+(destChecks||'<span class="emptyrec">Ingen kanaler.</span>')+'</div>'+
       '<label style="display:flex;align-items:center;justify-content:space-between;gap:8px">Tekst<span><button type="button" class="btn sm" id="kAiBtn" onclick="suggestKlubbliv()">'+ic('sparkle')+' Foreslå tekst</button></span></label><textarea id="k_body" placeholder="Skriv teksten, eller la AI foreslå ut fra idéen."></textarea>'+
       '<div class="actions"><button type="button" class="btn" onclick="closeModal()">Avbryt</button><button class="btn solid" type="submit">Lagre</button></div>'+
@@ -1112,6 +1113,7 @@ function openKlubblivForm(id){
   }
 }
 function klubblivIdeaPick(){const id=+document.getElementById('k_idea').value;const i=IDEAS.find(x=>x.id===id);if(i&&!val('k_title'))document.getElementById('k_title').value=i.title;}
+function klubblivRepeatToggle(){const r=document.getElementById('k_repeat');const w=document.getElementById('k_countwrap');if(w)w.style.display=(r&&r.value)?'':'none';}
 function klubblivFromIdea(ideaId,date){
   openKlubblivForm(null);
   const i=IDEAS.find(x=>x.id===ideaId);
@@ -1139,7 +1141,11 @@ async function saveKlubbliv(ev,id){ev.preventDefault();
   try{
     let card;
     if(id){card=await api('PUT','/klubbliv/'+id,body);const i=KLUBBLIV.findIndex(x=>x.id===id);if(i>=0)KLUBBLIV[i]=card;}
-    else{card=await api('POST','/klubbliv',body);KLUBBLIV.push(card);}
+    else{
+      const rep=document.getElementById('k_repeat')?document.getElementById('k_repeat').value:'';
+      if(rep){body.repeat=rep;body.repeat_count=parseInt((document.getElementById('k_count')||{}).value||'1',10)||1;}
+      const r=await api('POST','/klubbliv',body);(r.posts||[r]).forEach(c=>KLUBBLIV.push(c));
+    }
     closeModal();renderKlubbliv();renderHome();
   }catch(err){alert(err.message);}
 }
