@@ -6,6 +6,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DashboardLayoutController;
 use App\Http\Controllers\EventController;
 use App\Http\Controllers\KlubblivPostController;
+use App\Http\Controllers\PublicWheelController;
 use App\Http\Controllers\TaskController;
 use App\Http\Controllers\TrainingScheduleController;
 use App\Http\Controllers\UserController;
@@ -19,6 +20,9 @@ use Illuminate\Support\Str;
 Route::get('/', function () {
     return redirect()->route(Auth::check() ? 'dashboard' : 'login');
 });
+
+// Offentlig, innebygdbart årshjul (ingen innlogging)
+Route::get('/embed/{slug}/arshjul', [PublicWheelController::class, 'wheel'])->name('embed.wheel');
 
 Route::get('/login', function () {
     if (Auth::check()) {

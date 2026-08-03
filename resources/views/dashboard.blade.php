@@ -344,6 +344,7 @@ window.LAYOUT = @json($layout);
 window.LAYOUT_DEFAULT = @json($layoutDefault);
 window.HAS_USER_LAYOUT = @json($hasUserLayout);
 window.IS_SUPERADMIN = @json($isSuperadmin);
+window.COMPANY_SLUG = @json($company->slug ?? 'flik');
 window.CSRF = '{{ csrf_token() }}';
 </script>
 @verbatim
@@ -1027,9 +1028,25 @@ async function saveDefaultConfig(){if(!confirm('Lagre dette som standardoppsett 
 function openSettings(){
   document.getElementById('modal').innerHTML=
     KHEAD+'<h2>Innstillinger</h2><div class="sub">Klubbens oppsett</div></div>'+
-    '<div class="mbody"><div class="idearow"><span class="it">Treningstider<small>Hvem trener når – brukes på dashbordet</small></span><button class="btn sm" onclick="openTrainingMgr()">Åpne</button></div></div>';
+    '<div class="mbody">'+
+      '<div class="idearow"><span class="it">Treningstider<small>Hvem trener når – brukes på dashbordet</small></span><button class="btn sm" onclick="openTrainingMgr()">Åpne</button></div>'+
+      '<div class="idearow"><span class="it">Del årshjulet<small>Innebygdbart årshjul til nettsiden (uten Administrasjon)</small></span><button class="btn sm" onclick="openShareWheel()">Åpne</button></div>'+
+    '</div>';
   document.getElementById('overlay').classList.add('open');
 }
+function openShareWheel(){
+  const url=window.location.origin+'/embed/'+(window.COMPANY_SLUG||'flik')+'/arshjul';
+  const iframe='<iframe src="'+url+'" width="640" height="740" style="border:0;width:100%;max-width:660px" title="Årshjul"></iframe>';
+  document.getElementById('modal').innerHTML=
+    KHEAD+'<h2>Del årshjulet</h2><div class="sub">Prikkene er ikke klikkbare, og Administrasjon vises ikke</div></div>'+
+    '<div class="mbody">'+
+      '<label>Direkte lenke</label><div style="display:flex;gap:8px;align-items:center"><input class="tiphint" id="shareUrl" readonly value="'+esc(url)+'"><button class="btn sm" style="flex:none" onclick="copyField(\'shareUrl\')">'+ic('copy')+' Kopier</button></div>'+
+      '<label style="margin-top:14px">Innbyggingskode (iframe)</label><textarea id="shareEmbed" readonly style="width:100%;min-height:92px;font-family:inherit;font-size:12.5px;padding:10px 12px;border:1px solid #e6ebf2;border-radius:10px;background:#fbfcfe;color:var(--ink)">'+esc(iframe)+'</textarea>'+
+      '<div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap"><button class="btn sm" onclick="copyField(\'shareEmbed\')">'+ic('copy')+' Kopier innbyggingskode</button><a class="btn sm" href="'+url+'" target="_blank">'+ic('link')+' Åpne forhåndsvisning</a></div>'+
+    '</div>';
+  document.getElementById('overlay').classList.add('open');
+}
+function copyField(id){const el=document.getElementById(id);if(!el)return;el.focus();el.select();const t=el.value;if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(t);else{try{document.execCommand('copy');}catch(e){}}}
 async function dagensTips(){
   const box=document.getElementById('tipResult');if(!box)return;
   box.innerHTML='<div class="emptyrec" style="padding-top:10px">'+ic('sparkle')+' Skriver …</div>';
