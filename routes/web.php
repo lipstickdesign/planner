@@ -5,6 +5,7 @@ use App\Http\Controllers\ContentIdeaController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DashboardLayoutController;
 use App\Http\Controllers\EventController;
+use App\Http\Controllers\KampController;
 use App\Http\Controllers\KlubblivPostController;
 use App\Http\Controllers\PublicWheelController;
 use App\Http\Controllers\TaskController;
@@ -142,5 +143,10 @@ Route::middleware('auth')->group(function () {
         Route::post('/training-schedules', [TrainingScheduleController::class, 'store']);
         Route::put('/training-schedules/{trainingSchedule}', [TrainingScheduleController::class, 'update']);
         Route::delete('/training-schedules/{trainingSchedule}', [TrainingScheduleController::class, 'destroy']);
+
+        // Kamper
+        Route::post('/kamper', [KampController::class, 'store']);
+        Route::put('/kamper/{kamp}', [KampController::class, 'update']);
+        Route::delete('/kamper/{kamp}', [KampController::class, 'destroy']);
     });
 });

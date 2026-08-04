@@ -339,6 +339,7 @@ window.TEAM = @json($teamUsers);
 window.KLUBBLIV = @json($klubbliv);
 window.IDEAS = @json($ideas);
 window.TRAINING = @json($training);
+window.KAMPER = @json($kamper);
 window.WEATHER = @json($weather);
 window.LAYOUT = @json($layout);
 window.LAYOUT_DEFAULT = @json($layoutDefault);
@@ -850,7 +851,7 @@ async function removeUser(id,name){
 }
 
 /* ===== DENNE UKA + KLUBBLIV + TRENINGSTIDER ===== */
-let KLUBBLIV=window.KLUBBLIV||[], IDEAS=window.IDEAS||[], TRAINING=window.TRAINING||[], WEATHER=window.WEATHER||[];
+let KLUBBLIV=window.KLUBBLIV||[], IDEAS=window.IDEAS||[], TRAINING=window.TRAINING||[], WEATHER=window.WEATHER||[], KAMPER=window.KAMPER||[];
 const WD=['Mandag','Tirsdag','Onsdag','Torsdag','Fredag','Lørdag','Søndag'];
 const isoDow=d=>{const g=new Date(d).getDay();return g===0?7:g;};
 function ymd(d){const x=new Date(d);return x.getFullYear()+'-'+String(x.getMonth()+1).padStart(2,'0')+'-'+String(x.getDate()).padStart(2,'0');}
@@ -918,6 +919,7 @@ function mod_idag(){
   return wc('calendar','I dag – '+WD[dow-1],null,null,
     '<div class="lbl" style="margin-bottom:6px">Trener i dag</div>'+
     (todayTrain.length?todayTrain.map(t=>'<div class="trainline"><span class="sw" style="background:'+(t.color||'#8795a3')+'"></span>'+esc(t.category||t.group||'Trening')+(t.start?' · '+t.start+(t.end?'–'+t.end:''):'')+(t.location?' · '+esc(t.location):'')+'</div>').join(''):'<div class="emptyrec">Ingen trening registrert i dag.</div>')+
+    (function(){const kt=KAMPER.filter(k=>ymd(k.date)===ymd(today));return kt.length?'<div class="lbl" style="margin:12px 0 4px">Kamp i dag</div>'+kt.map(k=>'<div class="trainline"><span class="sw" style="background:'+(k.color||'#8795a3')+'"></span>'+esc(k.title)+(k.time?' · '+k.time:'')+' · '+(k.home?'Hjemme':'Borte')+(k.location?' · '+esc(k.location):'')+'</div>').join(''):'';})()+
     (wToday?'<div class="lbl" style="margin:12px 0 4px">Vær i dag</div><div class="trainline">'+(wToday.temp!=null?wToday.temp+'° · ':'')+esc(wToday.label||'')+'</div>':''));
 }
 function mod_vaer(opts){
@@ -945,6 +947,12 @@ function mod_tellere(){
   const cells=[[DATA.length,'Arrangement'],[totalPosts,'Oppgaver'],[needsWork,'Uten innhold'],[toApprove,'Til godkjenning']];
   return wc('info','Nøkkeltall',null,null,'<div class="ministats">'+cells.map(c=>'<div class="ministat"><div class="mn">'+c[0]+'</div><div class="ml">'+c[1]+'</div></div>').join('')+'</div>');
 }
+function mod_kamper(){
+  const today=new Date();today.setHours(0,0,0,0);
+  const up=KAMPER.filter(k=>k.date&&addDays(k.date,0)>=today).sort((a,b)=>((a.date+(a.time||''))<(b.date+(b.time||''))?-1:1)).slice(0,8);
+  const inner=up.length?up.map(k=>'<div class="rrow"><span class="rd">'+fmt(k.date)+'</span><span class="rt"><span style="display:inline-flex;align-items:center;gap:7px;min-width:0"><span style="width:9px;height:9px;border-radius:3px;flex:none;background:'+(k.color||'#8795a3')+'"></span>'+esc(k.title)+'</span><small>'+(k.category?esc(k.category)+' · ':'')+(k.home?'Hjemme':'Borte')+(k.time?' · '+k.time:'')+(k.location?' · '+esc(k.location):'')+'</small></span></div>').join(''):'<div class="emptyrec">Ingen kommende kamper registrert.</div>';
+  return wc('calendar','Kommende kamper',null,null,inner);
+}
 const MODREG={
   tellere:{t:'Nøkkeltall',render:mod_tellere},
   publiser:{t:'Publiser nå',render:mod_publiser},
@@ -954,6 +962,7 @@ const MODREG={
   idag:{t:'I dag',render:mod_idag},
   vaer:{t:'Vær',render:mod_vaer},
   tips:{t:'Dagens tips',render:mod_tips},
+  kamper:{t:'Kamper',render:mod_kamper},
   neste:{t:'Neste arrangement',render:mod_neste}
 };
 function normLayout(l){
@@ -1030,10 +1039,37 @@ function openSettings(){
     KHEAD+'<h2>Innstillinger</h2><div class="sub">Klubbens oppsett</div></div>'+
     '<div class="mbody">'+
       '<div class="idearow"><span class="it">Treningstider<small>Hvem trener når – brukes på dashbordet</small></span><button class="btn sm" onclick="openTrainingMgr()">Åpne</button></div>'+
+      '<div class="idearow"><span class="it">Kamper<small>Kommende kamper – vises på dashbordet</small></span><button class="btn sm" onclick="openKampMgr()">Åpne</button></div>'+
       '<div class="idearow"><span class="it">Del årshjulet<small>Innebygdbart årshjul til nettsiden (uten Administrasjon)</small></span><button class="btn sm" onclick="openShareWheel()">Åpne</button></div>'+
     '</div>';
   document.getElementById('overlay').classList.add('open');
 }
+function openKampMgr(){renderKampModal();document.getElementById('overlay').classList.add('open');}
+function renderKampModal(){
+  const rows=[...KAMPER].sort((a,b)=>((a.date+(a.time||''))<(b.date+(b.time||''))?-1:1));
+  const list=rows.length?rows.map(k=>'<div class="idearow"><span class="gpill" style="background:'+(k.color||'#8795a3')+';color:#fff">'+(k.date?fmt(k.date):'—')+'</span><span class="it">'+esc(k.title)+'<small>'+(k.category?esc(k.category)+' · ':'')+(k.home?'Hjemme':'Borte')+(k.time?' · '+k.time:'')+(k.location?' · '+esc(k.location):'')+'</small></span><button class="btn sm" onclick="openKampForm('+k.id+')">'+ic('edit')+'</button><button class="btn sm" style="color:#b23535" onclick="deleteKamp('+k.id+')">'+ic('trash')+'</button></div>').join(''):'<div class="emptyrec">Ingen kamper lagt inn ennå.</div>';
+  document.getElementById('modal').innerHTML=
+    KHEAD+'<h2>Kamper</h2><div class="sub">Kommende kamper – vises på dashbordet</div></div>'+
+    '<div class="mbody"><div style="text-align:right;margin-bottom:10px"><button class="btn solid sm" onclick="openKampForm(null)">'+ic('plus')+' Ny kamp</button></div>'+list+'</div>';
+}
+function openKampForm(id){
+  const k=id?KAMPER.find(x=>x.id===id):null;
+  const catOpts='<option value="">– idrett –</option>'+CATS.map(c=>'<option value="'+c.id+'">'+esc(c.name)+'</option>').join('');
+  document.getElementById('modal').innerHTML=
+    KHEAD+'<h2>'+(k?'Rediger kamp':'Ny kamp')+'</h2><div class="sub">Kamp</div></div>'+
+    '<div class="mbody"><form class="f" onsubmit="saveKamp(event,'+(id||'null')+')">'+
+      '<div class="two"><div><label>Motstander / navn *</label><input id="ka_title" required placeholder="f.eks. mot Vanse IL"></div><div><label>Idrett</label><select id="ka_cat">'+catOpts+'</select></div></div>'+
+      '<div class="two"><div><label>Dato *</label><input id="ka_date" type="date" required></div><div><label>Tid</label><input id="ka_time" type="time"></div></div>'+
+      '<div class="two"><div><label>Sted</label><input id="ka_loc"></div><div><label>Hjemme/borte</label><select id="ka_home"><option value="1">Hjemme</option><option value="0">Borte</option></select></div></div>'+
+      '<div class="actions"><button type="button" class="btn" onclick="renderKampModal()">Tilbake</button><button class="btn solid" type="submit">Lagre</button></div>'+
+    '</form></div>';
+  if(k){document.getElementById('ka_title').value=k.title;if(k.category_id)document.getElementById('ka_cat').value=k.category_id;if(k.date)document.getElementById('ka_date').value=k.date;if(k.time)document.getElementById('ka_time').value=k.time;if(k.location)document.getElementById('ka_loc').value=k.location;document.getElementById('ka_home').value=k.home?'1':'0';}
+}
+async function saveKamp(ev,id){ev.preventDefault();
+  const body={title:val('ka_title'),category_id:(+document.getElementById('ka_cat').value||null),match_date:val('ka_date'),match_time:val('ka_time')||null,location:val('ka_loc')||null,home:document.getElementById('ka_home').value==='1'};
+  try{let card;if(id){card=await api('PUT','/kamper/'+id,body);const i=KAMPER.findIndex(x=>x.id===id);if(i>=0)KAMPER[i]=card;}else{card=await api('POST','/kamper',body);KAMPER.push(card);}renderKampModal();renderHome();}catch(err){alert(err.message);}
+}
+async function deleteKamp(id){if(!confirm('Slette denne kampen?'))return;try{await api('DELETE','/kamper/'+id);KAMPER=KAMPER.filter(x=>x.id!==id);renderKampModal();renderHome();}catch(err){alert(err.message);}}
 function openShareWheel(){
   const url=window.location.origin+'/embed/'+(window.COMPANY_SLUG||'flik')+'/arshjul';
   const iframe='<iframe src="'+url+'" width="640" height="740" style="border:0;width:100%;max-width:660px" title="Årshjul"></iframe>';

@@ -8,6 +8,7 @@ use App\Models\ContentIdea;
 use App\Models\DashboardLayout;
 use App\Models\Destination;
 use App\Models\Event;
+use App\Models\Kamp;
 use App\Models\KlubblivPost;
 use App\Models\TrainingSchedule;
 use App\Services\WeatherService;
@@ -60,6 +61,14 @@ class DashboardController extends Controller
             ->map(fn (TrainingSchedule $t) => $t->card())
             ->values();
 
+        $kamper = Kamp::with('category')
+            ->whereNotNull('match_date')
+            ->whereDate('match_date', '>=', now()->subDay())
+            ->orderBy('match_date')->orderBy('match_time')
+            ->get()
+            ->map(fn (Kamp $k) => $k->card())
+            ->values();
+
         // Dashboard-oppsett: brukerens eget → selskaps-standard → innebygd standard
         $builtinDefault = ['a' => ['tellere', 'publiser', 'utenplan', 'travle', 'tomrom'], 'b' => ['idag', 'tips']];
         $companyDefault = DashboardLayout::whereNull('user_id')->first();
@@ -79,6 +88,7 @@ class DashboardController extends Controller
             'klubbliv' => $klubbliv,
             'ideas' => $ideas,
             'training' => $training,
+            'kamper' => $kamper,
             'weather' => $weather->week(),
             'layout' => $layout,
             'layoutDefault' => $resolvedDefault,
