@@ -151,6 +151,9 @@ svg.wheel{width:100%;height:auto;display:block}
 .rchev{color:var(--grey);display:flex;flex:none;align-items:center}
 .pubbtn{background:#eef6ef;border:1px solid #cfe6d4;color:#1f7a42;border-radius:8px;width:32px;height:28px;cursor:pointer;display:grid;place-items:center;flex:none;padding:0}
 .pubbtn:hover{background:#d9f0de}
+.rrow.done{opacity:.75}
+.donetag{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:500;color:#1f7a42;flex:none;white-space:nowrap}
+.btnlink{background:none;border:none;color:var(--flik-blue);cursor:pointer;font-size:12px;font-family:inherit;padding:0;text-decoration:underline}
 @media(max-width:880px){.ministats{grid-template-columns:repeat(2,1fr)}.weathergrid{grid-template-columns:repeat(3,1fr)}.modtray{grid-column:auto}}
 .legend .item{display:flex;align-items:center;gap:9px;font-size:13px;padding:6px 0;cursor:pointer;border-radius:6px}
 .legend .item:hover{background:#f5f8fc}.legend .item.off{opacity:.32}
@@ -862,8 +865,8 @@ function startOfWeek(d){const x=new Date(d);x.setHours(0,0,0,0);const g=(x.getDa
 function isoWeek(d){const x=new Date(d);x.setHours(0,0,0,0);x.setDate(x.getDate()+3-((x.getDay()+6)%7));const w1=new Date(x.getFullYear(),0,4);return 1+Math.round(((x-w1)/86400000-3+((w1.getDay()+6)%7))/7);}
 function allPosts(){
   const arr=[];
-  DATA.forEach(e=>(e.posts||[]).forEach(p=>{if(p.date)arr.push({date:p.date,kind:'event',id:p.id,eventId:e.id,title:p.label||'Innlegg',ctx:e.title,channels:(p.pages||[]).join(' · '),status:p.status,published:p.status==='Publisert'});}));
-  KLUBBLIV.forEach(k=>{if(k.date)arr.push({date:k.date,kind:'klubbliv',id:k.id,title:k.title,ctx:'Klubbliv',channels:(k.channels||[]).join(' · '),status:k.status,published:k.status==='publisert'});});
+  DATA.forEach(e=>(e.posts||[]).forEach(p=>{if(p.date)arr.push({date:p.date,kind:'event',id:p.id,eventId:e.id,title:p.label||'Innlegg',ctx:e.title,channels:(p.pages||[]).join(' · '),status:p.status,published:p.status==='Publisert',raw:p.status_raw||'planlagt'});}));
+  KLUBBLIV.forEach(k=>{if(k.date)arr.push({date:k.date,kind:'klubbliv',id:k.id,title:k.title,ctx:'Klubbliv',channels:(k.channels||[]).join(' · '),status:k.status,published:k.status==='publisert',raw:k.status||'planlagt'});});
   return arr;
 }
 function wc(icon,title,ctCls,ct,inner){return '<div class="weekcard"><h3>'+ic(icon)+' '+title+(ct!=null?' <span class="ct '+(ctCls||'')+'">'+ct+'</span>':'')+'</h3>'+inner+'</div>';}
@@ -877,17 +880,7 @@ function convRow(p){
 }
 function rrow(p){
   const open=p.kind==='event'?'openEvent('+p.eventId+')':'openKlubblivForm('+p.id+')';
-  const act=CANEDIT
-    ?'<button class="pubbtn" title="Merk som publisert" onclick="event.stopPropagation();markPublished(\''+p.kind+'\','+(p.eventId||'null')+','+p.id+')">'+ic('check')+'</button>'
-    :chev();
-  return '<div class="rrow click" onclick="'+open+'"><span class="rd">'+fmt(p.date)+'</span><span class="rt">'+esc(p.title)+'<small>'+esc(p.ctx)+(p.channels?' · '+esc(p.channels):'')+' · '+cd(daysTo(p.date))+'</small></span>'+act+'</div>';
-}
-async function markPublished(kind,eventId,id){
-  try{
-    if(kind==='event'){const card=await api('PUT','/tasks/'+id+'/status',{status:'publisert'});upsert(card);}
-    else{const card=await api('PUT','/klubbliv/'+id+'/status',{status:'publisert'});const i=KLUBBLIV.findIndex(x=>x.id===id);if(i>=0)KLUBBLIV[i]=card;}
-    rerender();
-  }catch(err){alert(err.message);}
+  return '<div class="rrow click" onclick="'+open+'"><span class="rd">'+fmt(p.date)+'</span><span class="rt">'+esc(p.title)+'<small>'+esc(p.ctx)+(p.channels?' · '+esc(p.channels):'')+' · '+cd(daysTo(p.date))+'</small></span>'+chev()+'</div>';
 }
 function eventRow(e){
   const posts=e.posts?e.posts.length:0;
