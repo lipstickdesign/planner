@@ -25,7 +25,7 @@ svg.wheel{width:100%;height:auto;display:block}
   <h1>Årshjul {{ date('Y') }} · {{ $company->name ?? '' }}</h1>
   <div id="host"></div>
   <div class="legend" id="legend"></div>
-  <div class="foot">Laget med <a href="https://planner.vivu.no" target="_blank" rel="nofollow noopener">Vivu Planner</a></div>
+  <div class="foot">Laget i Vivu Planner · <a href="https://havdurdesign.no/produkter/vivu-planner" target="_blank" rel="noopener">Havdur Design</a></div>
 </div>
 <script>window.WHEEL = @json($events); window.YEAR = {{ (int) date('Y') }};</script>
 @verbatim

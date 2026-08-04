@@ -25,6 +25,9 @@ input:focus{outline:none;border-color:#2f6fd6;box-shadow:0 0 0 3px rgba(47,111,2
 button{width:100%;font-family:inherit;font-size:15px;font-weight:500;padding:13px;border:none;border-radius:12px;background:#2f6fd6;color:#fff;cursor:pointer}
 button:hover{background:#2557b8}
 .hint{margin-top:16px;border-top:1px solid #e3e8ef;padding-top:13px;font-size:12px;color:#8795a3}
+.promo{margin-top:20px;border-top:1px solid #e8edf4;padding-top:15px;font-size:12.5px;color:#7a8798;line-height:1.55}
+.promo a{color:#2f6fd6;text-decoration:none;font-weight:500}
+.promo a:hover{text-decoration:underline}
 </style>
 </head>
 <body>
@@ -48,6 +51,7 @@ button:hover{background:#2557b8}
     <button type="submit">Logg inn</button>
   </form>
   <a href="{{ route('password.request') }}" style="display:inline-block;margin-top:15px;font-size:13px;color:#5b6b86;text-decoration:none">Glemt passord?</a>
+  <div class="promo">Vil din klubb også ha full oversikt over innhold og årshjul?<br><a href="https://havdurdesign.no/produkter/vivu-planner" target="_blank" rel="noopener">Vivu Planner kan settes opp for dere – les mer hos Havdur Design →</a></div>
 </div>
 </body>
 </html>
