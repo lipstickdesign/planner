@@ -83,6 +83,17 @@ class KlubblivPostController extends Controller
         return response()->json($klubblivPost->fresh()->card($this->destMap()));
     }
 
+    /** Endre kun status – for raskt statusbytte i lista. */
+    public function updateStatus(Request $request, KlubblivPost $klubblivPost)
+    {
+        $data = $request->validate([
+            'status' => ['required', Rule::in(['planlagt', 'under_arbeid', 'klar', 'publisert'])],
+        ]);
+        $klubblivPost->update(['status' => $data['status']]);
+
+        return response()->json($klubblivPost->fresh()->card($this->destMap()));
+    }
+
     public function destroy(KlubblivPost $klubblivPost)
     {
         $klubblivPost->delete();

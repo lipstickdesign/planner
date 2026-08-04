@@ -137,6 +137,7 @@ Route::middleware('auth')->group(function () {
         // Klubbliv-poster (planlagt innhold utenom arrangement)
         Route::post('/klubbliv', [KlubblivPostController::class, 'store']);
         Route::put('/klubbliv/{klubblivPost}', [KlubblivPostController::class, 'update']);
+        Route::put('/klubbliv/{klubblivPost}/status', [KlubblivPostController::class, 'updateStatus']);
         Route::delete('/klubbliv/{klubblivPost}', [KlubblivPostController::class, 'destroy']);
 
         // Treningstider

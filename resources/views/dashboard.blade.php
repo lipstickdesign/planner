@@ -149,6 +149,8 @@ svg.wheel{width:100%;height:auto;display:block}
 .travday{padding:4px 0 6px;border-bottom:1px solid var(--line)}.travday:last-child{border-bottom:none;padding-bottom:0}
 .travhead{font-size:12.5px;font-weight:600;color:#c25a00;margin:6px 0 2px}
 .rchev{color:var(--grey);display:flex;flex:none;align-items:center}
+.pubbtn{background:#eef6ef;border:1px solid #cfe6d4;color:#1f7a42;border-radius:8px;width:32px;height:28px;cursor:pointer;display:grid;place-items:center;flex:none;padding:0}
+.pubbtn:hover{background:#d9f0de}
 @media(max-width:880px){.ministats{grid-template-columns:repeat(2,1fr)}.weathergrid{grid-template-columns:repeat(3,1fr)}.modtray{grid-column:auto}}
 .legend .item{display:flex;align-items:center;gap:9px;font-size:13px;padding:6px 0;cursor:pointer;border-radius:6px}
 .legend .item:hover{background:#f5f8fc}.legend .item.off{opacity:.32}
@@ -394,7 +396,7 @@ function renderStats(){
 }
 function renderUrgent(){
   let items=[];
-  DATA.forEach(e=>(e.posts||[]).forEach(p=>{if(!p.date)return;const dd=daysTo(p.date);if(dd>=-3&&dd<=60&&p.status!=='Publisert')items.push({e,p,dd});}));
+  DATA.forEach(e=>(e.posts||[]).forEach(p=>{if(!p.date)return;const dd=daysTo(p.date);if(dd>=-3&&dd<=60&&!p.published)items.push({e,p,dd});}));
   DATA.filter(e=>{const dd=daysTo(e.date);return dd>=0&&dd<=70&&(!e.posts||!e.posts.length)&&e.type!=='Administrasjon'&&!/ikke markedsf|ikke skal/i.test(e.notat||'');})
     .forEach(e=>items.push({e,p:null,dd:daysTo(e.date),missing:true}));
   items.sort((a,b)=>a.dd-b.dd);
@@ -860,8 +862,8 @@ function startOfWeek(d){const x=new Date(d);x.setHours(0,0,0,0);const g=(x.getDa
 function isoWeek(d){const x=new Date(d);x.setHours(0,0,0,0);x.setDate(x.getDate()+3-((x.getDay()+6)%7));const w1=new Date(x.getFullYear(),0,4);return 1+Math.round(((x-w1)/86400000-3+((w1.getDay()+6)%7))/7);}
 function allPosts(){
   const arr=[];
-  DATA.forEach(e=>(e.posts||[]).forEach(p=>{if(p.date)arr.push({date:p.date,kind:'event',id:p.id,eventId:e.id,title:p.label||'Innlegg',ctx:e.title,channels:(p.pages||[]).join(' · '),status:p.status});}));
-  KLUBBLIV.forEach(k=>{if(k.date)arr.push({date:k.date,kind:'klubbliv',id:k.id,title:k.title,ctx:'Klubbliv',channels:(k.channels||[]).join(' · '),status:k.status});});
+  DATA.forEach(e=>(e.posts||[]).forEach(p=>{if(p.date)arr.push({date:p.date,kind:'event',id:p.id,eventId:e.id,title:p.label||'Innlegg',ctx:e.title,channels:(p.pages||[]).join(' · '),status:p.status,published:p.status==='Publisert'});}));
+  KLUBBLIV.forEach(k=>{if(k.date)arr.push({date:k.date,kind:'klubbliv',id:k.id,title:k.title,ctx:'Klubbliv',channels:(k.channels||[]).join(' · '),status:k.status,published:k.status==='publisert'});});
   return arr;
 }
 function wc(icon,title,ctCls,ct,inner){return '<div class="weekcard"><h3>'+ic(icon)+' '+title+(ct!=null?' <span class="ct '+(ctCls||'')+'">'+ct+'</span>':'')+'</h3>'+inner+'</div>';}
@@ -875,7 +877,17 @@ function convRow(p){
 }
 function rrow(p){
   const open=p.kind==='event'?'openEvent('+p.eventId+')':'openKlubblivForm('+p.id+')';
-  return '<div class="rrow click" onclick="'+open+'"><span class="rd">'+fmt(p.date)+'</span><span class="rt">'+esc(p.title)+'<small>'+esc(p.ctx)+(p.channels?' · '+esc(p.channels):'')+' · '+cd(daysTo(p.date))+'</small></span>'+chev()+'</div>';
+  const act=CANEDIT
+    ?'<button class="pubbtn" title="Merk som publisert" onclick="event.stopPropagation();markPublished(\''+p.kind+'\','+(p.eventId||'null')+','+p.id+')">'+ic('check')+'</button>'
+    :chev();
+  return '<div class="rrow click" onclick="'+open+'"><span class="rd">'+fmt(p.date)+'</span><span class="rt">'+esc(p.title)+'<small>'+esc(p.ctx)+(p.channels?' · '+esc(p.channels):'')+' · '+cd(daysTo(p.date))+'</small></span>'+act+'</div>';
+}
+async function markPublished(kind,eventId,id){
+  try{
+    if(kind==='event'){const card=await api('PUT','/tasks/'+id+'/status',{status:'publisert'});upsert(card);}
+    else{const card=await api('PUT','/klubbliv/'+id+'/status',{status:'publisert'});const i=KLUBBLIV.findIndex(x=>x.id===id);if(i>=0)KLUBBLIV[i]=card;}
+    rerender();
+  }catch(err){alert(err.message);}
 }
 function eventRow(e){
   const posts=e.posts?e.posts.length:0;
@@ -884,10 +896,10 @@ function eventRow(e){
 /* ---- Moduler ---- */
 function mod_publiser(){
   const today=new Date();today.setHours(0,0,0,0);const in7=addDays(today,7);const posts=allPosts();
-  const due=posts.filter(p=>{const d=addDays(p.date,0);return d>=addDays(today,-2)&&d<=in7&&p.status!=='Publisert';}).sort((x,y)=>new Date(x.date)-new Date(y.date));
+  const due=posts.filter(p=>{const d=addDays(p.date,0);return d>=addDays(today,-2)&&d<=in7&&!p.published;}).sort((x,y)=>new Date(x.date)-new Date(y.date));
   if(due.length)return wc('sparkle','Publiser nå','',due.length,due.map(rrow).join(''));
   // Dynamisk fallback – hold brukeren i forkant selv når ingenting haster
-  const next=posts.filter(p=>{const d=addDays(p.date,0);return d>addDays(today,7)&&p.status!=='Publisert';}).sort((x,y)=>new Date(x.date)-new Date(y.date)).slice(0,3);
+  const next=posts.filter(p=>{const d=addDays(p.date,0);return d>addDays(today,7)&&!p.published;}).sort((x,y)=>new Date(x.date)-new Date(y.date)).slice(0,3);
   const idea=ideaOfDay();
   let inner='<div class="emptyrec" style="padding:2px 0 6px">Ingenting som haster de neste dagene – godt jobba! Her er det som holder deg i forkant:</div>';
   if(next.length)inner+='<div class="lbl" style="margin:4px 0 2px">Neste på tur</div>'+next.map(rrow).join('');
@@ -901,7 +913,7 @@ function mod_utenplan(){
 }
 function mod_travle(){
   const today=new Date();today.setHours(0,0,0,0);const posts=allPosts();
-  const byDay={};posts.forEach(p=>{const d=addDays(p.date,0);if(d>=today&&d<=addDays(today,28)){const k=ymd(p.date);(byDay[k]=byDay[k]||[]).push(p);}});
+  const byDay={};posts.forEach(p=>{const d=addDays(p.date,0);if(d>=today&&d<=addDays(today,28)&&!p.published){const k=ymd(p.date);(byDay[k]=byDay[k]||[]).push(p);}});
   const days=Object.keys(byDay).filter(k=>byDay[k].length>=2).sort();
   const inner=days.length?days.map(k=>'<div class="travday"><div class="travhead">'+fmt(k)+' · '+byDay[k].length+' poster samme dag – vurder å flytte en</div>'+byDay[k].slice().sort((x,y)=>String(x.ctx).localeCompare(String(y.ctx))).map(convRow).join('')+'</div>').join(''):'<div class="emptyrec">Ingen dager med for mange poster.</div>';
   return wc('info','Travle dager','red',days.length,inner);
