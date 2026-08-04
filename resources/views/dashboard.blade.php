@@ -255,6 +255,15 @@ footer{color:var(--ink-soft);font-size:12.5px;text-align:center;padding:24px 20p
 .trs{font-size:12px;color:var(--ink-soft);margin-top:2px;display:flex;align-items:center;gap:7px;flex-wrap:wrap}
 .tflag{font-size:10.5px;font-weight:600;padding:1px 7px;border-radius:20px;flex:none}
 .tflag.red{background:#fde3e3;color:#b23535}.tflag.amber{background:#fdf0d6;color:#9a6b00}
+.segbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:18px}
+.seg{font-family:inherit;font-size:13px;font-weight:500;padding:8px 14px;border-radius:20px;border:1px solid var(--line);background:#fff;color:var(--ink-soft);cursor:pointer;display:inline-flex;align-items:center;gap:7px}
+.seg:hover{background:#f3f7fc}
+.seg.active{background:var(--flik-blue);color:#fff;border-color:var(--flik-blue)}
+.segc{font-size:11px;font-weight:700;background:rgba(20,40,80,.09);border-radius:20px;padding:0 7px;min-width:18px;text-align:center}
+.seg.active .segc{background:rgba(255,255,255,.28)}
+.segtoggle{font-family:inherit;font-size:13px;font-weight:500;padding:8px 14px;border-radius:20px;border:1px solid var(--line);background:#fff;color:var(--ink-soft);cursor:pointer;margin-left:auto;display:inline-flex;align-items:center;gap:6px}
+.segtoggle.on{background:#eef3fd;border-color:#cddcf0;color:var(--flik-blue)}
+@media(max-width:880px){.segtoggle{margin-left:0}}
 @media(max-width:880px){.trowf{grid-template-columns:56px 1fr auto;gap:10px}}
 .tchan{font-size:11px;color:var(--ink-soft);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:170px;text-align:right}
 .taskdetail{display:none;padding:2px 15px 15px}
@@ -329,14 +338,11 @@ form.f .actions .btn{padding:11px 22px;font-size:14px}
   </section>
   <section class="view" id="view-tasks">
     <div class="viewhead"><h2>Oppgaver</h2></div>
-    <div class="note">Snarvei til alle oppgaver på tvers av arrangement. Oppgaver med publiseringsdato som ikke er publisert er varsler – forfalte er markert rødt.</div>
     <div class="toolbar">
       <input type="text" id="tsearch" placeholder="Søk i oppgaver…">
       <select id="tSport"><option value="">Alle idretter</option></select>
-      <select id="tStatus"><option value="">Alle statuser</option><option value="planlagt">Planlagt</option><option value="under_arbeid">Under arbeid</option><option value="klar">Klar for publisering</option><option value="publisert">Publisert</option></select>
-      <label class="chk"><input type="checkbox" id="tMine"> Mine oppgaver</label>
-      <label class="chk"><input type="checkbox" id="tAlerts"> Kun varsler</label>
     </div>
+    <div class="segbar" id="tScope"></div>
     <div id="taskListHost"></div>
   </section>
   <section class="view" id="view-klubbliv">
@@ -657,7 +663,7 @@ document.querySelectorAll('.tab').forEach(t=>t.addEventListener('click',()=>{
   if(t.dataset.view==='team')renderTeam();
 }));
 ['search','fSport','fStatus'].forEach(id=>document.getElementById(id).addEventListener('input',renderList));
-['tsearch','tSport','tStatus','tMine','tAlerts'].forEach(id=>{const el=document.getElementById(id);if(el){el.addEventListener('input',renderTaskList);el.addEventListener('change',renderTaskList);}});
+['tsearch','tSport'].forEach(id=>{const el=document.getElementById(id);if(el){el.addEventListener('input',renderTaskList);el.addEventListener('change',renderTaskList);}});
 
 /* ---- REDIGERING (CRUD via fetch) ---- */
 const CSRF=window.CSRF, CATS=window.CATS||[], MEMBERS=window.MEMBERS||[], DESTS=window.DESTS||[];
@@ -1149,30 +1155,38 @@ function taskRowFlat(p,e,today){
     (CANEDIT?statusSel(p,e.id):'<span class="pill st-planlagt">'+esc(p.status)+'</span>')+
   '</div>';
 }
+let taskScope='kommende',taskMine=false;
+function setTaskScope(s){taskScope=s;renderTaskList();}
+function toggleTaskMine(){taskMine=!taskMine;renderTaskList();}
 function renderTaskList(){
   const host=document.getElementById('taskListHost');if(!host)return;
   const today=new Date();today.setHours(0,0,0,0);
   const tsp=document.getElementById('tSport');
   if(tsp&&tsp.options.length<=1){[...new Set(DATA.map(e=>e.sport).filter(Boolean))].sort().forEach(s=>{const o=document.createElement('option');o.value=s;o.textContent=s;tsp.appendChild(o);});}
   const q=(document.getElementById('tsearch').value||'').toLowerCase();
-  const fsp=document.getElementById('tSport').value;
-  const fst=document.getElementById('tStatus').value;
-  const mine=document.getElementById('tMine').checked;
-  const alerts=document.getElementById('tAlerts').checked;
+  const fsp=tsp?tsp.value:'';
   const meId=(window.ME&&window.ME.id)||0;
-  let rows=[];
-  DATA.forEach(e=>(e.posts||[]).forEach(p=>rows.push({p,e})));
-  rows=rows.filter(({p,e})=>{
+  let base=[];
+  DATA.forEach(e=>(e.posts||[]).forEach(p=>base.push({p,e})));
+  base=base.filter(({p,e})=>{
     if(q&&!((p.label||'').toLowerCase().indexOf(q)>=0||(e.title||'').toLowerCase().indexOf(q)>=0))return false;
     if(fsp&&e.sport!==fsp)return false;
-    if(fst&&p.status_raw!==fst)return false;
-    if(mine){const r=p.responsible_user_id||e.responsible_user_id;if(r!==meId)return false;}
-    if(alerts){if(!p.date||p.status_raw==='publisert')return false;}
+    if(taskMine){const r=p.responsible_user_id||e.responsible_user_id;if(r!==meId)return false;}
     return true;
   });
-  rows.sort((a,b)=>{const da=a.p.date||'9999-99-99',db=b.p.date||'9999-99-99';return da<db?-1:(da>db?1:0);});
-  const cnt=rows.length;
-  host.innerHTML='<div class="monthgroup"><h3>'+cnt+' oppgave'+(cnt===1?'':'r')+'</h3></div>'+(rows.length?'<div class="elist">'+rows.map(({p,e})=>taskRowFlat(p,e,today)).join('')+'</div>':'<div class="nopost" style="margin:0">Ingen oppgaver som matcher.</div>');
+  const pub=x=>x.p.status_raw==='publisert';
+  const dOf=x=>x.p.date?addDays(x.p.date,0):null;
+  const kommende=base.filter(x=>!pub(x)&&dOf(x)&&dOf(x)>=today);
+  const forfalt=base.filter(x=>!pub(x)&&dOf(x)&&dOf(x)<today);
+  const publisert=base.filter(x=>pub(x));
+  const scopes={kommende:kommende,forfalt:forfalt,publisert:publisert,alle:base};
+  const seg=(id,label,arr)=>'<button class="seg'+(taskScope===id?' active':'')+'" onclick="setTaskScope(\''+id+'\')">'+label+' <span class="segc">'+arr.length+'</span></button>';
+  const sc=document.getElementById('tScope');
+  if(sc)sc.innerHTML=seg('kommende','Kommende',kommende)+seg('forfalt','Forfalt',forfalt)+seg('publisert','Publisert',publisert)+seg('alle','Alle',base)+'<button class="segtoggle'+(taskMine?' on':'')+'" onclick="toggleTaskMine()">'+ic('check')+' Mine oppgaver</button>';
+  let rows=(scopes[taskScope]||base).slice();
+  if(taskScope==='publisert'||taskScope==='forfalt')rows.sort((a,b)=>{const da=a.p.date||'',db=b.p.date||'';return da<db?1:(da>db?-1:0);});
+  else rows.sort((a,b)=>{const da=a.p.date||'9999-99-99',db=b.p.date||'9999-99-99';return da<db?-1:(da>db?1:0);});
+  host.innerHTML=rows.length?'<div class="elist">'+rows.map(({p,e})=>taskRowFlat(p,e,today)).join('')+'</div>':'<div class="nopost" style="margin:0">Ingen oppgaver i denne visningen.</div>';
 }
 /* ---- KLUBBLIV ---- */
 function renderKlubbliv(){
