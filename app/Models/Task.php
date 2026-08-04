@@ -28,6 +28,11 @@ class Task extends Model
         return $this->belongsTo(Event::class);
     }
 
+    public function responsible(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'responsible_user_id');
+    }
+
     public function postType(): BelongsTo
     {
         return $this->belongsTo(PostType::class);

@@ -246,6 +246,16 @@ footer{color:var(--ink-soft);font-size:12.5px;text-align:center;padding:24px 20p
 .statussel{font-family:inherit;font-size:11px;font-weight:500;border:none;border-radius:20px;padding:4px 10px;cursor:pointer;-webkit-appearance:none;appearance:none;max-width:150px}
 .statussel.st-planlagt{background:#e7f0fb;color:#1c5fa8}.statussel.st-arbeid{background:#fdf0d6;color:#9a6b00}
 .statussel.st-klar{background:#dcf3ee;color:#137a6e}.statussel.st-publisert{background:#dff3e4;color:#1f7a42}
+.chk{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--ink-soft)}.chk input{width:auto}
+.trowf{display:grid;grid-template-columns:64px 1fr auto;gap:14px;align-items:center;padding:13px 18px;border-bottom:1px solid var(--line);cursor:pointer}
+.elist .trowf:last-child{border-bottom:none}.trowf:hover{background:#f7faff}
+.trd{font-size:12px;color:var(--ink-soft);font-weight:600;text-align:center}
+.trmeta{min-width:0}
+.trt{font-weight:500;font-size:14px;display:flex;align-items:center;gap:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.trs{font-size:12px;color:var(--ink-soft);margin-top:2px;display:flex;align-items:center;gap:7px;flex-wrap:wrap}
+.tflag{font-size:10.5px;font-weight:600;padding:1px 7px;border-radius:20px;flex:none}
+.tflag.red{background:#fde3e3;color:#b23535}.tflag.amber{background:#fdf0d6;color:#9a6b00}
+@media(max-width:880px){.trowf{grid-template-columns:56px 1fr auto;gap:10px}}
 .tchan{font-size:11px;color:var(--ink-soft);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:170px;text-align:right}
 .taskdetail{display:none;padding:2px 15px 15px}
 .taskitem.open .taskdetail{display:block}
@@ -288,6 +298,7 @@ form.f .actions .btn{padding:11px 22px;font-size:14px}
     <button class="tab active" data-view="home">Dashboard</button>
     <button class="tab" data-view="wheel">Årshjul</button>
     <button class="tab" data-view="list">Eventliste</button>
+    <button class="tab" data-view="tasks">Oppgaver</button>
     <button class="tab" data-view="klubbliv">Klubbliv</button>
     @if($canEdit)<button class="tab" data-view="team">Brukere</button>@endif
   </div>
@@ -316,6 +327,18 @@ form.f .actions .btn{padding:11px 22px;font-size:14px}
     </div>
     <div id="listHost"></div>
   </section>
+  <section class="view" id="view-tasks">
+    <div class="viewhead"><h2>Oppgaver</h2></div>
+    <div class="note">Snarvei til alle oppgaver på tvers av arrangement. Oppgaver med publiseringsdato som ikke er publisert er varsler – forfalte er markert rødt.</div>
+    <div class="toolbar">
+      <input type="text" id="tsearch" placeholder="Søk i oppgaver…">
+      <select id="tSport"><option value="">Alle idretter</option></select>
+      <select id="tStatus"><option value="">Alle statuser</option><option value="planlagt">Planlagt</option><option value="under_arbeid">Under arbeid</option><option value="klar">Klar for publisering</option><option value="publisert">Publisert</option></select>
+      <label class="chk"><input type="checkbox" id="tMine"> Mine oppgaver</label>
+      <label class="chk"><input type="checkbox" id="tAlerts"> Kun varsler</label>
+    </div>
+    <div id="taskListHost"></div>
+  </section>
   <section class="view" id="view-klubbliv">
     <div class="viewhead"><h2>Klubbliv</h2>@if($canEdit)<button class="btn solid" onclick="openKlubblivForm(null)"><svg class="ico" viewBox="0 0 24 24"><path d="M12 5l0 14M5 12l14 0"/></svg> Ny klubbliv-post</button>@endif</div>
     <div class="note">Innhold mellom arrangementene – verving, engasjement og praktisk info. Nederst kan du redigere idé-biblioteket.</div>
@@ -335,7 +358,7 @@ form.f .actions .btn{padding:11px 22px;font-size:14px}
 
 <script>
 window.DATA = @json($events);
-window.ME = @json(['name' => $user->name]);
+window.ME = @json(['name' => $user->name, 'id' => $user->id]);
 window.CATS = @json($categories);
 window.MEMBERS = @json($members);
 window.DESTS = @json($destinations);
@@ -551,7 +574,10 @@ function platChip(p){
   return '<span class="platchip" style="background:#'+pl[1]+'22;color:#'+pl[1]+'">'+pl[0]+fmt+'</span>';
 }
 async function setTaskStatus(eventId,taskId,status){
-  try{const card=await api('PUT','/tasks/'+taskId+'/status',{status});upsert(card);rerender();openEvent(eventId);}catch(err){alert(err.message);}
+  try{const card=await api('PUT','/tasks/'+taskId+'/status',{status});upsert(card);
+    if(document.getElementById('overlay').classList.contains('open'))openEvent(eventId);
+    rerender();
+  }catch(err){alert(err.message);}
 }
 
 /* EVENT CARD */
@@ -626,10 +652,12 @@ document.querySelectorAll('.tab').forEach(t=>t.addEventListener('click',()=>{
   if(t.dataset.view==='home')renderHome();
   if(t.dataset.view==='wheel'){renderWheel();renderLegend();}
   if(t.dataset.view==='list')renderList();
+  if(t.dataset.view==='tasks')renderTaskList();
   if(t.dataset.view==='klubbliv')renderKlubbliv();
   if(t.dataset.view==='team')renderTeam();
 }));
 ['search','fSport','fStatus'].forEach(id=>document.getElementById(id).addEventListener('input',renderList));
+['tsearch','tSport','tStatus','tMine','tAlerts'].forEach(id=>{const el=document.getElementById(id);if(el){el.addEventListener('input',renderTaskList);el.addEventListener('change',renderTaskList);}});
 
 /* ---- REDIGERING (CRUD via fetch) ---- */
 const CSRF=window.CSRF, CATS=window.CATS||[], MEMBERS=window.MEMBERS||[], DESTS=window.DESTS||[];
@@ -643,7 +671,7 @@ async function api(method,url,body){
   return r.status===204?null:r.json();
 }
 function upsert(card){const i=DATA.findIndex(x=>x.id===card.id);if(i>=0)DATA[i]=card;else DATA.push(card);}
-function rerender(){renderHome();const a=document.querySelector('.tab.active');if(a&&a.dataset.view==='wheel'){renderWheel();renderLegend();}if(a&&a.dataset.view==='list')renderList();}
+function rerender(){renderHome();const a=document.querySelector('.tab.active');if(a&&a.dataset.view==='wheel'){renderWheel();renderLegend();}if(a&&a.dataset.view==='list')renderList();if(a&&a.dataset.view==='tasks')renderTaskList();}
 
 function openEventForm(id){
   const e=id?DATA.find(x=>x.id===id):{};
@@ -694,7 +722,7 @@ function openTaskForm(eventId,taskId){
     '<div class="mbody"><form class="f" onsubmit="saveTaskForm(event,'+eventId+','+(taskId||'null')+')">'+
       '<div class="two"><div><label>Hva slags post *</label><input id="t_label" required value="'+esc(t.label)+'" placeholder="f.eks. Teaser – hold av datoen"></div>'+
       '<div><label>Publiseringsdato</label><input id="t_date" type="date" value="'+(t.date||'')+'"></div></div>'+
-      '<label>Status</label><select id="t_status">'+stOpts+'</select>'+
+      '<div class="two"><div><label>Status</label><select id="t_status">'+stOpts+'</select></div><div><label>Ansvarlig</label><select id="t_resp"><option value="">– ingen –</option>'+MEMBERS.map(m=>'<option value="'+m.id+'"'+sel(t.responsible_user_id||'',m.id)+'>'+esc(m.name)+'</option>').join('')+'</select></div></div>'+
       '<div class="two"><div><label>Plattform</label><select id="t_platform"><option value="">– velg –</option>'+Object.keys(PLATFORMS).map(k=>'<option value="'+k+'"'+sel(t.platform||'',k)+'>'+PLATFORMS[k][0]+'</option>').join('')+'</select></div>'+
       '<div><label>Format</label><select id="t_format"><option value="">–</option><option value="post"'+sel(t.format||'','post')+'>Post</option><option value="story"'+sel(t.format||'','story')+'>Story</option></select></div></div>'+
       '<label>FLIK-side(r) / destinasjoner</label><select id="t_dests" multiple size="5" style="height:auto">'+destOpts+'</select>'+
@@ -707,7 +735,7 @@ function openTaskForm(eventId,taskId){
 }
 async function saveTaskForm(ev,eventId,taskId){ev.preventDefault();
   const dests=[...document.getElementById('t_dests').selectedOptions].map(o=>parseInt(o.value,10));
-  const body={label:val('t_label'),publish_date:val('t_date')||null,status:val('t_status'),platform:val('t_platform')||null,format:val('t_format')||null,draft_url:val('t_text')||null,body_draft:val('t_body')||null,destination_ids:dests};
+  const body={label:val('t_label'),publish_date:val('t_date')||null,status:val('t_status'),platform:val('t_platform')||null,format:val('t_format')||null,responsible_user_id:(+val('t_resp')||null),draft_url:val('t_text')||null,body_draft:val('t_body')||null,destination_ids:dests};
   try{const card=taskId?await api('PUT','/tasks/'+taskId,body):await api('POST','/events/'+eventId+'/tasks',body);upsert(card);rerender();openEvent(eventId);}catch(err){alert(err.message);}
 }
 async function deleteTask(eventId,taskId){
@@ -1109,6 +1137,43 @@ async function dagensTips(){
 }
 function copyTip(){if(window.__tip&&navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(window.__tip);}
 function tipToKlubbliv(){openKlubblivForm(null);const t=document.getElementById('k_title');if(t)t.value='Dagens innlegg';const b=document.getElementById('k_body');if(b)b.value=window.__tip||'';const d=document.getElementById('k_date');if(d)d.value=ymd(new Date());}
+/* ---- OPPGAVELISTE (alle tasks på tvers) ---- */
+function taskRowFlat(p,e,today){
+  const overdue=p.date&&addDays(p.date,0)<today&&p.status_raw!=='publisert';
+  const dd=p.date?daysTo(p.date):null;
+  const flag=overdue?'<span class="tflag red">Forfalt</span>':((dd!=null&&dd>=0&&dd<=3&&p.status_raw!=='publisert')?'<span class="tflag amber">Snart</span>':'');
+  const resp=p.ansvarlig||e.ansvarlig||'';
+  return '<div class="trowf" onclick="openEvent('+e.id+')">'+
+    '<span class="trd">'+(p.date?fmt(p.date):'—')+'</span>'+
+    '<span class="trmeta"><span class="trt">'+esc(p.label||'Innlegg')+flag+'</span><span class="trs"><span class="sport" style="background:'+col(e)+'">'+esc(e.sport||'')+'</span> '+esc(e.title)+(resp?' · '+esc(resp):'')+(p.platform&&PLATFORMS[p.platform]?' · '+PLATFORMS[p.platform][0]:'')+'</span></span>'+
+    (CANEDIT?statusSel(p,e.id):'<span class="pill st-planlagt">'+esc(p.status)+'</span>')+
+  '</div>';
+}
+function renderTaskList(){
+  const host=document.getElementById('taskListHost');if(!host)return;
+  const today=new Date();today.setHours(0,0,0,0);
+  const tsp=document.getElementById('tSport');
+  if(tsp&&tsp.options.length<=1){[...new Set(DATA.map(e=>e.sport).filter(Boolean))].sort().forEach(s=>{const o=document.createElement('option');o.value=s;o.textContent=s;tsp.appendChild(o);});}
+  const q=(document.getElementById('tsearch').value||'').toLowerCase();
+  const fsp=document.getElementById('tSport').value;
+  const fst=document.getElementById('tStatus').value;
+  const mine=document.getElementById('tMine').checked;
+  const alerts=document.getElementById('tAlerts').checked;
+  const meId=(window.ME&&window.ME.id)||0;
+  let rows=[];
+  DATA.forEach(e=>(e.posts||[]).forEach(p=>rows.push({p,e})));
+  rows=rows.filter(({p,e})=>{
+    if(q&&!((p.label||'').toLowerCase().indexOf(q)>=0||(e.title||'').toLowerCase().indexOf(q)>=0))return false;
+    if(fsp&&e.sport!==fsp)return false;
+    if(fst&&p.status_raw!==fst)return false;
+    if(mine){const r=p.responsible_user_id||e.responsible_user_id;if(r!==meId)return false;}
+    if(alerts){if(!p.date||p.status_raw==='publisert')return false;}
+    return true;
+  });
+  rows.sort((a,b)=>{const da=a.p.date||'9999-99-99',db=b.p.date||'9999-99-99';return da<db?-1:(da>db?1:0);});
+  const cnt=rows.length;
+  host.innerHTML='<div class="monthgroup"><h3>'+cnt+' oppgave'+(cnt===1?'':'r')+'</h3></div>'+(rows.length?'<div class="elist">'+rows.map(({p,e})=>taskRowFlat(p,e,today)).join('')+'</div>':'<div class="nopost" style="margin:0">Ingen oppgaver som matcher.</div>');
+}
 /* ---- KLUBBLIV ---- */
 function renderKlubbliv(){
   const host=document.getElementById('klubblivHost');if(!host)return;

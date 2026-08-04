@@ -66,7 +66,7 @@ class Event extends Model
      */
     public function toCard(): array
     {
-        $this->loadMissing(['category', 'responsible', 'tasks.destinations']);
+        $this->loadMissing(['category', 'responsible', 'tasks.destinations', 'tasks.responsible']);
 
         return [
             'id' => $this->id,
@@ -96,6 +96,8 @@ class Event extends Model
                     'status_raw' => $t->status,
                     'platform' => $t->platform,
                     'format' => $t->format,
+                    'responsible_user_id' => $t->responsible_user_id,
+                    'ansvarlig' => $t->responsible->name ?? null,
                     'pages' => $t->destinations->pluck('name')->all(),
                     'destination_ids' => $t->destinations->pluck('id')->all(),
                     'text' => $t->draft_url,

@@ -17,6 +17,7 @@ class TaskController extends Controller
             'status' => ['required', Rule::in(['planlagt', 'under_arbeid', 'klar', 'publisert'])],
             'platform' => ['nullable', Rule::in(['facebook', 'instagram', 'tiktok', 'snapchat', 'linkedin', 'youtube'])],
             'format' => ['nullable', Rule::in(['post', 'story'])],
+            'responsible_user_id' => ['nullable', 'exists:users,id'],
             'draft_url' => ['nullable', 'string', 'max:500'],
             'body_draft' => ['nullable', 'string'],
             'destination_ids' => ['array'],
@@ -45,6 +46,7 @@ class TaskController extends Controller
             'status' => $data['status'],
             'platform' => $data['platform'] ?? null,
             'format' => $data['format'] ?? null,
+            'responsible_user_id' => $data['responsible_user_id'] ?? null,
             'draft_url' => $data['draft_url'] ?? null,
             'body_draft' => $data['body_draft'] ?? null,
             'sort_order' => (int) $event->tasks()->max('sort_order') + 1,
@@ -64,6 +66,7 @@ class TaskController extends Controller
             'status' => $data['status'],
             'platform' => $data['platform'] ?? null,
             'format' => $data['format'] ?? null,
+            'responsible_user_id' => $data['responsible_user_id'] ?? null,
             'draft_url' => $data['draft_url'] ?? null,
             'body_draft' => $data['body_draft'] ?? null,
         ]);
