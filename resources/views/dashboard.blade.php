@@ -1456,7 +1456,7 @@ function renderKampModal(){
   const list=rows.length?rows.map(k=>'<div class="idearow"><span class="gpill" style="background:'+(k.color||'#8795a3')+';color:#fff">'+(k.date?fmt(k.date):'—')+'</span><span class="it">'+esc(k.title)+'<small>'+(k.category?esc(k.category)+' · ':'')+(k.home?'Hjemme':'Borte')+(k.time?' · '+k.time:'')+(k.location?' · '+esc(k.location):'')+'</small></span><button class="btn sm" onclick="openKampForm('+k.id+')">'+ic('edit')+'</button><button class="btn sm" style="color:#b23535" onclick="deleteKamp('+k.id+')">'+ic('trash')+'</button></div>').join(''):'<div class="emptyrec">Ingen kamper lagt inn ennå.</div>';
   document.getElementById('modal').innerHTML=
     KHEAD+'<h2>Kamper</h2><div class="sub">Kommende hjemmekamper – vises på dashbordet</div></div>'+
-    '<div class="mbody"><div style="display:flex;justify-content:flex-end;gap:8px;margin-bottom:10px"><button class="btn sm" onclick="importKamper()">'+ic('refresh')+' Importer fra fotball.no</button><button class="btn solid sm" onclick="openKampForm(null)">'+ic('plus')+' Ny kamp</button></div>'+list+'</div>';
+    '<div class="mbody"><div style="display:flex;justify-content:flex-end;gap:8px;margin-bottom:10px;flex-wrap:wrap"><button class="btn sm" onclick="openShareKamper()">'+ic('link')+' Del til nettside</button><button class="btn sm" onclick="importKamper()">'+ic('refresh')+' Importer fra fotball.no</button><button class="btn solid sm" onclick="openKampForm(null)">'+ic('plus')+' Ny kamp</button></div>'+list+'</div>';
 }
 async function importKamper(){
   if(!confirm('Hente hjemmekamper fra fotball.no? Nye kamper legges til og tidligere importerte oppdateres.'))return;
@@ -1497,6 +1497,17 @@ function openShareWheel(){
       '<div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap"><button class="btn sm" onclick="copyField(\'shareEmbed\')">'+ic('copy')+' Kopier innbyggingskode</button><a class="btn sm" href="'+url+'" target="_blank">'+ic('link')+' Åpne forhåndsvisning</a></div>'+
     '</div>';
   document.getElementById('overlay').classList.add('open');
+}
+function openShareKamper(){
+  const url=window.location.origin+'/embed/'+(window.COMPANY_SLUG||'flik')+'/kamper';
+  const iframe='<iframe src="'+url+'" width="640" height="560" style="border:0;width:100%;max-width:660px" title="Kommende hjemmekamper"></iframe>';
+  document.getElementById('modal').innerHTML=
+    KHEAD+'<h2>Del kampoversikt</h2><div class="sub">Viser hjemmekamper i dag + 7 dager – oppdateres automatisk</div></div>'+
+    '<div class="mbody">'+
+      '<label>Direkte lenke</label><div style="display:flex;gap:8px;align-items:center"><input class="tiphint" id="kShareUrl" readonly value="'+esc(url)+'"><button class="btn sm" style="flex:none" onclick="copyField(\'kShareUrl\')">'+ic('copy')+' Kopier</button></div>'+
+      '<label style="margin-top:14px">Innbyggingskode (iframe) – lim inn på flik.no/hvaskjer</label><textarea id="kShareEmbed" readonly style="width:100%;min-height:92px;font-family:inherit;font-size:12.5px;padding:10px 12px;border:1px solid #e6ebf2;border-radius:10px;background:#fbfcfe;color:var(--ink)">'+esc(iframe)+'</textarea>'+
+      '<div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap"><button class="btn sm" onclick="copyField(\'kShareEmbed\')">'+ic('copy')+' Kopier innbyggingskode</button><a class="btn sm" href="'+url+'" target="_blank">'+ic('link')+' Åpne forhåndsvisning</a><button class="btn sm" onclick="renderKampModal()">Tilbake</button></div>'+
+    '</div>';
 }
 function copyField(id){const el=document.getElementById(id);if(!el)return;el.focus();el.select();const t=el.value;if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(t);else{try{document.execCommand('copy');}catch(e){}}}
 async function dagensTips(){

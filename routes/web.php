@@ -12,6 +12,7 @@ use App\Http\Controllers\EventController;
 use App\Http\Controllers\KampController;
 use App\Http\Controllers\KlubblivPostController;
 use App\Http\Controllers\OnboardingController;
+use App\Http\Controllers\PublicKampController;
 use App\Http\Controllers\PublicWheelController;
 use App\Http\Controllers\TaskController;
 use App\Http\Controllers\TrainingScheduleController;
@@ -29,6 +30,9 @@ Route::get('/', function () {
 
 // Offentlig, innebygdbart årshjul (ingen innlogging)
 Route::get('/embed/{slug}/arshjul', [PublicWheelController::class, 'wheel'])->name('embed.wheel');
+
+// Offentlig, innebygdbar kampoversikt (i dag + 7 dager) for nettside
+Route::get('/embed/{slug}/kamper', [PublicKampController::class, 'feed'])->name('embed.kamper');
 
 Route::get('/login', function () {
     if (Auth::check()) {
