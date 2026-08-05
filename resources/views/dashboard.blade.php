@@ -16,7 +16,7 @@
 body{margin:0;background:var(--bg);color:var(--ink);font-family:'Ubuntu',system-ui,sans-serif;line-height:1.55}
 a{color:var(--flik-blue);text-decoration:none}a:hover{text-decoration:underline}
 .wrap{max-width:1240px;margin:0 auto;padding:0 28px}
-.topbar{background:linear-gradient(125deg,#26406e,#1c3155 55%,#1a1e39);color:#fff}
+.topbar{background:var(--brand-grad,linear-gradient(125deg,#26406e,#1c3155 55%,#1a1e39));color:#fff}
 .topbar .wrap{display:flex;align-items:center;gap:14px;padding:16px 28px}
 .brand{display:flex;align-items:center;gap:12px}
 .brandmark{height:38px;width:auto;color:#fff;display:block}
@@ -291,6 +291,15 @@ form.f .actions .btn{padding:11px 22px;font-size:14px}
 @media(max-width:880px){.stats{grid-template-columns:repeat(2,1fr)}.grid2,.wheelwrap{grid-template-columns:1fr}.fieldgrid{grid-template-columns:1fr}}
 </style>
 @endverbatim
+@php
+$themes = [
+  'blue'  => ['blue'=>'2f6fd6','dark'=>'1c3155','deep'=>'1a1e39','navy'=>'1c3155','sky'=>'6aaae4','accent'=>'fb471f','grad'=>'linear-gradient(125deg,#26406e,#1c3155 55%,#1a1e39)'],
+  'red'   => ['blue'=>'c0392b','dark'=>'4a121c','deep'=>'350c14','navy'=>'4a121c','sky'=>'dd9a9a','accent'=>'e8a200','grad'=>'linear-gradient(125deg,#6e2634,#4a121c 55%,#350c14)'],
+  'green' => ['blue'=>'2e9e5b','dark'=>'15412b','deep'=>'0e2f1e','navy'=>'15412b','sky'=>'8fcfa6','accent'=>'e8a200','grad'=>'linear-gradient(125deg,#245c3d,#15412b 55%,#0e2f1e)'],
+];
+$th = $themes[$brand['theme'] ?? 'blue'] ?? $themes['blue'];
+@endphp
+<style>:root{--flik-blue:#{{ $th['blue'] }};--flik-blue-dark:#{{ $th['dark'] }};--flik-blue-deep:#{{ $th['deep'] }};--navy:#{{ $th['navy'] }};--sky:#{{ $th['sky'] }};--accent:#{{ $th['accent'] }};--brand-grad:{{ $th['grad'] }}}</style>
 </head>
 <body>
 <div class="topbar">
@@ -299,7 +308,7 @@ form.f .actions .btn{padding:11px 22px;font-size:14px}
       <span class="logosvg"></span>
       <div>
         <h1>Vivu Planner</h1>
-        <div class="sub">{{ $company->name ?? 'Årshjul' }}</div>
+        <div class="sub">{{ $brand['subtitle'] ?? 'Årshjul' }}</div>
       </div>
     </div>
     <div class="spacer"></div>
@@ -376,6 +385,7 @@ window.DATA = @json($events);
 window.ME = @json(['name' => $user->name, 'id' => $user->id, 'email' => $user->email]);
 window.COMPANIES = @json($companies);
 window.CURRENT_COMPANY_ID = @json($currentCompanyId);
+window.BRAND = @json($brand);
 window.CATS = @json($categories);
 window.MEMBERS = @json($members);
 window.DESTS = @json($destinations);
@@ -396,7 +406,7 @@ window.CSRF = '{{ csrf_token() }}';
 @verbatim
 <script>
 const LOGO='<svg class="brandmark" viewBox="0 0 191.4 365" xmlns="http://www.w3.org/2000/svg"><path fill="currentColor" d="M191.4,121.5V45l-11.7,3.6C95.2,74.9,43.6,106.1,26.6,141.5c-8,16.5-8.6,33.7-1.8,51.1c5.3,13.7,14.4,23.2,27.1,28.2c-9.8,65.7,7.5,134.3,8.3,137.4l1.7,6.8h65.7l-1.9-10.6c-1.1-6.1-2.3-12.1-3.5-17.9c-5.8-28.4-10.3-50.9,0.6-66.9c9-13.2,29-22.4,61.3-28.1l7.4-1.3l0-81.4l-13.9,9.2C162,178,124.8,198.7,92.8,205c-2.7,5.8-4.4,12.5-5.4,19.1c15.4-1.9,33.2-7.3,53.2-16.2c12.9-5.7,24.4-11.9,32.8-16.7v33.7c-33.4,6.9-54.4,17.8-65.6,34.3c-15.2,22.3-9.4,50.6-3.4,80.6c0.5,2.3,0.9,4.6,1.4,6.9H76c-3.7-17.2-12.4-64.3-7.8-111.3c0.6-9.7,1.9-20,4.9-29.5c17.1-58.2,110.6-82.7,111.5-83L191.4,121.5z M173.4,107.7c-9.9,3-29.2,9.7-49.6,20.7c-37,20-60.6,45.6-68.4,74.2c-6.3-3.4-10.9-8.8-13.8-16.5c-5-12.8-4.6-24.8,1.2-36.8c17.2-35.5,78.2-62.5,130.6-79.8V107.7z"/><path fill="currentColor" d="M41.8,83.6c-5.7,0-11.5-1.2-16.9-3.6C14.7,75.5,6.9,67.3,2.8,56.9s-3.8-21.8,0.7-32S16.3,6.9,26.7,2.8c21.5-8.3,45.7,2.4,54.1,23.9c8.3,21.5-2.4,45.7-23.9,54.1C52,82.7,46.9,83.6,41.8,83.6z M41.8,18c-2.9,0-5.8,0.5-8.6,1.6c-5.9,2.3-10.6,6.8-13.2,12.6c-2.6,5.8-2.7,12.3-0.4,18.2c2.3,5.9,6.8,10.6,12.6,13.2c5.8,2.6,12.3,2.7,18.2,0.4C62.6,59.2,68.7,45.4,64,33.2C60.3,23.8,51.3,18,41.8,18z"/></svg>';
-document.querySelector('.logosvg').innerHTML=LOGO;
+document.querySelector('.logosvg').innerHTML=(window.BRAND&&window.BRAND.mark)?'<img src="'+window.BRAND.mark+'" alt="" style="height:38px;width:auto;display:block;border-radius:6px">':LOGO;
 
 const DATA=window.DATA||[];
 const TODAY=new Date();
@@ -1125,11 +1135,47 @@ function openSettings(){
   document.getElementById('modal').innerHTML=
     KHEAD+'<h2>Innstillinger</h2><div class="sub">Klubbens oppsett</div></div>'+
     '<div class="mbody">'+
+      '<div class="idearow"><span class="it">Klubb & abonnement<small>Navn, undertekst, fargetema og logo</small></span><button class="btn sm" onclick="openCompanySettings()">Åpne</button></div>'+
       '<div class="idearow"><span class="it">Treningstider<small>Hvem trener når – brukes på dashbordet</small></span><button class="btn sm" onclick="openTrainingMgr()">Åpne</button></div>'+
       '<div class="idearow"><span class="it">Kamper<small>Kommende kamper – vises på dashbordet</small></span><button class="btn sm" onclick="openKampMgr()">Åpne</button></div>'+
       '<div class="idearow"><span class="it">Del årshjulet<small>Innebygdbart årshjul til nettsiden (uten Administrasjon)</small></span><button class="btn sm" onclick="openShareWheel()">Åpne</button></div>'+
     '</div>';
   document.getElementById('overlay').classList.add('open');
+}
+function openCompanySettings(){
+  const b=window.BRAND||{};
+  const dd=document.getElementById('userDD');if(dd)dd.classList.remove('open');
+  const themes=[['blue','Blå'],['red','Rød'],['green','Grønn']];const cur=b.theme||'blue';
+  document.getElementById('modal').innerHTML=
+    KHEAD+'<h2>Klubb & abonnement</h2><div class="sub">Tilpass hvordan løsningen ser ut for dere</div></div>'+
+    '<div class="mbody"><form class="f" onsubmit="saveCompanySettings(event)">'+
+      '<div class="two"><div><label>Navn</label><input id="co_name"></div><div><label>Fargetema</label><select id="co_theme">'+themes.map(t=>'<option value="'+t[0]+'"'+(cur===t[0]?' selected':'')+'>'+t[1]+'</option>').join('')+'</select></div></div>'+
+      '<label>Undertekst <span style="color:var(--ink-soft);font-weight:400">(står under «Vivu Planner» øverst)</span></label><input id="co_sub" placeholder="f.eks. Farsund og Lista Idrettsklubb">'+
+      '<label>Logo / ikon <span style="color:var(--ink-soft);font-weight:400">(øverst til venstre – PNG/SVG)</span></label><input id="co_logo" type="file" accept="image/png,image/jpeg,image/svg+xml">'+
+      (b.mark?'<div class="muted" style="font-size:12.5px;margin-top:6px">Logo er satt. <button type="button" class="btnlink" onclick="removeCompanyLogo()">Fjern logo</button></div>':'')+
+      '<div class="actions"><button type="button" class="btn" onclick="closeModal()">Avbryt</button><button class="btn solid" type="submit">Lagre</button></div>'+
+    '</form></div>';
+  document.getElementById('overlay').classList.add('open');
+  document.getElementById('co_name').value=b.name||'';
+  document.getElementById('co_sub').value=b.subtitle||'';
+}
+async function saveCompanySettings(ev){ev.preventDefault();
+  const id=window.CURRENT_COMPANY_ID;if(!id)return;
+  try{
+    await api('PUT','/company/'+id,{name:val('co_name'),subtitle:val('co_sub')||null,theme:val('co_theme')});
+    const f=document.getElementById('co_logo');
+    if(f&&f.files&&f.files[0]){
+      const fd=new FormData();fd.append('logo',f.files[0]);
+      const r=await fetch('/company/'+id+'/logo',{method:'POST',headers:{'X-CSRF-TOKEN':CSRF,'Accept':'application/json'},body:fd});
+      if(!r.ok){const j=await r.json().catch(()=>({}));throw new Error((j.errors&&Object.values(j.errors).flat().join('\n'))||'Kunne ikke laste opp logo');}
+    }
+    location.reload();
+  }catch(err){alert(err.message);}
+}
+async function removeCompanyLogo(){
+  const id=window.CURRENT_COMPANY_ID;if(!id)return;
+  if(!confirm('Fjerne logoen og bruke standard?'))return;
+  try{await api('DELETE','/company/'+id+'/logo');location.reload();}catch(err){alert(err.message);}
 }
 function openKampMgr(){renderKampModal();document.getElementById('overlay').classList.add('open');}
 function renderKampModal(){

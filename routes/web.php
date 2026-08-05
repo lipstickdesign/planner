@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AiController;
 use App\Models\Company;
+use App\Http\Controllers\CompanyController;
 use App\Http\Controllers\ContentIdeaController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DashboardLayoutController;
@@ -142,6 +143,11 @@ Route::middleware('auth')->group(function () {
         Route::post('/users/{user}/reset-password', [UserController::class, 'resetPassword']);
         Route::put('/users/{user}/role', [UserController::class, 'updateRole']);
         Route::delete('/users/{user}', [UserController::class, 'destroy']);
+
+        // Selskaps-/abonnementsinnstillinger (branding)
+        Route::put('/company/{company}', [CompanyController::class, 'update']);
+        Route::post('/company/{company}/logo', [CompanyController::class, 'uploadLogo']);
+        Route::delete('/company/{company}/logo', [CompanyController::class, 'removeLogo']);
 
         // Klubbliv-bibliotek (innholdsidéer)
         Route::post('/content-ideas', [ContentIdeaController::class, 'store']);

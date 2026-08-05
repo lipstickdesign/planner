@@ -77,6 +77,14 @@ class DashboardController extends Controller
             ->map(fn (Kamp $k) => $k->card())
             ->values();
 
+        $cSettings = ($company && is_array($company->settings)) ? $company->settings : [];
+        $brand = [
+            'name' => $company->name ?? 'Vivu Planner',
+            'subtitle' => ($cSettings['subtitle'] ?? null) ?: ($company->name ?? null),
+            'theme' => $cSettings['theme'] ?? 'blue',
+            'mark' => $company?->logo_path ?: null,
+        ];
+
         // Selskaper brukeren kan bytte mellom (superadmin ser alle)
         $companies = $user->is_platform_admin
             ? Company::orderBy('name')->get(['id', 'name'])
@@ -109,6 +117,7 @@ class DashboardController extends Controller
             'isSuperadmin' => (bool) $user->is_platform_admin,
             'companies' => $companies,
             'currentCompanyId' => $company?->id,
+            'brand' => $brand,
         ]);
     }
 }
