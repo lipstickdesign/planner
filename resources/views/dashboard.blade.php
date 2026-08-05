@@ -986,7 +986,7 @@ function dayOfYear(d){const x=new Date(d);const s=new Date(x.getFullYear(),0,0);
 function ideaOfDay(){const act=IDEAS.filter(i=>i.is_active!==false);return act.length?act[dayOfYear(new Date())%act.length]:null;}
 function convRow(p){
   const open=p.kind==='event'?'openEvent('+p.eventId+')':'openKlubblivForm('+p.id+')';
-  return '<div class="rrow click" style="padding:8px 0" onclick="'+open+'"><span class="rt">'+esc(p.title)+'<small>'+esc(p.ctx)+(p.channels?' · '+esc(p.channels):'')+'</small></span>'+chev()+'</div>';
+  return '<div class="rrow click" style="padding:8px 0" onclick="'+open+'"><span class="rt">'+esc(p.title)+platChip(p)+'<small>'+esc(p.ctx)+(p.channels?' · '+esc(p.channels):'')+'</small></span>'+chev()+'</div>';
 }
 function rrow(p){
   const open=p.kind==='event'?'openEvent('+p.eventId+')':'openKlubblivForm('+p.id+')';
@@ -1017,8 +1017,21 @@ function mod_utenplan(){
 function mod_travle(){
   const today=new Date();today.setHours(0,0,0,0);const posts=allPosts();
   const byDay={};posts.forEach(p=>{const d=addDays(p.date,0);if(d>=today&&d<=addDays(today,28)&&!p.published){const k=ymd(p.date);(byDay[k]=byDay[k]||[]).push(p);}});
-  const days=Object.keys(byDay).filter(k=>byDay[k].length>=2).sort();
-  const inner=days.length?days.map(k=>'<div class="travday"><div class="travhead">'+fmt(k)+' · '+byDay[k].length+' poster samme dag – vurder å flytte en</div>'+byDay[k].slice().sort((x,y)=>String(x.ctx).localeCompare(String(y.ctx))).map(convRow).join('')+'</div>').join(''):'<div class="emptyrec">Ingen dager med for mange poster.</div>';
+  const platLbl=pl=>{const m=PLATFORMS[pl];return m?m[0]:'uten kanal';};
+  // Kun reelt travelt når SAMME kanal har flere poster samme dag.
+  // To poster samme dag på ulike kanaler (f.eks. Facebook + Instagram) er helt greit.
+  const days=[];
+  Object.keys(byDay).sort().forEach(k=>{
+    const grp={};byDay[k].forEach(p=>{const key=p.platform||'_';(grp[key]=grp[key]||[]).push(p);});
+    const busy=Object.keys(grp).filter(g=>grp[g].length>=2);
+    if(busy.length)days.push({k:k,grp:grp,busy:busy});
+  });
+  if(!days.length)return wc('info','Travle dager','red',0,'<div class="emptyrec">Ingen kanaler med flere poster samme dag. To poster samme dag på ulike kanaler er helt greit.</div>');
+  const inner=days.map(d=>{
+    const label=d.busy.map(bk=>platLbl(bk)+': '+d.grp[bk].length+' poster').join(' · ');
+    const rows=d.busy.reduce((a,bk)=>a.concat(d.grp[bk]),[]).map(convRow).join('');
+    return '<div class="travday"><div class="travhead">'+fmt(d.k)+' · '+label+' samme dag – vurder å flytte en</div>'+rows+'</div>';
+  }).join('');
   return wc('info','Travle dager','red',days.length,inner);
 }
 function mod_tomrom(){
