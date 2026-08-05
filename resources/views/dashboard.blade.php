@@ -387,6 +387,8 @@ window.COMPANIES = @json($companies);
 window.CURRENT_COMPANY_ID = @json($currentCompanyId);
 window.BRAND = @json($brand);
 window.CATS = @json($categories);
+window.CAT_MANAGE = @json($categoriesManage);
+window.CAT_LABEL = @json($catLabel);
 window.MEMBERS = @json($members);
 window.DESTS = @json($destinations);
 window.CANEDIT = @json($canEdit);
@@ -1136,6 +1138,7 @@ function openSettings(){
     KHEAD+'<h2>Innstillinger</h2><div class="sub">Klubbens oppsett</div></div>'+
     '<div class="mbody">'+
       '<div class="idearow"><span class="it">Klubb & abonnement<small>Navn, undertekst, fargetema og logo</small></span><button class="btn sm" onclick="openCompanySettings()">Åpne</button></div>'+
+      '<div class="idearow"><span class="it">'+(window.CAT_LABEL||'Kategorier')+'<small>Rediger '+(window.CAT_LABEL||'Kategorier').toLowerCase()+' – navn, farge, arkiver</small></span><button class="btn sm" onclick="openCatManager()">Åpne</button></div>'+
       '<div class="idearow"><span class="it">Kom i gang – importer<small>Lim inn tekst eller regneark → AI foreslår arrangement</small></span><button class="btn sm" onclick="openOnboarding()">Åpne</button></div>'+
       '<div class="idearow"><span class="it">Treningstider<small>Hvem trener når – brukes på dashbordet</small></span><button class="btn sm" onclick="openTrainingMgr()">Åpne</button></div>'+
       '<div class="idearow"><span class="it">Kamper<small>Kommende kamper – vises på dashbordet</small></span><button class="btn sm" onclick="openKampMgr()">Åpne</button></div>'+
@@ -1178,6 +1181,82 @@ async function removeCompanyLogo(){
   if(!confirm('Fjerne logoen og bruke standard?'))return;
   try{await api('DELETE','/company/'+id+'/logo');location.reload();}catch(err){alert(err.message);}
 }
+
+/* ---- KATEGORIER (idretter / avdelinger) ---- */
+function openCatManager(){
+  const dd=document.getElementById('userDD');if(dd)dd.classList.remove('open');
+  const L=window.CAT_LABEL||'Kategorier';const one=L.toLowerCase().replace(/er$/,'');
+  document.getElementById('modal').innerHTML=
+    KHEAD+'<h2>'+esc(L)+'</h2><div class="sub">Rediger '+esc(L.toLowerCase())+' klubben bruker. Arkiverte skjules fra nedtrekk, men beholder historikken.</div></div>'+
+    '<div class="mbody">'+
+      '<div id="catList"></div>'+
+      '<div style="display:flex;gap:8px;align-items:center;margin-top:14px;padding-top:14px;border-top:1px solid var(--line)">'+
+        '<input type="color" id="newcat_color" value="#5a7184" style="width:42px;height:38px;padding:2px">'+
+        '<input id="newcat_name" placeholder="Ny '+esc(one)+' …" style="flex:1" onkeydown="if(event.key===\'Enter\'){event.preventDefault();addCategory();}">'+
+        '<button class="btn solid sm" onclick="addCategory()">'+ic('plus')+' Legg til</button>'+
+      '</div>'+
+    '</div>';
+  renderCatList();
+  document.getElementById('overlay').classList.add('open');
+}
+function renderCatList(){
+  const host=document.getElementById('catList');if(!host)return;
+  const cats=window.CAT_MANAGE||[];
+  if(!cats.length){host.innerHTML='<div class="emptyrec">Ingen kategorier ennå. Legg til under.</div>';return;}
+  host.innerHTML=cats.map(catManageRow).join('');
+}
+function catManageRow(c){
+  const badge=c.events?'<span class="count" title="arrangement bruker denne">'+c.events+'</span>':'';
+  return '<div class="catrow" data-id="'+c.id+'" style="display:flex;gap:8px;align-items:center;padding:7px 0;border-bottom:1px solid var(--line)'+(c.archived?';opacity:.55':'')+'">'+
+    '<input type="color" value="'+esc(c.color||'#5a7184')+'" onchange="saveCategory('+c.id+')" class="cat_color" style="width:36px;height:34px;padding:2px"'+(c.archived?' disabled':'')+'>'+
+    '<input value="'+esc(c.name)+'" onchange="saveCategory('+c.id+')" class="cat_name" style="flex:1"'+(c.archived?' disabled':'')+'>'+
+    badge+
+    '<button class="btn sm" onclick="toggleArchiveCategory('+c.id+')" title="'+(c.archived?'Gjenopprett':'Arkiver')+'">'+ic(c.archived?'refresh':'archive')+'</button>'+
+    (c.events?'':'<button class="btn sm" onclick="deleteCategory('+c.id+')" title="Slett">'+ic('trash')+'</button>')+
+  '</div>';
+}
+async function addCategory(){
+  const el=document.getElementById('newcat_name');const name=(el.value||'').trim();
+  if(!name){el.focus();return;}
+  try{
+    const r=await api('POST','/categories',{name:name,color:val('newcat_color')});
+    (window.CAT_MANAGE=window.CAT_MANAGE||[]).push(r.category);
+    CATS.push({id:r.category.id,name:r.category.name,color:r.category.color});
+    el.value='';
+    renderCatList();
+  }catch(err){alert(err.message);}
+}
+async function saveCategory(id){
+  const row=document.querySelector('.catrow[data-id="'+id+'"]');if(!row)return;
+  const name=(row.querySelector('.cat_name').value||'').trim();
+  const color=row.querySelector('.cat_color').value;
+  if(!name){alert('Navn kan ikke være tomt.');return;}
+  try{
+    await api('PUT','/categories/'+id,{name:name,color:color});
+    const m=(window.CAT_MANAGE||[]).find(x=>x.id===id);if(m){m.name=name;m.color=color;}
+    const d=CATS.find(x=>x.id===id);if(d){d.name=name;d.color=color;}
+  }catch(err){alert(err.message);}
+}
+async function toggleArchiveCategory(id){
+  try{
+    const r=await api('PUT','/categories/'+id+'/archive',{});
+    const m=(window.CAT_MANAGE||[]).find(x=>x.id===id);if(m)m.archived=r.archived;
+    const idx=CATS.findIndex(x=>x.id===id);
+    if(r.archived){if(idx>=0)CATS.splice(idx,1);}
+    else if(idx<0&&m){CATS.push({id:m.id,name:m.name,color:m.color});}
+    renderCatList();
+  }catch(err){alert(err.message);}
+}
+async function deleteCategory(id){
+  if(!confirm('Slette kategorien helt? Dette kan ikke angres.'))return;
+  try{
+    await api('DELETE','/categories/'+id,{});
+    window.CAT_MANAGE=(window.CAT_MANAGE||[]).filter(x=>x.id!==id);
+    const idx=CATS.findIndex(x=>x.id===id);if(idx>=0)CATS.splice(idx,1);
+    renderCatList();
+  }catch(err){alert(err.message);}
+}
+
 /* ---- ONBOARDING (AI tolker tekst/regneark) ---- */
 function ensureXLSX(){return new Promise(res=>{if(typeof XLSX!=='undefined'){res(true);return;}const s=document.createElement('script');s.src='https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';s.onload=()=>res(true);s.onerror=()=>res(false);document.head.appendChild(s);});}
 function fileToText(file){return new Promise((res,rej)=>{const r=new FileReader();r.onload=e=>{try{const wb=XLSX.read(e.target.result,{type:'binary'});let out='';wb.SheetNames.forEach(n=>{out+=XLSX.utils.sheet_to_csv(wb.Sheets[n])+'\n';});res(out);}catch(err){rej(new Error('Kunne ikke lese regnearket.'));}};r.onerror=()=>rej(new Error('Kunne ikke lese fila.'));r.readAsBinaryString(file);});}
@@ -1208,7 +1287,8 @@ function renderOnboardingPreview(events){
   const box=document.getElementById('ob_result');
   if(!events.length){box.innerHTML='<div class="emptyrec" style="padding-top:12px">Fant ingen arrangement i teksten. Prøv å beskrive tydeligere.</div>';return;}
   window.__obEvents=events;
-  box.innerHTML='<div class="sectionlabel" style="margin:16px 0 8px">Forslag <span class="count">'+events.length+'</span> <span style="font-weight:400;color:var(--ink-soft)">– hak av det du vil opprette</span></div>'+
+  var warn = events.length>12 ? '<div style="background:#fff4d6;border:1px solid #e8c96a;border-radius:10px;padding:10px 12px;margin:14px 0 8px;font-size:13px;color:#6b5410">'+ic('info')+' AI-en fant <b>'+events.length+'</b> arrangement. Er dette egentlig treningstider eller en fast ukeplan? Da bør det heller være <b>ett</b> arrangement (oppstart) + påminnelser i Klubbliv – ikke ett per økt. Gå nøye gjennom før du oppretter.</div>' : '';
+  box.innerHTML=warn+'<div class="sectionlabel" style="margin:16px 0 8px">Forslag <span class="count">'+events.length+'</span> <span style="font-weight:400;color:var(--ink-soft)">– hak av det du vil opprette</span></div>'+
     events.map((e,i)=>'<label class="idearow" style="cursor:pointer"><input type="checkbox" class="obchk" data-i="'+i+'" checked style="width:auto;margin-right:6px"><span class="it">'+esc(e.title)+'<small>'+(e.date?fmt(e.date):'dato mangler')+(e.sport?' · '+esc(e.sport):'')+(e.goal?' · '+esc(e.goal):'')+'</small></span></label>').join('')+
     '<div class="actions"><button class="btn" onclick="closeModal()">Avbryt</button><button class="btn solid" onclick="onboardingImport()">'+ic('plus')+' Opprett valgte</button></div>';
 }

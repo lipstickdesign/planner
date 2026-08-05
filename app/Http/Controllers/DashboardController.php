@@ -102,7 +102,16 @@ class DashboardController extends Controller
             'events' => $events,
             'user' => $user,
             'canEdit' => $user->isCompanyAdmin(),
-            'categories' => Category::orderBy('sort_order')->get(['id', 'name', 'color']),
+            'categories' => Category::whereNull('archived_at')->orderBy('sort_order')->get(['id', 'name', 'color']),
+            'categoriesManage' => Category::orderBy('sort_order')->withCount('events')->get()
+                ->map(fn (Category $c) => [
+                    'id' => $c->id,
+                    'name' => $c->name,
+                    'color' => $c->color,
+                    'archived' => (bool) $c->archived_at,
+                    'events' => $c->events_count,
+                ])->values(),
+            'catLabel' => ($company && $company->org_type === 'idrettsklubb') ? 'Idretter' : 'Kategorier',
             'members' => $company ? $company->users()->orderBy('name')->get(['users.id', 'name']) : collect(),
             'destinations' => Destination::orderBy('name')->get(['id', 'name']),
             'teamUsers' => $teamUsers,

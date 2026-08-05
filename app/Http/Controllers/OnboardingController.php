@@ -19,12 +19,19 @@ class OnboardingController extends Controller
             return response()->json(['error' => 'AI er ikke aktivert (mangler ANTHROPIC_API_KEY).'], 422);
         }
 
-        $system = 'Du er en assistent som strukturerer en idrettsklubbs årshjul. Trekk ut alle '
-            .'arrangement/aktiviteter som er nevnt i teksten. Returner KUN gyldig JSON, uten '
-            .'forklaring eller kodeblokk, på formen: '
+        $system = 'Du er en assistent som strukturerer en idrettsklubbs årshjul for SOSIALE MEDIER. '
+            .'Årshjulet handler om KOMMUNIKASJONSØYEBLIKK (hva klubben skal si utad), IKKE om selve treningskalenderen. '
+            .'Returner KUN gyldig JSON, uten forklaring eller kodeblokk, på formen: '
             .'{"events":[{"title":"...","date":"YYYY-MM-DD eller null","sport":"idrett eller gruppe eller null",'
             .'"type":"Event","goal":"kort hovedmål eller null","description":"kort beskrivelse eller null"}]}. '
-            .'Hvis bare måned eller uke er nevnt, gjett en fornuftig dato. Ikke finn på arrangement som ikke står i teksten.';
+            .'VIKTIGSTE REGEL – IKKE ETT ARRANGEMENT PER TRENING: Hvis teksten inneholder en fast eller roterende '
+            .'trenings-/aktivitetsplan (f.eks. en ukentlig plan der samme tilbud går igjen, eller idretten roterer uke for uke), '
+            .'skal du IKKE lage ett arrangement per rad/økt/uke. Slå det sammen til noen få arrangement: '
+            .'typisk ETT for oppstart/første samling og ETT for avslutning. Da bør beskrivelsen nevne at det er et gjentakende '
+            .'tilbud, og goal kan være «rekruttering» eller «avslutning». '
+            .'Ett enkeltstående arrangement (turnering, årsmøte, dugnad, cup, stevne, kick-off) blir ett arrangement hver. '
+            .'Hvis bare måned eller uke er nevnt, gjett en fornuftig dato. Ikke finn på arrangement som ikke står i teksten. '
+            .'Vær heller for gjerrig enn for rundhåndet – det er bedre å foreslå for få enn for mange.';
 
         $resp = Http::withHeaders([
             'x-api-key' => $key,

@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AiController;
 use App\Models\Company;
+use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\CompanyController;
 use App\Http\Controllers\ContentIdeaController;
 use App\Http\Controllers\DashboardController;
@@ -148,6 +149,12 @@ Route::middleware('auth')->group(function () {
         // Onboarding – AI tolker tekst/regneark til arrangement
         Route::post('/onboarding/parse', [OnboardingController::class, 'parse']);
         Route::post('/onboarding/import', [OnboardingController::class, 'import']);
+
+        // Kategorier (idretter / avdelinger) – redigerbare per selskap
+        Route::post('/categories', [CategoryController::class, 'store']);
+        Route::put('/categories/{category}', [CategoryController::class, 'update']);
+        Route::put('/categories/{category}/archive', [CategoryController::class, 'archive']);
+        Route::delete('/categories/{category}', [CategoryController::class, 'destroy']);
 
         // Selskaps-/abonnementsinnstillinger (branding)
         Route::put('/company/{company}', [CompanyController::class, 'update']);
