@@ -112,6 +112,9 @@ class DashboardController extends Controller
                     'events' => $c->events_count,
                 ])->values(),
             'catLabel' => ($company && $company->org_type === 'idrettsklubb') ? 'Idretter' : 'Kategorier',
+            'goals' => (isset($cSettings['goals']) && is_array($cSettings['goals']) && count($cSettings['goals']))
+                ? array_values($cSettings['goals'])
+                : ['Rekruttering', 'Konkurranse', 'Aktivitet', 'Inkludering', 'Fellesskap', 'Økonomi', 'Admin'],
             'members' => $company ? $company->users()->orderBy('name')->get(['users.id', 'name']) : collect(),
             'destinations' => Destination::orderBy('name')->get(['id', 'name']),
             'teamUsers' => $teamUsers,

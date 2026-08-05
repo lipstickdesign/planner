@@ -158,6 +158,7 @@ Route::middleware('auth')->group(function () {
 
         // Selskaps-/abonnementsinnstillinger (branding)
         Route::put('/company/{company}', [CompanyController::class, 'update']);
+        Route::put('/company/{company}/goals', [CompanyController::class, 'updateGoals']);
         Route::post('/company/{company}/logo', [CompanyController::class, 'uploadLogo']);
         Route::delete('/company/{company}/logo', [CompanyController::class, 'removeLogo']);
 

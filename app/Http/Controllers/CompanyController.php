@@ -36,6 +36,28 @@ class CompanyController extends Controller
         return response()->json(['ok' => true]);
     }
 
+    /** Rediger lista over hovedmål (lagres i settings – ingen logikk henger på disse). */
+    public function updateGoals(Request $request, Company $company)
+    {
+        $this->guard($request, $company);
+
+        $data = $request->validate([
+            'goals' => ['present', 'array'],
+            'goals.*' => ['string', 'max:60'],
+        ]);
+
+        $goals = array_values(array_unique(array_filter(
+            array_map(fn ($g) => trim($g), $data['goals']),
+            fn ($g) => $g !== ''
+        )));
+
+        $settings = $company->settings ?? [];
+        $settings['goals'] = $goals;
+        $company->update(['settings' => $settings]);
+
+        return response()->json(['ok' => true, 'goals' => $goals]);
+    }
+
     public function uploadLogo(Request $request, Company $company)
     {
         $this->guard($request, $company);

@@ -389,6 +389,7 @@ window.BRAND = @json($brand);
 window.CATS = @json($categories);
 window.CAT_MANAGE = @json($categoriesManage);
 window.CAT_LABEL = @json($catLabel);
+window.GOALS = @json($goals);
 window.MEMBERS = @json($members);
 window.DESTS = @json($destinations);
 window.CANEDIT = @json($canEdit);
@@ -709,7 +710,8 @@ function openEventForm(id){
   const catOpts='<option value="">– ingen –</option>'+CATS.map(c=>'<option value="'+c.id+'"'+sel(e.category_id,c.id)+'>'+c.name+'</option>').join('');
   const memOpts='<option value="">– velg –</option>'+MEMBERS.map(m=>'<option value="'+m.id+'"'+sel(e.responsible_user_id,m.id)+'>'+m.name+'</option>').join('');
   const typeOpts=['Event','Turnering','Rekruttering','Administrasjon'].map(t=>'<option'+sel(e.type,t)+'>'+t+'</option>').join('');
-  const malOpts=['','Rekruttering','Konkurranse','Aktivitet','Inkludering','Fellesskap','Økonomi','Admin'].map(t=>'<option'+sel(e.mal||'',t)+'>'+(t||'– velg –')+'</option>').join('');
+  const gl=(window.GOALS||[]).slice();if(e.mal&&gl.indexOf(e.mal)<0)gl.unshift(e.mal);
+  const malOpts='<option value="">– velg –</option>'+gl.map(t=>'<option'+sel(e.mal||'',t)+'>'+esc(t)+'</option>').join('');
   const apprOpts=[['utkast','Utkast'],['til_godkjenning','Til godkjenning'],['godkjent','Godkjent'],['internt','Internt']].map(o=>'<option value="'+o[0]+'"'+sel(e.approval_status||'utkast',o[0])+'>'+o[1]+'</option>').join('');
   document.getElementById('modal').innerHTML=
     '<div class="head" style="background:linear-gradient(135deg,var(--flik-blue),var(--flik-blue-deep))"><button class="close" onclick="closeModal()">×</button><h2>'+(id?'Rediger arrangement':'Nytt arrangement')+'</h2><div class="sub">Plasseres automatisk i årshjul og liste</div></div>'+
@@ -1139,6 +1141,7 @@ function openSettings(){
     '<div class="mbody">'+
       '<div class="idearow"><span class="it">Klubb & abonnement<small>Navn, undertekst, fargetema og logo</small></span><button class="btn sm" onclick="openCompanySettings()">Åpne</button></div>'+
       '<div class="idearow"><span class="it">'+(window.CAT_LABEL||'Kategorier')+'<small>Rediger '+(window.CAT_LABEL||'Kategorier').toLowerCase()+' – navn, farge, arkiver</small></span><button class="btn sm" onclick="openCatManager()">Åpne</button></div>'+
+      '<div class="idearow"><span class="it">Hovedmål<small>Målene arrangementene kan merkes med</small></span><button class="btn sm" onclick="openGoalManager()">Åpne</button></div>'+
       '<div class="idearow"><span class="it">Kom i gang – importer<small>Lim inn tekst eller regneark → AI foreslår arrangement</small></span><button class="btn sm" onclick="openOnboarding()">Åpne</button></div>'+
       '<div class="idearow"><span class="it">Treningstider<small>Hvem trener når – brukes på dashbordet</small></span><button class="btn sm" onclick="openTrainingMgr()">Åpne</button></div>'+
       '<div class="idearow"><span class="it">Kamper<small>Kommende kamper – vises på dashbordet</small></span><button class="btn sm" onclick="openKampMgr()">Åpne</button></div>'+
@@ -1255,6 +1258,47 @@ async function deleteCategory(id){
     const idx=CATS.findIndex(x=>x.id===id);if(idx>=0)CATS.splice(idx,1);
     renderCatList();
   }catch(err){alert(err.message);}
+}
+
+/* ---- HOVEDMÅL ---- */
+function openGoalManager(){
+  const dd=document.getElementById('userDD');if(dd)dd.classList.remove('open');
+  document.getElementById('modal').innerHTML=
+    KHEAD+'<h2>Hovedmål</h2><div class="sub">Målene arrangementene kan merkes med. Endres fritt – ingen logikk henger på disse.</div></div>'+
+    '<div class="mbody"><div id="goalList"></div>'+
+      '<div style="display:flex;gap:8px;margin-top:14px;padding-top:14px;border-top:1px solid var(--line)">'+
+        '<input id="newgoal" placeholder="Nytt hovedmål …" style="flex:1" onkeydown="if(event.key===\'Enter\'){event.preventDefault();addGoal();}">'+
+        '<button class="btn solid sm" onclick="addGoal()">'+ic('plus')+' Legg til</button>'+
+      '</div></div>';
+  renderGoalList();
+  document.getElementById('overlay').classList.add('open');
+}
+function renderGoalList(){
+  const host=document.getElementById('goalList');if(!host)return;
+  const g=window.GOALS||[];
+  if(!g.length){host.innerHTML='<div class="emptyrec">Ingen hovedmål ennå. Legg til under.</div>';return;}
+  host.innerHTML=g.map((name,i)=>'<div style="display:flex;gap:8px;align-items:center;padding:7px 0;border-bottom:1px solid var(--line)">'+
+    '<input value="'+esc(name)+'" class="goal_name" onchange="renameGoal('+i+',this.value)" style="flex:1">'+
+    '<button class="btn sm" onclick="removeGoal('+i+')" title="Fjern">'+ic('trash')+'</button></div>').join('');
+}
+async function saveGoals(){
+  const id=window.CURRENT_COMPANY_ID;if(!id)return;
+  await api('PUT','/company/'+id+'/goals',{goals:window.GOALS||[]});
+}
+async function addGoal(){
+  const el=document.getElementById('newgoal');const v=(el.value||'').trim();if(!v)return;
+  if((window.GOALS||[]).some(x=>x.toLowerCase()===v.toLowerCase())){el.value='';return;}
+  (window.GOALS=window.GOALS||[]).push(v);el.value='';renderGoalList();
+  try{await saveGoals();}catch(err){alert(err.message);}
+}
+async function renameGoal(i,v){
+  v=(v||'').trim();if(!v){renderGoalList();return;}
+  window.GOALS[i]=v;
+  try{await saveGoals();}catch(err){alert(err.message);}
+}
+async function removeGoal(i){
+  window.GOALS.splice(i,1);renderGoalList();
+  try{await saveGoals();}catch(err){alert(err.message);}
 }
 
 /* ---- ONBOARDING (AI tolker tekst/regneark) ---- */
