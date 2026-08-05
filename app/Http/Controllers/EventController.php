@@ -103,6 +103,8 @@ class EventController extends Controller
             'adjust.*.date' => ['nullable', 'date'],
             'adjust.*.platform' => ['nullable', 'string', 'max:30'],
             'adjust.*.format' => ['nullable', 'string', 'max:30'],
+            'remove' => ['array'],
+            'remove.*' => ['integer'],
         ]);
 
         $order = (int) ($event->tasks()->max('sort_order') ?? 0);
@@ -136,6 +138,14 @@ class EventController extends Controller
             }
             if ($fields) {
                 $task->update($fields);
+            }
+        }
+
+        // Godkjente fjerninger – kun oppgaver som tilhører dette arrangementet (soft delete).
+        foreach ($data['remove'] ?? [] as $rid) {
+            $task = $event->tasks()->find($rid);
+            if ($task) {
+                $task->delete();
             }
         }
 

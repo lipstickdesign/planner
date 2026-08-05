@@ -801,12 +801,13 @@ function renderPlanReview(eventId,r){
   const e=DATA.find(x=>x.id===eventId);
   const lbl=id=>{const p=(e.posts||[]).find(x=>x.id===id);return p?p.label:('#'+id);};
   const pdate=id=>{const p=(e.posts||[]).find(x=>x.id===id);return p&&p.date?fmt(p.date):'ingen dato';};
-  window.__review={eventId:eventId,add:r.add||[],adjust:r.adjust||[]};
-  const nAdd=(r.add||[]).length, nAdj=(r.adjust||[]).length, nFlag=(r.flag||[]).length;
+  window.__review={eventId:eventId,add:r.add||[],adjust:r.adjust||[],remove:r.remove||[]};
+  const nAdd=(r.add||[]).length, nAdj=(r.adjust||[]).length, nRem=(r.remove||[]).length;
   let html='';
-  if(!nAdd&&!nAdj&&!nFlag){
+  if(!nAdd&&!nAdj&&!nRem){
     html='<div class="emptyrec" style="padding-top:14px">'+ic('check')+' Planen ser bra ut – ingen forslag akkurat nå.</div>';
   }else{
+    html+='<div class="muted" style="font-size:12.5px;margin:4px 0 12px">Hak av det du vil gjennomføre. Ingenting endres før du trykker «Bruk valgte». Vil du beholde planen som den er, trykk «Avvis».</div>';
     if(nAdd){
       html+='<div class="sectionlabel" style="margin:6px 0 8px">Nye oppgaver <span class="count">'+nAdd+'</span></div>'+
         r.add.map((a,i)=>'<label class="idearow" style="cursor:pointer"><input type="checkbox" class="rv-add" data-i="'+i+'" checked style="width:auto;margin-right:6px"><span class="it">'+esc(a.label)+'<small>'+(a.date?fmt(a.date):'ingen dato')+(a.platform?' · '+esc(a.platform):'')+(a.format?' · '+esc(a.format):'')+(a.reason?' — '+esc(a.reason):'')+'</small></span></label>').join('');
@@ -815,22 +816,24 @@ function renderPlanReview(eventId,r){
       html+='<div class="sectionlabel" style="margin:16px 0 8px">Foreslåtte endringer <span class="count">'+nAdj+'</span></div>'+
         r.adjust.map((a,i)=>{const ch=[];if(a.date)ch.push('dato → '+fmt(a.date));if(a.platform)ch.push('kanal → '+esc(a.platform));if(a.format)ch.push('format → '+esc(a.format));return '<label class="idearow" style="cursor:pointer"><input type="checkbox" class="rv-adj" data-i="'+i+'" checked style="width:auto;margin-right:6px"><span class="it">'+esc(lbl(a.id))+'<small>'+esc(pdate(a.id))+' · '+(ch.join(', ')||'ingen endring')+(a.reason?' — '+esc(a.reason):'')+'</small></span></label>';}).join('');
     }
-    if(nFlag){
-      html+='<div class="sectionlabel" style="margin:16px 0 8px">Til vurdering <span class="count">'+nFlag+'</span></div>'+
-        r.flag.map(f=>'<div class="idearow"><span class="it">'+ic('info')+' '+esc(lbl(f.id))+'<small>'+esc(f.reason||'')+'</small></span></div>').join('')+
-        '<div class="muted" style="font-size:12px;margin-top:4px">Disse endres ikke automatisk – vurder dem selv i lista.</div>';
+    if(nRem){
+      html+='<div class="sectionlabel" style="margin:16px 0 8px">Foreslått fjernet <span class="count">'+nRem+'</span></div>'+
+        r.remove.map((f,i)=>'<label class="idearow" style="cursor:pointer"><input type="checkbox" class="rv-rem" data-i="'+i+'" checked style="width:auto;margin-right:6px"><span class="it">'+ic('trash')+' '+esc(lbl(f.id))+'<small>'+esc(pdate(f.id))+(f.reason?' — '+esc(f.reason):'')+'</small></span></label>').join('')+
+        '<div class="muted" style="font-size:12px;margin-top:4px">Fjerning skjer bare for de du haker av, og bekreftes før den utføres.</div>';
     }
   }
-  const canApply=nAdd||nAdj;
+  const canApply=nAdd||nAdj||nRem;
   const mb=document.querySelector('#modal .mbody');
-  mb.innerHTML=html+'<div class="actions"><button class="btn" onclick="closeModal()">Lukk</button>'+(canApply?'<button class="btn solid" onclick="applyPlanReview()">'+ic('check')+' Bruk valgte</button>':'')+'</div>';
+  mb.innerHTML=html+'<div class="actions"><button class="btn" onclick="closeModal()">Avvis</button>'+(canApply?'<button class="btn solid" onclick="applyPlanReview()">'+ic('check')+' Bruk valgte</button>':'')+'</div>';
 }
 async function applyPlanReview(){
   const rv=window.__review;if(!rv)return;
   const add=[...document.querySelectorAll('#modal .rv-add:checked')].map(c=>rv.add[+c.dataset.i]).filter(Boolean);
   const adjust=[...document.querySelectorAll('#modal .rv-adj:checked')].map(c=>rv.adjust[+c.dataset.i]).filter(Boolean);
-  if(!add.length&&!adjust.length){alert('Velg minst ett forslag.');return;}
-  try{const card=await api('POST','/events/'+rv.eventId+'/apply-plan',{add:add,adjust:adjust});upsert(card);rerender();openEvent(rv.eventId);}
+  const remove=[...document.querySelectorAll('#modal .rv-rem:checked')].map(c=>(rv.remove[+c.dataset.i]||{}).id).filter(Boolean);
+  if(!add.length&&!adjust.length&&!remove.length){alert('Velg minst ett forslag.');return;}
+  if(remove.length&&!confirm('Dette sletter '+remove.length+' oppgave(r) permanent. Fortsette?'))return;
+  try{const card=await api('POST','/events/'+rv.eventId+'/apply-plan',{add:add,adjust:adjust,remove:remove});upsert(card);rerender();openEvent(rv.eventId);}
   catch(err){alert(err.message);}
 }
 

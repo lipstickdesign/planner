@@ -53,11 +53,15 @@ class AiController extends Controller
             .'Returner KUN gyldig JSON (ingen forklaring, ingen kodeblokk) på formen: '
             .'{"add":[{"label":"...","date":"YYYY-MM-DD","platform":"facebook|instagram|tiktok","format":"post|story","reason":"kort begrunnelse"}],'
             .'"adjust":[{"id":<tall>,"date":"YYYY-MM-DD eller null","platform":"... eller null","format":"... eller null","reason":"kort begrunnelse"}],'
-            .'"flag":[{"id":<tall>,"reason":"kort begrunnelse"}]}. '
-            .'Regler: "add" = oppgaver som mangler for god dekning. "adjust" = KUN når en eksisterende oppgave '
-            .'har åpenbart feil dato/kanal (f.eks. publisering etter at arrangementet er over, eller urealistisk timing) '
-            .'– ta bare med feltene som skal endres, resten null. "flag" = oppgaver som ser malplasserte ut eller er '
-            .'duplikater. IKKE foreslå å slette noe – bruker bestemmer selv. Hold begrunnelsene korte. '
+            .'"remove":[{"id":<tall>,"reason":"kort begrunnelse"}]}. '
+            .'Regler: "add" = oppgaver som mangler for god dekning – men IKKE foreslå en ny oppgave dersom en '
+            .'tilsvarende oppgave allerede finnes i lista (da heller la den stå, eller juster den). "adjust" = KUN når '
+            .'en eksisterende oppgave har åpenbart feil dato/kanal (f.eks. publisering etter at arrangementet er over, '
+            .'eller urealistisk timing) – ta bare med feltene som skal endres, resten null. "remove" = oppgaver som bør '
+            .'fjernes: klare duplikater av hverandre, eller overflødige/feilplasserte oppgaver. Vær forsiktig med "remove" '
+            .'– foreslå kun fjerning når oppgaven tydelig er unødvendig eller en duplikat. Målet er en REN, '
+            .'ikke-overlappende plan i kronologisk rekkefølge. Hvis planen allerede er god og komplett, returner tomme '
+            .'lister. Bruker godkjenner alt selv. Hold begrunnelsene korte. '
             .'Datoer må være realistiske i forhold til arrangementsdatoen og dagens dato.';
 
         $resp = Http::withHeaders([
@@ -100,14 +104,14 @@ class AiController extends Controller
                 'reason' => isset($a['reason']) ? mb_substr((string) $a['reason'], 0, 300) : null,
             ])->values();
 
-        $flag = collect($json['flag'] ?? [])
+        $remove = collect($json['remove'] ?? [])
             ->filter(fn ($a) => is_array($a) && isset($a['id']) && in_array((int) $a['id'], $validIds, true))
             ->map(fn ($a) => [
                 'id' => (int) $a['id'],
                 'reason' => isset($a['reason']) ? mb_substr((string) $a['reason'], 0, 300) : null,
             ])->values();
 
-        return response()->json(['add' => $add, 'adjust' => $adjust, 'flag' => $flag]);
+        return response()->json(['add' => $add, 'adjust' => $adjust, 'remove' => $remove]);
     }
 
     private function extractJson(string $text): array
