@@ -5,6 +5,7 @@ use App\Models\Company;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\CompanyController;
 use App\Http\Controllers\ContentIdeaController;
+use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DashboardLayoutController;
 use App\Http\Controllers\EventController;
@@ -110,6 +111,10 @@ Route::middleware('auth')->group(function () {
 
     // Egen profil (alle innloggede kan endre sin egen bruker)
     Route::put('/me', [UserController::class, 'updateSelf']);
+
+    // Superadmin: kundeadministrasjon (oppretter selskap + første admin). Vokter i controller.
+    Route::get('/customers', [CustomerController::class, 'index']);
+    Route::post('/customers', [CustomerController::class, 'store']);
 
     // Bytte aktivt selskap (superadmin: alle; ellers kun egne)
     Route::post('/switch-company/{company}', function (Request $request, Company $company) {

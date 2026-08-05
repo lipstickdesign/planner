@@ -1139,6 +1139,7 @@ function openSettings(){
   document.getElementById('modal').innerHTML=
     KHEAD+'<h2>Innstillinger</h2><div class="sub">Klubbens oppsett</div></div>'+
     '<div class="mbody">'+
+      (IS_SUPERADMIN?'<div class="idearow" style="border:1px solid var(--accent,#00529b);background:rgba(0,82,155,.05)"><span class="it">Kunder<small>Superadmin: opprett nytt selskap + første admin</small></span><button class="btn solid sm" onclick="openCustomerManager()">Åpne</button></div>':'')+
       '<div class="idearow"><span class="it">Klubb & abonnement<small>Navn, undertekst, fargetema og logo</small></span><button class="btn sm" onclick="openCompanySettings()">Åpne</button></div>'+
       '<div class="idearow"><span class="it">'+(window.CAT_LABEL||'Kategorier')+'<small>Rediger '+(window.CAT_LABEL||'Kategorier').toLowerCase()+' – navn, farge, arkiver</small></span><button class="btn sm" onclick="openCatManager()">Åpne</button></div>'+
       '<div class="idearow"><span class="it">Hovedmål<small>Målene arrangementene kan merkes med</small></span><button class="btn sm" onclick="openGoalManager()">Åpne</button></div>'+
@@ -1299,6 +1300,51 @@ async function renameGoal(i,v){
 async function removeGoal(i){
   window.GOALS.splice(i,1);renderGoalList();
   try{await saveGoals();}catch(err){alert(err.message);}
+}
+
+/* ---- KUNDER (superadmin) ---- */
+async function openCustomerManager(){
+  const dd=document.getElementById('userDD');if(dd)dd.classList.remove('open');
+  document.getElementById('modal').innerHTML=
+    KHEAD+'<h2>Kunder</h2><div class="sub">Alle selskaper i systemet. Opprett nye og bytt mellom dem.</div></div>'+
+    '<div class="mbody"><div id="custList"><div class="emptyrec">'+ic('refresh')+' Henter …</div></div>'+
+      '<div style="margin-top:16px;padding-top:14px;border-top:1px solid var(--line)">'+
+      '<div class="sectionlabel" style="margin-bottom:10px">Nytt selskap</div>'+
+      '<form class="f" onsubmit="createCustomer(event)">'+
+        '<div class="two"><div><label>Selskapsnavn</label><input id="cu_name" required></div>'+
+          '<div><label>Type</label><select id="cu_type">'+
+            ['idrettsklubb|Idrettsklubb','bedrift|Bedrift','forening|Forening','annet|Annet'].map(o=>{const p=o.split("|");return '<option value="'+p[0]+'">'+p[1]+'</option>';}).join('')+
+          '</select></div></div>'+
+        '<div class="two"><div><label>Fargetema</label><select id="cu_theme"><option value="blue">Blå</option><option value="red">Rød</option><option value="green">Grønn</option></select></div>'+
+          '<div><label>Undertekst <span style="color:var(--ink-soft);font-weight:400">(valgfri)</span></label><input id="cu_sub" placeholder="f.eks. fullt navn"></div></div>'+
+        '<div class="sectionlabel" style="margin:12px 0 4px">Første administrator</div>'+
+        '<div class="two"><div><label>Navn</label><input id="cu_aname" required></div><div><label>E-post</label><input id="cu_aemail" type="email" required></div></div>'+
+        '<label>Midlertidig passord <span style="color:var(--ink-soft);font-weight:400">(minst 8 tegn – del med admin, som kan endre det selv)</span></label><input id="cu_apass" type="text" minlength="8" required>'+
+        '<div class="actions"><button type="button" class="btn" onclick="closeModal()">Lukk</button><button class="btn solid" type="submit">'+ic('plus')+' Opprett selskap</button></div>'+
+      '</form></div></div>';
+  document.getElementById('overlay').classList.add('open');
+  try{const r=await api('GET','/customers');window.__customers=r.customers||[];renderCustList();}
+  catch(err){document.getElementById('custList').innerHTML='<div class="emptyrec" style="color:#b23535">'+esc(err.message)+'</div>';}
+}
+function renderCustList(){
+  const host=document.getElementById('custList');if(!host)return;
+  const cs=window.__customers||[];const cur=window.CURRENT_COMPANY_ID;
+  if(!cs.length){host.innerHTML='<div class="emptyrec">Ingen selskaper ennå.</div>';return;}
+  host.innerHTML=cs.map(c=>'<div class="idearow"><span class="it">'+esc(c.name)+(c.id===cur?' <span class="count">aktiv</span>':'')+
+    '<small>'+esc(c.org_type||'')+' · '+c.users+' brukere · '+c.events+' arrangement</small></span>'+
+    (c.id===cur?'':'<button class="btn sm" onclick="switchCompany('+c.id+')">Bytt til</button>')+'</div>').join('');
+}
+async function createCustomer(ev){ev.preventDefault();
+  const body={name:val('cu_name'),org_type:val('cu_type'),theme:val('cu_theme'),subtitle:val('cu_sub')||null,
+    admin_name:val('cu_aname'),admin_email:val('cu_aemail'),admin_password:val('cu_apass')};
+  try{
+    const r=await api('POST','/customers',body);
+    (window.__customers=window.__customers||[]).push(r.customer);
+    window.__customers.sort((a,b)=>a.name.localeCompare(b.name,'no'));
+    renderCustList();
+    ['cu_name','cu_sub','cu_aname','cu_aemail','cu_apass'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+    alert('Selskapet «'+r.customer.name+'» er opprettet med admin '+body.admin_email+'. Bytt til det for å sette opp innhold.');
+  }catch(err){alert(err.message);}
 }
 
 /* ---- ONBOARDING (AI tolker tekst/regneark) ---- */
