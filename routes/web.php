@@ -32,6 +32,7 @@ Route::get('/', function () {
 Route::get('/embed/{slug}/arshjul', [PublicWheelController::class, 'wheel'])->name('embed.wheel');
 
 // Offentlig, innebygdbar kampoversikt (i dag + 7 dager) for nettside
+Route::get('/embed/{slug}/kamper.js', [PublicKampController::class, 'feedJs'])->name('embed.kamper.js');
 Route::get('/embed/{slug}/kamper', [PublicKampController::class, 'feed'])->name('embed.kamper');
 
 Route::get('/login', function () {

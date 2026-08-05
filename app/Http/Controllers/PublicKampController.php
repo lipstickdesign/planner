@@ -13,21 +13,53 @@ class PublicKampController extends Controller
      * Viser hjemmekamper fra i dag og sju dager fram – et rullende vindu
      * som alltid er oppdatert uavhengig av ukedag.
      */
+    /** iframe-variant (isolert, med auto-høyde). */
     public function feed(string $slug)
+    {
+        [$company, $sport, $kamper] = $this->collect($slug);
+
+        return view('embed.kamper', compact('company', 'kamper', 'sport'));
+    }
+
+    /**
+     * Uten-iframe-variant: en <script> som skriver kampene rett inn i nettsiden,
+     * så de arver sidens font og flyter naturlig (ingen fast høyde).
+     */
+    public function feedJs(string $slug)
+    {
+        [$company, $sport, $kamper] = $this->collect($slug);
+
+        $html = view('embed.kamper_list', compact('company', 'kamper', 'sport'))->render();
+
+        $js = '(function(){var s=document.currentScript;if(!s)return;'
+            .'var w=document.createElement("div");w.innerHTML='.json_encode($html, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES).';'
+            .'while(w.firstChild){s.parentNode.insertBefore(w.firstChild,s);}})();';
+
+        return response($js)
+            ->header('Content-Type', 'application/javascript; charset=utf-8')
+            ->header('Access-Control-Allow-Origin', '*')
+            ->header('Cache-Control', 'public, max-age=900');
+    }
+
+    /** @return array{0:Company,1:?string,2:array} */
+    private function collect(string $slug): array
     {
         $company = Company::where('slug', $slug)->firstOrFail();
         app()->instance('currentCompany', $company);
+
+        // Valgfritt: egen feed per idrett (?sport=Fotball). Uten = alle idretter.
+        $sport = trim((string) request('sport')) ?: null;
 
         $today = now('Europe/Oslo')->startOfDay();
         $end = $today->copy()->addDays(7);
 
         // Cache-nøkkel inkluderer dagens dato → ruller automatisk ved midnatt.
-        // Kort levetid slik at nye importer/endringer slår inn i løpet av kort tid.
-        $cacheKey = 'kampfeed_'.$company->id.'_'.$today->format('Ymd');
-        $kamper = Cache::remember($cacheKey, now()->addMinutes(30), function () use ($today, $end) {
-            return Kamp::query()
+        $cacheKey = 'kampfeed_'.$company->id.'_'.$today->format('Ymd').'_'.($sport ? mb_strtolower($sport) : 'alle');
+        $kamper = Cache::remember($cacheKey, now()->addMinutes(30), function () use ($today, $end, $sport) {
+            return Kamp::with('category')
                 ->where('home', true)
                 ->whereBetween('match_date', [$today->format('Y-m-d'), $end->format('Y-m-d')])
+                ->when($sport, fn ($q) => $q->whereHas('category', fn ($c) => $c->whereRaw('LOWER(name) = ?', [mb_strtolower($sport)])))
                 ->orderBy('match_date')->orderBy('match_time')
                 ->get()
                 ->map(fn (Kamp $k) => [
@@ -39,12 +71,11 @@ class PublicKampController extends Controller
                     'location' => $k->location,
                     'tournament' => $k->tournament,
                     'note' => $k->note,
+                    'sport' => $k->category?->name,
+                    'color' => $k->category?->color,
                 ])->values()->all();
         });
 
-        return view('embed.kamper', [
-            'company' => $company,
-            'kamper' => $kamper,
-        ]);
+        return [$company, $sport, $kamper];
     }
 }

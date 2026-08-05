@@ -1499,15 +1499,42 @@ function openShareWheel(){
   document.getElementById('overlay').classList.add('open');
 }
 function openShareKamper(){
-  const url=window.location.origin+'/embed/'+(window.COMPANY_SLUG||'flik')+'/kamper';
-  const iframe='<iframe src="'+url+'" width="640" height="560" style="border:0;width:100%;max-width:660px" title="Kommende hjemmekamper"></iframe>';
+  const sports=[...new Set((KAMPER||[]).map(k=>k.category).filter(Boolean))].sort();
+  const opts='<option value="">Alle idretter (kombinert)</option>'+sports.map(s=>'<option value="'+esc(s)+'">Bare '+esc(s)+'</option>').join('');
   document.getElementById('modal').innerHTML=
     KHEAD+'<h2>Del kampoversikt</h2><div class="sub">Viser hjemmekamper i dag + 7 dager – oppdateres automatisk</div></div>'+
     '<div class="mbody">'+
-      '<label>Direkte lenke</label><div style="display:flex;gap:8px;align-items:center"><input class="tiphint" id="kShareUrl" readonly value="'+esc(url)+'"><button class="btn sm" style="flex:none" onclick="copyField(\'kShareUrl\')">'+ic('copy')+' Kopier</button></div>'+
-      '<label style="margin-top:14px">Innbyggingskode (iframe) – lim inn på flik.no/hvaskjer</label><textarea id="kShareEmbed" readonly style="width:100%;min-height:92px;font-family:inherit;font-size:12.5px;padding:10px 12px;border:1px solid #e6ebf2;border-radius:10px;background:#fbfcfe;color:var(--ink)">'+esc(iframe)+'</textarea>'+
-      '<div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap"><button class="btn sm" onclick="copyField(\'kShareEmbed\')">'+ic('copy')+' Kopier innbyggingskode</button><a class="btn sm" href="'+url+'" target="_blank">'+ic('link')+' Åpne forhåndsvisning</a><button class="btn sm" onclick="renderKampModal()">Tilbake</button></div>'+
+      '<div class="two"><div><label>Hva skal feeden vise?</label><select id="kShareSport" onchange="rebuildKampShare()">'+opts+'</select></div>'+
+      '<div><label>Innbyggingsmåte</label><select id="kShareType" onchange="rebuildKampShare()"><option value="script">Uten iframe (arver font, auto-høyde)</option><option value="iframe">Med iframe</option></select></div></div>'+
+      '<label style="margin-top:14px">Direkte lenke (forhåndsvisning)</label><div style="display:flex;gap:8px;align-items:center"><input class="tiphint" id="kShareUrl" readonly><button class="btn sm" style="flex:none" onclick="copyField(\'kShareUrl\')">'+ic('copy')+' Kopier</button></div>'+
+      '<label style="margin-top:14px">Innbyggingskode – lim inn på nettsiden</label><textarea id="kShareEmbed" readonly style="width:100%;min-height:92px;font-family:inherit;font-size:12.5px;padding:10px 12px;border:1px solid #e6ebf2;border-radius:10px;background:#fbfcfe;color:var(--ink)"></textarea>'+
+      '<label style="margin-top:14px">Forslag til forklaringstekst over kampene</label><textarea id="kShareIntro" readonly style="width:100%;min-height:58px;font-family:inherit;font-size:12.5px;padding:10px 12px;border:1px solid #e6ebf2;border-radius:10px;background:#fbfcfe;color:var(--ink)"></textarea>'+
+      '<div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap"><button class="btn sm" onclick="copyField(\'kShareEmbed\')">'+ic('copy')+' Kopier innbyggingskode</button><button class="btn sm" onclick="copyField(\'kShareIntro\')">'+ic('copy')+' Kopier forklaringstekst</button><button class="btn sm" id="kSharePrev">'+ic('link')+' Forhåndsvis</button><button class="btn sm" onclick="renderKampModal()">Tilbake</button></div>'+
     '</div>';
+  rebuildKampShare();
+}
+function rebuildKampShare(){
+  const sport=document.getElementById('kShareSport').value;
+  const type=document.getElementById('kShareType').value;
+  const origin=window.location.origin;const slug=(window.COMPANY_SLUG||'flik');
+  const q=sport?'?sport='+encodeURIComponent(sport):'';
+  const pageUrl=origin+'/embed/'+slug+'/kamper'+q;
+  const jsUrl=origin+'/embed/'+slug+'/kamper.js'+q;
+  let embed;
+  if(type==='iframe'){
+    embed='<iframe id="vk-frame" src="'+pageUrl+'" scrolling="no" style="border:0;width:100%" title="Kommende hjemmekamper"></iframe>\n'+
+      '<script>window.addEventListener("message",function(e){if(e.data&&e.data.vkFrame){document.getElementById("vk-frame").style.height=e.data.vkHeight+"px";}});<\/script>';
+  }else{
+    embed='<script src="'+jsUrl+'"><\/script>';
+  }
+  const club=(window.BRAND&&window.BRAND.name)||'klubben';
+  const intro=sport
+    ? 'Her finner du '+club+' sine kommende '+sport.toLowerCase()+'kamper på hjemmebane. Oversikten oppdateres automatisk.'
+    : 'Her finner du '+club+' sine kommende hjemmekamper den neste uka. Oversikten oppdateres automatisk.';
+  document.getElementById('kShareUrl').value=pageUrl;
+  document.getElementById('kShareEmbed').value=embed;
+  document.getElementById('kShareIntro').value=intro;
+  const prev=document.getElementById('kSharePrev');if(prev)prev.onclick=()=>window.open(pageUrl,'_blank');
 }
 function copyField(id){const el=document.getElementById(id);if(!el)return;el.focus();el.select();const t=el.value;if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(t);else{try{document.execCommand('copy');}catch(e){}}}
 async function dagensTips(){
