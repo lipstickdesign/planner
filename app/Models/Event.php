@@ -87,7 +87,13 @@ class Event extends Model
             'hoopit' => $this->signup_url,
             'notat' => $this->internal_note,
             'brief' => $this->brief,
-            'posts' => $this->tasks->sortBy('sort_order')->values()->map(function ($t) {
+            'posts' => $this->tasks->sortBy(function ($t) {
+                // Kronologisk: dato først, så manuell rekkefølge (sort_order) ved lik/ingen dato.
+                // Udaterte oppgaver havner nederst.
+                $d = $t->publish_date ? $t->publish_date->format('Y-m-d') : '9999-12-31';
+
+                return $d.'-'.str_pad((string) ($t->sort_order ?? 0), 6, '0', STR_PAD_LEFT);
+            })->values()->map(function ($t) {
                 return [
                     'id' => $t->id,
                     'label' => $t->label,
