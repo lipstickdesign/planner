@@ -1455,8 +1455,18 @@ function renderKampModal(){
   const rows=[...KAMPER].sort((a,b)=>((a.date+(a.time||''))<(b.date+(b.time||''))?-1:1));
   const list=rows.length?rows.map(k=>'<div class="idearow"><span class="gpill" style="background:'+(k.color||'#8795a3')+';color:#fff">'+(k.date?fmt(k.date):'—')+'</span><span class="it">'+esc(k.title)+'<small>'+(k.category?esc(k.category)+' · ':'')+(k.home?'Hjemme':'Borte')+(k.time?' · '+k.time:'')+(k.location?' · '+esc(k.location):'')+'</small></span><button class="btn sm" onclick="openKampForm('+k.id+')">'+ic('edit')+'</button><button class="btn sm" style="color:#b23535" onclick="deleteKamp('+k.id+')">'+ic('trash')+'</button></div>').join(''):'<div class="emptyrec">Ingen kamper lagt inn ennå.</div>';
   document.getElementById('modal').innerHTML=
-    KHEAD+'<h2>Kamper</h2><div class="sub">Kommende kamper – vises på dashbordet</div></div>'+
-    '<div class="mbody"><div style="text-align:right;margin-bottom:10px"><button class="btn solid sm" onclick="openKampForm(null)">'+ic('plus')+' Ny kamp</button></div>'+list+'</div>';
+    KHEAD+'<h2>Kamper</h2><div class="sub">Kommende hjemmekamper – vises på dashbordet</div></div>'+
+    '<div class="mbody"><div style="display:flex;justify-content:flex-end;gap:8px;margin-bottom:10px"><button class="btn sm" onclick="importKamper()">'+ic('refresh')+' Importer fra fotball.no</button><button class="btn solid sm" onclick="openKampForm(null)">'+ic('plus')+' Ny kamp</button></div>'+list+'</div>';
+}
+async function importKamper(){
+  if(!confirm('Hente hjemmekamper fra fotball.no? Nye kamper legges til og tidligere importerte oppdateres.'))return;
+  const mb=document.querySelector('#modal .mbody');if(mb)mb.innerHTML='<div class="emptyrec" style="padding-top:14px">'+ic('refresh')+' Henter kamper fra fotball.no …</div>';
+  try{
+    const r=await api('POST','/kamper/import');
+    KAMPER=r.kamper||[];
+    renderKampModal();renderHome();
+    alert('Import ferdig: '+r.result.imported+' nye, '+r.result.updated+' oppdatert. ('+r.result.home+' hjemmekamper av '+r.result.total+' i feeden.)');
+  }catch(err){renderKampModal();alert(err.message);}
 }
 function openKampForm(id){
   const k=id?KAMPER.find(x=>x.id===id):null;

@@ -186,6 +186,7 @@ Route::middleware('auth')->group(function () {
         Route::delete('/training-schedules/{trainingSchedule}', [TrainingScheduleController::class, 'destroy']);
 
         // Kamper
+        Route::post('/kamper/import', [KampController::class, 'import']);
         Route::post('/kamper', [KampController::class, 'store']);
         Route::put('/kamper/{kamp}', [KampController::class, 'update']);
         Route::delete('/kamper/{kamp}', [KampController::class, 'destroy']);

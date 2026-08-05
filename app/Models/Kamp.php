@@ -13,8 +13,8 @@ class Kamp extends Model
     protected $table = 'kamper';
 
     protected $fillable = [
-        'company_id', 'category_id', 'title', 'match_date', 'match_time',
-        'location', 'home', 'note',
+        'company_id', 'category_id', 'external_uid', 'title', 'home_team', 'away_team',
+        'tournament', 'match_date', 'match_time', 'location', 'home', 'note', 'source',
     ];
 
     protected $casts = [
@@ -35,11 +35,15 @@ class Kamp extends Model
             'category' => $this->category?->name,
             'color' => $this->category?->color,
             'title' => $this->title,
+            'home_team' => $this->home_team,
+            'away_team' => $this->away_team,
+            'tournament' => $this->tournament,
             'date' => optional($this->match_date)->format('Y-m-d'),
             'time' => $this->match_time ? substr((string) $this->match_time, 0, 5) : null,
             'location' => $this->location,
             'home' => (bool) $this->home,
             'note' => $this->note,
+            'source' => $this->source,
         ];
     }
 }
