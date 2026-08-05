@@ -1136,6 +1136,7 @@ function openSettings(){
     KHEAD+'<h2>Innstillinger</h2><div class="sub">Klubbens oppsett</div></div>'+
     '<div class="mbody">'+
       '<div class="idearow"><span class="it">Klubb & abonnement<small>Navn, undertekst, fargetema og logo</small></span><button class="btn sm" onclick="openCompanySettings()">Åpne</button></div>'+
+      '<div class="idearow"><span class="it">Kom i gang – importer<small>Lim inn tekst eller regneark → AI foreslår arrangement</small></span><button class="btn sm" onclick="openOnboarding()">Åpne</button></div>'+
       '<div class="idearow"><span class="it">Treningstider<small>Hvem trener når – brukes på dashbordet</small></span><button class="btn sm" onclick="openTrainingMgr()">Åpne</button></div>'+
       '<div class="idearow"><span class="it">Kamper<small>Kommende kamper – vises på dashbordet</small></span><button class="btn sm" onclick="openKampMgr()">Åpne</button></div>'+
       '<div class="idearow"><span class="it">Del årshjulet<small>Innebygdbart årshjul til nettsiden (uten Administrasjon)</small></span><button class="btn sm" onclick="openShareWheel()">Åpne</button></div>'+
@@ -1176,6 +1177,45 @@ async function removeCompanyLogo(){
   const id=window.CURRENT_COMPANY_ID;if(!id)return;
   if(!confirm('Fjerne logoen og bruke standard?'))return;
   try{await api('DELETE','/company/'+id+'/logo');location.reload();}catch(err){alert(err.message);}
+}
+/* ---- ONBOARDING (AI tolker tekst/regneark) ---- */
+function ensureXLSX(){return new Promise(res=>{if(typeof XLSX!=='undefined'){res(true);return;}const s=document.createElement('script');s.src='https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';s.onload=()=>res(true);s.onerror=()=>res(false);document.head.appendChild(s);});}
+function fileToText(file){return new Promise((res,rej)=>{const r=new FileReader();r.onload=e=>{try{const wb=XLSX.read(e.target.result,{type:'binary'});let out='';wb.SheetNames.forEach(n=>{out+=XLSX.utils.sheet_to_csv(wb.Sheets[n])+'\n';});res(out);}catch(err){rej(new Error('Kunne ikke lese regnearket.'));}};r.onerror=()=>rej(new Error('Kunne ikke lese fila.'));r.readAsBinaryString(file);});}
+function openOnboarding(){
+  const dd=document.getElementById('userDD');if(dd)dd.classList.remove('open');
+  ensureXLSX();
+  document.getElementById('modal').innerHTML=
+    KHEAD+'<h2>Kom i gang – importer</h2><div class="sub">Lim inn tekst eller last opp et regneark, så foreslår AI arrangement</div></div>'+
+    '<div class="mbody"><form class="f" onsubmit="onboardingParse(event)">'+
+      '<label>Beskriv arrangementene (eller lim inn fra et dokument)</label><textarea id="ob_text" placeholder="F.eks.: Lions Cup i mars, fotballskole i august, håndballskole 11.–13. september, årsmøte i mars …"></textarea>'+
+      '<label>… eller last opp regneark (xlsx / csv)</label><input id="ob_file" type="file" accept=".xlsx,.xls,.csv,.txt">'+
+      '<div class="actions"><button type="button" class="btn" onclick="closeModal()">Avbryt</button><button class="btn solid" type="submit">'+ic('sparkle')+' Tolk med AI</button></div>'+
+    '</form><div id="ob_result"></div></div>';
+  document.getElementById('overlay').classList.add('open');
+}
+async function onboardingParse(ev){ev.preventDefault();
+  let text=document.getElementById('ob_text').value.trim();
+  const f=document.getElementById('ob_file');const box=document.getElementById('ob_result');
+  try{
+    if(f&&f.files&&f.files[0]){const ok=await ensureXLSX();if(!ok)throw new Error('Kunne ikke laste regneark-leseren – lim inn tekst i stedet.');const ft=await fileToText(f.files[0]);text=(text?text+'\n':'')+ft;}
+    if(!text){alert('Skriv litt tekst eller last opp en fil først.');return;}
+    box.innerHTML='<div class="emptyrec" style="padding-top:12px">'+ic('sparkle')+' Tolker …</div>';
+    const r=await api('POST','/onboarding/parse',{text:text});
+    renderOnboardingPreview(r.events||[]);
+  }catch(err){box.innerHTML='<div class="emptyrec" style="color:#b23535;padding-top:12px">'+esc(err.message)+'</div>';}
+}
+function renderOnboardingPreview(events){
+  const box=document.getElementById('ob_result');
+  if(!events.length){box.innerHTML='<div class="emptyrec" style="padding-top:12px">Fant ingen arrangement i teksten. Prøv å beskrive tydeligere.</div>';return;}
+  window.__obEvents=events;
+  box.innerHTML='<div class="sectionlabel" style="margin:16px 0 8px">Forslag <span class="count">'+events.length+'</span> <span style="font-weight:400;color:var(--ink-soft)">– hak av det du vil opprette</span></div>'+
+    events.map((e,i)=>'<label class="idearow" style="cursor:pointer"><input type="checkbox" class="obchk" data-i="'+i+'" checked style="width:auto;margin-right:6px"><span class="it">'+esc(e.title)+'<small>'+(e.date?fmt(e.date):'dato mangler')+(e.sport?' · '+esc(e.sport):'')+(e.goal?' · '+esc(e.goal):'')+'</small></span></label>').join('')+
+    '<div class="actions"><button class="btn" onclick="closeModal()">Avbryt</button><button class="btn solid" onclick="onboardingImport()">'+ic('plus')+' Opprett valgte</button></div>';
+}
+async function onboardingImport(){
+  const chks=[...document.querySelectorAll('#modal .obchk:checked')].map(c=>window.__obEvents[+c.dataset.i]).filter(Boolean);
+  if(!chks.length){alert('Velg minst ett arrangement.');return;}
+  try{const r=await api('POST','/onboarding/import',{events:chks});alert('Opprettet '+r.created+' arrangement. Siden lastes på nytt.');location.reload();}catch(err){alert(err.message);}
 }
 function openKampMgr(){renderKampModal();document.getElementById('overlay').classList.add('open');}
 function renderKampModal(){

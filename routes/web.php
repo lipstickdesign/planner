@@ -9,6 +9,7 @@ use App\Http\Controllers\DashboardLayoutController;
 use App\Http\Controllers\EventController;
 use App\Http\Controllers\KampController;
 use App\Http\Controllers\KlubblivPostController;
+use App\Http\Controllers\OnboardingController;
 use App\Http\Controllers\PublicWheelController;
 use App\Http\Controllers\TaskController;
 use App\Http\Controllers\TrainingScheduleController;
@@ -143,6 +144,10 @@ Route::middleware('auth')->group(function () {
         Route::post('/users/{user}/reset-password', [UserController::class, 'resetPassword']);
         Route::put('/users/{user}/role', [UserController::class, 'updateRole']);
         Route::delete('/users/{user}', [UserController::class, 'destroy']);
+
+        // Onboarding – AI tolker tekst/regneark til arrangement
+        Route::post('/onboarding/parse', [OnboardingController::class, 'parse']);
+        Route::post('/onboarding/import', [OnboardingController::class, 'import']);
 
         // Selskaps-/abonnementsinnstillinger (branding)
         Route::put('/company/{company}', [CompanyController::class, 'update']);
