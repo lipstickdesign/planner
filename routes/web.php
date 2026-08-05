@@ -53,7 +53,7 @@ Route::post('/login', function (Request $request) {
     return back()
         ->withErrors(['email' => 'Feil e-post eller passord.'])
         ->onlyInput('email');
-});
+})->middleware('throttle:10,1');
 
 Route::post('/logout', function (Request $request) {
     Auth::logout();
@@ -75,7 +75,7 @@ Route::post('/forgot-password', function (Request $request) {
     return $status === Password::RESET_LINK_SENT
         ? back()->with('status', 'Hvis e-posten finnes hos oss, har vi sendt en lenke for å nullstille passordet.')
         : back()->with('status', 'Hvis e-posten finnes hos oss, har vi sendt en lenke for å nullstille passordet.');
-})->middleware('guest')->name('password.email');
+})->middleware(['guest', 'throttle:6,1'])->name('password.email');
 
 Route::get('/reset-password/{token}', fn (string $token) => view('auth.reset-password', ['token' => $token]))
     ->middleware('guest')->name('password.reset');
@@ -100,7 +100,7 @@ Route::post('/reset-password', function (Request $request) {
     return $status === Password::PASSWORD_RESET
         ? redirect()->route('login')->with('status', 'Passordet er endret. Du kan nå logge inn.')
         : back()->withErrors(['email' => 'Lenken er ugyldig eller utløpt. Be om en ny.']);
-})->middleware('guest')->name('password.update');
+})->middleware(['guest', 'throttle:6,1'])->name('password.update');
 
 Route::middleware('auth')->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
