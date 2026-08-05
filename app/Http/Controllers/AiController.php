@@ -170,7 +170,11 @@ class AiController extends Controller
             .'en lokal, frivillig allidrettsklubb. Skriv varme, inkluderende og engasjerende '
             .'Facebook-innlegg på norsk (bokmål), fulle av idrettsglede. Bruk gjerne noen passende '
             .'emojier. Hold det kort og konkret, med en tydelig oppfordring (CTA) til slutt. '
-            .'Ikke bruk hashtags med mindre det er naturlig.';
+            .'Ikke bruk hashtags med mindre det er naturlig. '
+            .'VIKTIG OM FORMAT: Skriv REN TEKST som kan limes rett inn på Facebook/Instagram. '
+            .'IKKE bruk Markdown eller andre formateringstegn – ingen **fet skrift**, ingen *, _, # eller '
+            .'liste-tegn. Facebook viser slike tegn bokstavelig. Bruk kun vanlige ord, linjeskift og emoji '
+            .'for å skape struktur og fremheving.';
 
         // Felles kontekst om arrangementet
         $ctx = "Arrangement: {$data['title']}\n"
@@ -220,7 +224,19 @@ class AiController extends Controller
         }
 
         return response()->json([
-            'text' => $resp->json('content.0.text', ''),
+            'text' => $this->stripMarkdown($resp->json('content.0.text', '')),
         ]);
+    }
+
+    /** Fjern Markdown-tegn AI-en kan finne på å bruke, så teksten kan limes rett inn på SoMe. */
+    private function stripMarkdown(string $text): string
+    {
+        $text = preg_replace('/\*\*(.+?)\*\*/s', '$1', $text);   // **fet**
+        $text = preg_replace('/__(.+?)__/s', '$1', $text);       // __fet__
+        $text = preg_replace('/(^|\n)\s*#{1,6}\s*/', '$1', $text); // # overskrifter
+        $text = preg_replace('/(^|\n)\s*[\*\-]\s+/', '$1• ', $text); // liste-tegn → punkt
+        $text = str_replace(['**', '__'], '', $text);            // eventuelle rester
+
+        return trim($text);
     }
 }
