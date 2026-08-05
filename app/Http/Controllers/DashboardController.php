@@ -17,10 +17,18 @@ class DashboardController extends Controller
 {
     public function index(WeatherService $weather)
     {
-        $company = Company::where('slug', 'flik')->first();
+        $user = auth()->user();
 
-        if ($company) {
-            app()->instance('currentCompany', $company);
+        // Aktivt selskap kommer fra SetCurrentCompany (brukerens eget / valgt).
+        // Superadmin uten valgt selskap lander på første; ellers første selskap brukeren tilhører.
+        $company = app()->bound('currentCompany') ? app('currentCompany') : null;
+        if (! $company) {
+            $company = $user->is_platform_admin
+                ? Company::query()->orderBy('name')->first()
+                : $user->companies()->first();
+            if ($company) {
+                app()->instance('currentCompany', $company);
+            }
         }
 
         $events = Event::with(['category', 'responsible', 'tasks.destinations'])
@@ -69,6 +77,11 @@ class DashboardController extends Controller
             ->map(fn (Kamp $k) => $k->card())
             ->values();
 
+        // Selskaper brukeren kan bytte mellom (superadmin ser alle)
+        $companies = $user->is_platform_admin
+            ? Company::orderBy('name')->get(['id', 'name'])
+            : $user->companies()->orderBy('name')->get(['companies.id', 'companies.name']);
+
         // Dashboard-oppsett: brukerens eget → selskaps-standard → innebygd standard
         $builtinDefault = ['a' => ['tellere', 'publiser', 'utenplan', 'travle', 'tomrom'], 'b' => ['idag', 'tips']];
         $companyDefault = DashboardLayout::whereNull('user_id')->first();
@@ -94,6 +107,8 @@ class DashboardController extends Controller
             'layoutDefault' => $resolvedDefault,
             'hasUserLayout' => (bool) $userLayout,
             'isSuperadmin' => (bool) $user->is_platform_admin,
+            'companies' => $companies,
+            'currentCompanyId' => $company?->id,
         ]);
     }
 }

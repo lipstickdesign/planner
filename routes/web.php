@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AiController;
+use App\Models\Company;
 use App\Http\Controllers\ContentIdeaController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DashboardLayoutController;
@@ -103,6 +104,19 @@ Route::middleware('auth')->group(function () {
     // Personlig dashboard-oppsett (alle innloggede kan styre sitt eget)
     Route::post('/dashboard-layout', [DashboardLayoutController::class, 'save']);
     Route::delete('/dashboard-layout', [DashboardLayoutController::class, 'reset']);
+
+    // Egen profil (alle innloggede kan endre sin egen bruker)
+    Route::put('/me', [UserController::class, 'updateSelf']);
+
+    // Bytte aktivt selskap (superadmin: alle; ellers kun egne)
+    Route::post('/switch-company/{company}', function (Request $request, Company $company) {
+        $u = $request->user();
+        if ($u->is_platform_admin || $u->companies()->where('companies.id', $company->id)->exists()) {
+            $request->session()->put('active_company_id', $company->id);
+        }
+
+        return redirect()->route('dashboard');
+    });
 
     // Skrive-/adminoperasjoner – kun admin/superadmin
     Route::middleware('company.admin')->group(function () {

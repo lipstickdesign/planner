@@ -23,7 +23,16 @@ a{color:var(--flik-blue);text-decoration:none}a:hover{text-decoration:underline}
 .brand h1{font-size:17px;margin:0;font-weight:500}
 .brand .sub{font-size:12px;opacity:.82;font-weight:300}
 .spacer{flex:1}
-.userchip{display:flex;align-items:center;gap:9px;background:rgba(255,255,255,.13);padding:5px 13px;border-radius:24px;font-size:13px}
+.usermenu{position:relative}
+.userchip{display:flex;align-items:center;gap:9px;background:rgba(255,255,255,.13);padding:6px 13px;border-radius:24px;font-size:13px;border:none;color:#fff;cursor:pointer;font-family:inherit}
+.userchip:hover{background:rgba(255,255,255,.22)}
+.usermenudd{position:absolute;top:46px;right:0;background:#fff;border-radius:12px;box-shadow:0 16px 44px rgba(20,40,80,.24);border:1px solid var(--line);min-width:236px;padding:6px;display:none;z-index:70}
+.usermenudd.open{display:block}
+.usermenudd .ddi{display:flex;align-items:center;gap:9px;width:100%;text-align:left;background:none;border:none;font-family:inherit;font-size:13.5px;color:var(--ink);padding:9px 11px;border-radius:8px;cursor:pointer}
+.usermenudd .ddi:hover{background:#f3f7fc}
+.usermenudd .ddi.cur{color:var(--flik-blue);font-weight:600}
+.usermenudd .ddsep{font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:var(--ink-soft);padding:9px 11px 4px}
+.usermenudd .ddsep2{border-top:1px solid var(--line);margin:6px 0}
 .userchip .av{width:28px;height:28px;border-radius:50%;background:var(--accent);color:#3a2c00;display:grid;place-items:center;font-weight:700;font-size:11px;margin-left:-6px}
 .logoutbtn{background:rgba(255,255,255,.16);border:none;color:#fff;border-radius:20px;padding:7px 13px;cursor:pointer;font-family:inherit;font-size:13px}
 .logoutbtn:hover{background:rgba(255,255,255,.3)}
@@ -295,11 +304,11 @@ form.f .actions .btn{padding:11px 22px;font-size:14px}
     </div>
     <div class="spacer"></div>
     @if($canEdit)<button class="iconbtn" title="Innstillinger" onclick="openSettings()"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10.325 4.317c.426 -1.756 2.924 -1.756 3.35 0a1.724 1.724 0 0 0 2.573 1.066c1.543 -.94 3.31 .826 2.37 2.37a1.724 1.724 0 0 0 1.065 2.572c1.756 .426 1.756 2.924 0 3.35a1.724 1.724 0 0 0 -1.066 2.573c.94 1.543 -.826 3.31 -2.37 2.37a1.724 1.724 0 0 0 -2.572 1.065c-.426 1.756 -2.924 1.756 -3.35 0a1.724 1.724 0 0 0 -2.573 -1.066c-1.543 .94 -3.31 -.826 -2.37 -2.37a1.724 1.724 0 0 0 -1.065 -2.572c-1.756 -.426 -1.756 -2.924 0 -3.35a1.724 1.724 0 0 0 1.066 -2.573c-.94 -1.543 .826 -3.31 2.37 -2.37c1 .608 2.296 .07 2.572 -1.065z"/><path d="M9 12a3 3 0 1 0 6 0a3 3 0 0 0 -6 0"/></svg></button>@endif
-    <div class="userchip"><span>{{ $user->name }}</span></div>
-    <form method="POST" action="{{ route('logout') }}" style="margin:0">
-      @csrf
-      <button class="logoutbtn" type="submit">Logg ut</button>
-    </form>
+    <div class="usermenu">
+      <button class="userchip" onclick="toggleUserMenu(event)" title="Meny"><span>{{ $user->name }}</span></button>
+      <div class="usermenudd" id="userDD"></div>
+    </div>
+    <form method="POST" action="{{ route('logout') }}" id="logoutForm" style="display:none">@csrf</form>
   </div>
 </div>
 <div class="tabbar">
@@ -364,7 +373,9 @@ form.f .actions .btn{padding:11px 22px;font-size:14px}
 
 <script>
 window.DATA = @json($events);
-window.ME = @json(['name' => $user->name, 'id' => $user->id]);
+window.ME = @json(['name' => $user->name, 'id' => $user->id, 'email' => $user->email]);
+window.COMPANIES = @json($companies);
+window.CURRENT_COMPANY_ID = @json($currentCompanyId);
 window.CATS = @json($categories);
 window.MEMBERS = @json($members);
 window.DESTS = @json($destinations);
@@ -648,6 +659,7 @@ function openEvent(id){
 function toggleTask(id){const it=document.getElementById('ti'+id);if(it)it.classList.toggle('open');}
 function closeModal(){document.getElementById('overlay').classList.remove('open');}
 document.getElementById('overlay').addEventListener('click',e=>{if(e.target.id==='overlay')closeModal();});
+document.addEventListener('click',e=>{const dd=document.getElementById('userDD');if(dd&&dd.classList.contains('open')&&!(e.target.closest&&e.target.closest('.usermenu')))dd.classList.remove('open');});
 document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal();});
 
 /* TABS */
@@ -1073,6 +1085,42 @@ function cancelConfig(){LAYOUT=JSON.parse(JSON.stringify(LAYOUT_SAVED));editMode
 async function saveConfig(){try{await api('POST','/dashboard-layout',{layout:LAYOUT});LAYOUT_SAVED=JSON.parse(JSON.stringify(LAYOUT));editMode=false;renderHome();}catch(err){alert(err.message);}}
 async function resetConfig(){if(!confirm('Nullstille til standardoppsettet?'))return;try{await api('DELETE','/dashboard-layout');}catch(err){}LAYOUT=JSON.parse(JSON.stringify(LAYOUT_DEFAULT));LAYOUT_SAVED=JSON.parse(JSON.stringify(LAYOUT));editMode=false;renderHome();}
 async function saveDefaultConfig(){if(!confirm('Lagre dette som standardoppsett for hele klubben?'))return;try{await api('POST','/dashboard-layout/default',{layout:LAYOUT});LAYOUT_DEFAULT=JSON.parse(JSON.stringify(LAYOUT));alert('Lagret som standard for klubben.');}catch(err){alert(err.message);}}
+/* ---- NAVN-NEDTREKK / EGEN PROFIL / SELSKAPSBYTTE ---- */
+function toggleUserMenu(e){e.stopPropagation();const dd=document.getElementById('userDD');if(!dd)return;if(dd.classList.contains('open')){dd.classList.remove('open');return;}renderUserMenu();dd.classList.add('open');}
+function renderUserMenu(){
+  const dd=document.getElementById('userDD');if(!dd)return;
+  const comps=window.COMPANIES||[];const cur=window.CURRENT_COMPANY_ID;
+  let html='<button class="ddi" onclick="openMyProfile()">'+ic('edit')+' Personlige innstillinger</button>';
+  if(comps.length>1){html+='<div class="ddsep">Bytt konto</div>'+comps.map(c=>'<button class="ddi'+(c.id===cur?' cur':'')+'" onclick="switchCompany('+c.id+')">'+esc(c.name)+(c.id===cur?' '+ic('check'):'')+'</button>').join('');}
+  html+='<div class="ddsep2"></div><button class="ddi" onclick="doLogout()">Logg ut</button>';
+  dd.innerHTML=html;
+}
+function doLogout(){const f=document.getElementById('logoutForm');if(f)f.submit();}
+function switchCompany(id){
+  const f=document.createElement('form');f.method='POST';f.action='/switch-company/'+id;
+  const c=document.createElement('input');c.type='hidden';c.name='_token';c.value=CSRF;f.appendChild(c);
+  document.body.appendChild(f);f.submit();
+}
+function openMyProfile(){
+  const dd=document.getElementById('userDD');if(dd)dd.classList.remove('open');
+  document.getElementById('modal').innerHTML=
+    KHEAD+'<h2>Personlige innstillinger</h2><div class="sub">Endre din egen bruker</div></div>'+
+    '<div class="mbody"><form class="f" onsubmit="saveMyProfile(event)">'+
+      '<div class="two"><div><label>Navn *</label><input id="me_name" required></div><div><label>E-post *</label><input id="me_email" type="email" required></div></div>'+
+      '<label>Nytt passord <span style="color:var(--ink-soft);font-weight:400">(valgfritt, minst 8 tegn)</span></label><input id="me_pass" type="password" minlength="8" placeholder="La stå tomt for å beholde passordet">'+
+      '<div class="actions"><button type="button" class="btn" onclick="closeModal()">Avbryt</button><button class="btn solid" type="submit">Lagre</button></div>'+
+    '</form></div>';
+  document.getElementById('overlay').classList.add('open');
+  document.getElementById('me_name').value=(window.ME&&window.ME.name)||'';
+  document.getElementById('me_email').value=(window.ME&&window.ME.email)||'';
+}
+async function saveMyProfile(ev){ev.preventDefault();
+  const body={name:val('me_name'),email:val('me_email')};const pw=document.getElementById('me_pass').value;if(pw)body.password=pw;
+  try{const r=await api('PUT','/me',body);if(window.ME){window.ME.name=r.name;window.ME.email=r.email;}
+    const chip=document.querySelector('.usermenu .userchip span');if(chip)chip.textContent=r.name;
+    closeModal();
+  }catch(err){alert(err.message);}
+}
 function openSettings(){
   document.getElementById('modal').innerHTML=
     KHEAD+'<h2>Innstillinger</h2><div class="sub">Klubbens oppsett</div></div>'+

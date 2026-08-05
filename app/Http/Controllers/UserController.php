@@ -78,6 +78,26 @@ class UserController extends Controller
         return response()->json(['ok' => true]);
     }
 
+    /** Innlogget bruker endrer sin egen profil (tilgjengelig for alle roller). */
+    public function updateSelf(Request $request)
+    {
+        $user = $request->user();
+        $data = $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'email' => ['required', 'email', 'max:255', Rule::unique('users', 'email')->ignore($user->id)],
+            'password' => ['nullable', 'string', 'min:8'],
+        ]);
+
+        $user->name = $data['name'];
+        $user->email = $data['email'];
+        if (! empty($data['password'])) {
+            $user->password = Hash::make($data['password']);
+        }
+        $user->save();
+
+        return response()->json(['ok' => true, 'name' => $user->name, 'email' => $user->email]);
+    }
+
     public function resetPassword(Request $request, User $user)
     {
         $data = $request->validate(['password' => ['required', 'string', 'min:8']]);
