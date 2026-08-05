@@ -140,6 +140,8 @@ Route::middleware('auth')->group(function () {
         Route::delete('/tasks/{task}', [TaskController::class, 'destroy']);
 
         Route::post('/events/{event}/generate-plan', [EventController::class, 'generatePlan']);
+        Route::post('/events/{event}/review-plan', [AiController::class, 'reviewPlan']);
+        Route::post('/events/{event}/apply-plan', [EventController::class, 'applyPlan']);
         Route::post('/events/{event}/duplicate-next-year', [EventController::class, 'duplicateNextYear']);
         Route::post('/events/{event}/reorder-tasks', [EventController::class, 'reorderTasks']);
         Route::post('/ai/suggest', [AiController::class, 'suggest']);

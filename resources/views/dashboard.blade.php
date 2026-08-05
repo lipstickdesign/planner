@@ -660,7 +660,7 @@ function openEvent(id){
       (e.notat?'<div class="note" style="margin:0 0 18px">'+ic('doc')+' '+e.notat+'</div>':'')+
       (e.brief?'<div class="brief">'+ic('info')+' <b>Praktisk info:</b> '+esc(e.brief)+'</div>':'')+
       '<div class="planhead"><div class="planttl">'+ic('calendar')+' Publiseringsplan <span class="count">'+(e.posts?e.posts.length:0)+' oppgaver</span></div>'+
-        (CANEDIT?'<div class="planbtns"><button class="btn solid sm" onclick="generatePlan('+e.id+')">'+ic('sparkle')+' Foreslå plan</button><button class="btn sm" onclick="openTaskForm('+e.id+',null)">'+ic('plus')+' Oppgave</button></div>':'')+'</div>'+
+        (CANEDIT?'<div class="planbtns"><button class="btn solid sm" onclick="openPlanReview('+e.id+')">'+ic('sparkle')+' Foreslå plan</button><button class="btn sm" onclick="openTaskForm('+e.id+',null)">'+ic('plus')+' Oppgave</button></div>':'')+'</div>'+
       postsHtml+
       '<div class="checklist"><h4>Sjekkliste – klar for publisering?</h4>'+checks.map(ch=>'<div class="check '+(ch[1]?'done':'todo')+'"><span class="box">'+(ch[1]?ic('check','chk'):'')+'</span><span class="lbl">'+ch[0]+'</span></div>').join('')+'</div>'+
       (CANEDIT?'<div class="links">'+
@@ -785,6 +785,53 @@ async function generatePlan(eventId){
   const msg=(e.posts||[]).length?'Legge til en foreslått publiseringsplan i tillegg til de eksisterende oppgavene?':'Lage forslag til publiseringsplan basert på eventdatoen?';
   if(!confirm(msg))return;
   try{const card=await api('POST','/events/'+eventId+'/generate-plan');upsert(card);rerender();openEvent(eventId);}catch(err){alert(err.message);}
+}
+
+/* AI vurderer HELE planen: foreslår nye oppgaver, endringer og flagg – bruker godkjenner */
+async function openPlanReview(eventId){
+  const e=DATA.find(x=>x.id===eventId);if(!e)return;
+  document.getElementById('modal').innerHTML=
+    KHEAD+'<h2>Gjennomgang av planen</h2><div class="sub">'+esc(e.title)+'</div></div>'+
+    '<div class="mbody"><div class="emptyrec" style="padding-top:14px">'+ic('sparkle')+' Vurderer planen …</div></div>';
+  document.getElementById('overlay').classList.add('open');
+  try{const r=await api('POST','/events/'+eventId+'/review-plan');renderPlanReview(eventId,r);}
+  catch(err){const mb=document.querySelector('#modal .mbody');if(mb)mb.innerHTML='<div class="emptyrec" style="color:#b23535;padding-top:14px">'+esc(err.message)+'</div>';}
+}
+function renderPlanReview(eventId,r){
+  const e=DATA.find(x=>x.id===eventId);
+  const lbl=id=>{const p=(e.posts||[]).find(x=>x.id===id);return p?p.label:('#'+id);};
+  const pdate=id=>{const p=(e.posts||[]).find(x=>x.id===id);return p&&p.date?fmt(p.date):'ingen dato';};
+  window.__review={eventId:eventId,add:r.add||[],adjust:r.adjust||[]};
+  const nAdd=(r.add||[]).length, nAdj=(r.adjust||[]).length, nFlag=(r.flag||[]).length;
+  let html='';
+  if(!nAdd&&!nAdj&&!nFlag){
+    html='<div class="emptyrec" style="padding-top:14px">'+ic('check')+' Planen ser bra ut – ingen forslag akkurat nå.</div>';
+  }else{
+    if(nAdd){
+      html+='<div class="sectionlabel" style="margin:6px 0 8px">Nye oppgaver <span class="count">'+nAdd+'</span></div>'+
+        r.add.map((a,i)=>'<label class="idearow" style="cursor:pointer"><input type="checkbox" class="rv-add" data-i="'+i+'" checked style="width:auto;margin-right:6px"><span class="it">'+esc(a.label)+'<small>'+(a.date?fmt(a.date):'ingen dato')+(a.platform?' · '+esc(a.platform):'')+(a.format?' · '+esc(a.format):'')+(a.reason?' — '+esc(a.reason):'')+'</small></span></label>').join('');
+    }
+    if(nAdj){
+      html+='<div class="sectionlabel" style="margin:16px 0 8px">Foreslåtte endringer <span class="count">'+nAdj+'</span></div>'+
+        r.adjust.map((a,i)=>{const ch=[];if(a.date)ch.push('dato → '+fmt(a.date));if(a.platform)ch.push('kanal → '+esc(a.platform));if(a.format)ch.push('format → '+esc(a.format));return '<label class="idearow" style="cursor:pointer"><input type="checkbox" class="rv-adj" data-i="'+i+'" checked style="width:auto;margin-right:6px"><span class="it">'+esc(lbl(a.id))+'<small>'+esc(pdate(a.id))+' · '+(ch.join(', ')||'ingen endring')+(a.reason?' — '+esc(a.reason):'')+'</small></span></label>';}).join('');
+    }
+    if(nFlag){
+      html+='<div class="sectionlabel" style="margin:16px 0 8px">Til vurdering <span class="count">'+nFlag+'</span></div>'+
+        r.flag.map(f=>'<div class="idearow"><span class="it">'+ic('info')+' '+esc(lbl(f.id))+'<small>'+esc(f.reason||'')+'</small></span></div>').join('')+
+        '<div class="muted" style="font-size:12px;margin-top:4px">Disse endres ikke automatisk – vurder dem selv i lista.</div>';
+    }
+  }
+  const canApply=nAdd||nAdj;
+  const mb=document.querySelector('#modal .mbody');
+  mb.innerHTML=html+'<div class="actions"><button class="btn" onclick="closeModal()">Lukk</button>'+(canApply?'<button class="btn solid" onclick="applyPlanReview()">'+ic('check')+' Bruk valgte</button>':'')+'</div>';
+}
+async function applyPlanReview(){
+  const rv=window.__review;if(!rv)return;
+  const add=[...document.querySelectorAll('#modal .rv-add:checked')].map(c=>rv.add[+c.dataset.i]).filter(Boolean);
+  const adjust=[...document.querySelectorAll('#modal .rv-adj:checked')].map(c=>rv.adjust[+c.dataset.i]).filter(Boolean);
+  if(!add.length&&!adjust.length){alert('Velg minst ett forslag.');return;}
+  try{const card=await api('POST','/events/'+rv.eventId+'/apply-plan',{add:add,adjust:adjust});upsert(card);rerender();openEvent(rv.eventId);}
+  catch(err){alert(err.message);}
 }
 
 /* kopier event til neste år (datoer flyttet ett år frem) */

@@ -87,6 +87,62 @@ class EventController extends Controller
     }
 
     /**
+     * Bruk godkjente forslag fra plan-gjennomgangen.
+     * add = nye oppgaver, adjust = endre dato/kanal på eksisterende. Sletter aldri noe.
+     */
+    public function applyPlan(Request $request, Event $event)
+    {
+        $data = $request->validate([
+            'add' => ['array'],
+            'add.*.label' => ['required', 'string', 'max:255'],
+            'add.*.date' => ['nullable', 'date'],
+            'add.*.platform' => ['nullable', 'string', 'max:30'],
+            'add.*.format' => ['nullable', 'string', 'max:30'],
+            'adjust' => ['array'],
+            'adjust.*.id' => ['required', 'integer'],
+            'adjust.*.date' => ['nullable', 'date'],
+            'adjust.*.platform' => ['nullable', 'string', 'max:30'],
+            'adjust.*.format' => ['nullable', 'string', 'max:30'],
+        ]);
+
+        $order = (int) ($event->tasks()->max('sort_order') ?? 0);
+
+        foreach ($data['add'] ?? [] as $a) {
+            $event->tasks()->create([
+                'label' => $a['label'],
+                'publish_date' => $a['date'] ?? null,
+                'platform' => $a['platform'] ?? null,
+                'format' => $a['format'] ?? null,
+                'status' => 'planlagt',
+                'sort_order' => ++$order,
+            ]);
+        }
+
+        foreach ($data['adjust'] ?? [] as $adj) {
+            // Kun oppgaver som faktisk tilhører dette arrangementet.
+            $task = $event->tasks()->find($adj['id']);
+            if (! $task) {
+                continue;
+            }
+            $fields = [];
+            if (array_key_exists('date', $adj) && $adj['date']) {
+                $fields['publish_date'] = $adj['date'];
+            }
+            if (! empty($adj['platform'])) {
+                $fields['platform'] = $adj['platform'];
+            }
+            if (! empty($adj['format'])) {
+                $fields['format'] = $adj['format'];
+            }
+            if ($fields) {
+                $task->update($fields);
+            }
+        }
+
+        return response()->json($event->fresh()->toCard());
+    }
+
+    /**
      * Kopier event (med oppgaver/tekster) til neste år, med alle datoer flyttet ett år frem.
      * Tekstene kopieres som de er – brukeren kan så oppdatere dem for nytt år med AI.
      */

@@ -2,11 +2,138 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Event;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 
 class AiController extends Controller
 {
+    /**
+     * Vurder en hel publiseringsplan for et arrangement.
+     * Returnerer FORSLAG (add/adjust/flag) – oppretter/endrer INGENTING.
+     * Brukeren godkjenner selv hva som skal brukes.
+     */
+    public function reviewPlan(Event $event)
+    {
+        $key = config('services.anthropic.key');
+        if (! $key) {
+            return response()->json([
+                'error' => 'AI er ikke aktivert ennå. Legg ANTHROPIC_API_KEY inn i .env på serveren.',
+            ], 422);
+        }
+
+        $event->loadMissing('tasks');
+        $today = now()->format('Y-m-d');
+
+        $existing = $event->tasks
+            ->sortBy(fn ($t) => $t->publish_date?->format('Y-m-d') ?? '9999')
+            ->map(fn ($t) => [
+                'id' => $t->id,
+                'label' => $t->label,
+                'date' => optional($t->publish_date)->format('Y-m-d'),
+                'platform' => $t->platform,
+                'format' => $t->format,
+                'har_tekst' => ! empty($t->body_draft),
+                'status' => $t->status,
+            ])->values();
+
+        $ctx = "Arrangement: {$event->title}\n"
+            .'Idrett/gruppe: '.($event->category->name ?? 'ukjent')."\n"
+            .'Arrangementsdato: '.(optional($event->event_date)->format('Y-m-d') ?? 'ukjent')."\n"
+            .'Type: '.($event->type ?? '')."\n"
+            .'Hovedmål: '.($event->goal ?? '')."\n"
+            .'I dag er: '.$today."\n\n"
+            .'Eksisterende oppgaver (JSON):'."\n".$existing->toJson(JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
+
+        $system = 'Du er innholdsstrateg for en idrettsklubb og vurderer en publiseringsplan (årshjul) for '
+            .'sosiale medier for ETT arrangement. Målet er god, jevn kommunikasjon rundt arrangementet – '
+            .'typisk teaser/«sett av dato» i forkant, påmelding, påminnelse rett før, noe på selve dagen, '
+            .'og gjerne en oppfølging/takk etterpå. Tilpass antall og timing til hva slags arrangement det er. '
+            .'VIKTIG: for faste eller roterende treningsplaner skal du IKKE foreslå én post per økt. '
+            .'Returner KUN gyldig JSON (ingen forklaring, ingen kodeblokk) på formen: '
+            .'{"add":[{"label":"...","date":"YYYY-MM-DD","platform":"facebook|instagram|tiktok","format":"post|story","reason":"kort begrunnelse"}],'
+            .'"adjust":[{"id":<tall>,"date":"YYYY-MM-DD eller null","platform":"... eller null","format":"... eller null","reason":"kort begrunnelse"}],'
+            .'"flag":[{"id":<tall>,"reason":"kort begrunnelse"}]}. '
+            .'Regler: "add" = oppgaver som mangler for god dekning. "adjust" = KUN når en eksisterende oppgave '
+            .'har åpenbart feil dato/kanal (f.eks. publisering etter at arrangementet er over, eller urealistisk timing) '
+            .'– ta bare med feltene som skal endres, resten null. "flag" = oppgaver som ser malplasserte ut eller er '
+            .'duplikater. IKKE foreslå å slette noe – bruker bestemmer selv. Hold begrunnelsene korte. '
+            .'Datoer må være realistiske i forhold til arrangementsdatoen og dagens dato.';
+
+        $resp = Http::withHeaders([
+            'x-api-key' => $key,
+            'anthropic-version' => '2023-06-01',
+            'content-type' => 'application/json',
+        ])->timeout(60)->post('https://api.anthropic.com/v1/messages', [
+            'model' => config('services.anthropic.model'),
+            'max_tokens' => 1800,
+            'system' => $system,
+            'messages' => [['role' => 'user', 'content' => $ctx]],
+        ]);
+
+        if (! $resp->successful()) {
+            return response()->json([
+                'error' => 'AI-tjenesten svarte ikke ('.$resp->status().'). Sjekk API-nøkkelen.',
+            ], 502);
+        }
+
+        $json = $this->extractJson($resp->json('content.0.text', ''));
+        $validIds = $event->tasks->pluck('id')->all();
+
+        // Rens og valider mot faktiske oppgaver på DETTE arrangementet.
+        $add = collect($json['add'] ?? [])->filter(fn ($a) => is_array($a) && ! empty($a['label']))
+            ->map(fn ($a) => [
+                'label' => mb_substr((string) $a['label'], 0, 255),
+                'date' => $this->cleanDate($a['date'] ?? null),
+                'platform' => $a['platform'] ?? null,
+                'format' => $a['format'] ?? null,
+                'reason' => isset($a['reason']) ? mb_substr((string) $a['reason'], 0, 300) : null,
+            ])->values();
+
+        $adjust = collect($json['adjust'] ?? [])
+            ->filter(fn ($a) => is_array($a) && isset($a['id']) && in_array((int) $a['id'], $validIds, true))
+            ->map(fn ($a) => [
+                'id' => (int) $a['id'],
+                'date' => $this->cleanDate($a['date'] ?? null),
+                'platform' => ($a['platform'] ?? null) ?: null,
+                'format' => ($a['format'] ?? null) ?: null,
+                'reason' => isset($a['reason']) ? mb_substr((string) $a['reason'], 0, 300) : null,
+            ])->values();
+
+        $flag = collect($json['flag'] ?? [])
+            ->filter(fn ($a) => is_array($a) && isset($a['id']) && in_array((int) $a['id'], $validIds, true))
+            ->map(fn ($a) => [
+                'id' => (int) $a['id'],
+                'reason' => isset($a['reason']) ? mb_substr((string) $a['reason'], 0, 300) : null,
+            ])->values();
+
+        return response()->json(['add' => $add, 'adjust' => $adjust, 'flag' => $flag]);
+    }
+
+    private function extractJson(string $text): array
+    {
+        $start = strpos($text, '{');
+        $end = strrpos($text, '}');
+        if ($start === false || $end === false || $end < $start) {
+            return [];
+        }
+        $j = json_decode(substr($text, $start, $end - $start + 1), true);
+
+        return is_array($j) ? $j : [];
+    }
+
+    private function cleanDate($d): ?string
+    {
+        if (! $d) {
+            return null;
+        }
+        try {
+            return \Carbon\Carbon::parse($d)->format('Y-m-d');
+        } catch (\Throwable $e) {
+            return null;
+        }
+    }
+
     /**
      * Foreslå (eller oppdater) et tekstutkast for en oppgave, i FLIKs stemme.
      * - existing: oppdaterer fjorårets tekst til nytt år (rett årstall/årsklasser).
