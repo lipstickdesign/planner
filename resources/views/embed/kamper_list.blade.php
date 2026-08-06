@@ -20,11 +20,17 @@
   <div class="vk-day">
     <div class="vk-dh">{{ $day['label'] }}</div>
     @foreach($day['matches'] as $m)
+      @php
+        $showSport = empty($sport) && ! empty($m['sport']);
+        $meta = trim(($m['tournament'] ?? '')
+            .((! empty($m['tournament']) && ! empty($m['location'])) ? ' · ' : '')
+            .($m['location'] ?? ''));
+      @endphp
       <div class="vk-m">
         <div class="vk-t">{{ $m['time'] ?? '' }}</div>
         <div class="vk-i">
-          <div class="vk-teams">@if(empty($sport) && !empty($m['sport']))<span class="vk-sport" style="background:{{ $m['color'] ?? '#5a7184' }}">{{ $m['sport'] }}</span>@endif{{ $m['home_team'] }}<span class="vk-vs">–</span>{{ $m['away_team'] }}@if(!empty($m['note']))<span class="vk-badge">{{ $m['note'] }}</span>@endif</div>
-          <div class="vk-meta">@if(!empty($m['tournament'])){{ $m['tournament'] }}@endif@if(!empty($m['location'])) · {{ $m['location'] }}@endif</div>
+          <div class="vk-teams">{!! $showSport ? '<span class="vk-sport" style="background:'.e($m['color'] ?? '#5a7184').'">'.e($m['sport']).'</span>' : '' !!}{{ $m['home_team'] }}<span class="vk-vs">–</span>{{ $m['away_team'] }}{!! ! empty($m['note']) ? '<span class="vk-badge">'.e($m['note']).'</span>' : '' !!}</div>
+          <div class="vk-meta">{{ $meta }}</div>
         </div>
       </div>
     @endforeach
