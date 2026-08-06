@@ -6,6 +6,7 @@ use App\Models\Category;
 use App\Models\Company;
 use App\Models\Kamp;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 
 /**
@@ -16,7 +17,12 @@ use Illuminate\Support\Facades\Http;
 class KampImportService
 {
     /**
-     * @return array{imported:int,updated:int,total:int,home:int,skipped:int}
+     * Full synk av hjemmekamper fra feeden. Henter og parser FØRST, deretter
+     * erstattes de tidligere importerte kampene (source=fotball.no) i én
+     * transaksjon. Manuelt lagt inn kamper (source=null) røres ikke.
+     * Slik unngås duplikater, og flyttede/avlyste kamper oppdateres.
+     *
+     * @return array{synced:int,total:int,home:int}
      */
     public function import(Company $company): array
     {
@@ -41,19 +47,15 @@ class KampImportService
             ->whereRaw('LOWER(name) = ?', ['fotball'])
             ->value('id');
 
-        $imported = 0;
-        $updated = 0;
+        // Bygg rader for hjemmekampene (i minnet – vi rører ikke DB før alt er klart).
+        $rows = [];
         $home = 0;
-        $skipped = 0;
-
         foreach ($events as $e) {
             [$homeTeam, $awayTeam] = $this->teams($e);
-            if ($homeTeam === '' && $awayTeam === '') {
-                $skipped++;
+            if ($homeTeam === '') {
                 continue;
             }
 
-            // Kun hjemmekamper: et av klubbens aliaser må matche HJEMMElaget.
             $isHome = false;
             foreach ($aliases as $a) {
                 if ($a !== '' && mb_stripos($homeTeam, $a) !== false) {
@@ -64,42 +66,45 @@ class KampImportService
             if (! $isHome) {
                 continue;
             }
-            $home++;
 
             $start = $this->parseStart($e['DTSTART'] ?? '');
             if (! $start) {
-                $skipped++;
                 continue;
             }
+            $home++;
 
             $postponed = (bool) preg_match('/\bUtsatt\b/u', $e['SUMMARY'] ?? '');
-
-            $record = Kamp::updateOrCreate(
-                ['company_id' => $company->id, 'external_uid' => $e['UID'] ?? null],
-                [
-                    'category_id' => $catId,
-                    'title' => trim($homeTeam.' - '.$awayTeam),
-                    'home_team' => $homeTeam,
-                    'away_team' => $awayTeam,
-                    'tournament' => $e['_tournament'] ?? null,
-                    'match_date' => $start->format('Y-m-d'),
-                    'match_time' => $start->format('H:i:s'),
-                    'location' => $e['LOCATION'] ?? null,
-                    'home' => true,
-                    'note' => $postponed ? 'Utsatt' : null,
-                    'source' => 'fotball.no',
-                ]
-            );
-
-            $record->wasRecentlyCreated ? $imported++ : $updated++;
+            $rows[] = [
+                'company_id' => $company->id,
+                'category_id' => $catId,
+                'external_uid' => $e['UID'] ?? null,
+                'title' => trim($homeTeam.' - '.$awayTeam),
+                'home_team' => $homeTeam,
+                'away_team' => $awayTeam,
+                'tournament' => $e['_tournament'] ?? null,
+                'match_date' => $start->format('Y-m-d'),
+                'match_time' => $start->format('H:i:s'),
+                'location' => $e['LOCATION'] ?? null,
+                'home' => true,
+                'note' => $postponed ? 'Utsatt' : null,
+                'source' => 'fotball.no',
+                'created_at' => now(),
+                'updated_at' => now(),
+            ];
         }
 
+        // Full resync: erstatt de tidligere importerte i én transaksjon.
+        DB::transaction(function () use ($company, $rows) {
+            Kamp::where('company_id', $company->id)->where('source', 'fotball.no')->delete();
+            foreach (array_chunk($rows, 200) as $chunk) {
+                DB::table('kamper')->insert($chunk);
+            }
+        });
+
         return [
-            'imported' => $imported,
-            'updated' => $updated,
+            'synced' => count($rows),
             'total' => count($events),
             'home' => $home,
-            'skipped' => $skipped,
         ];
     }
 

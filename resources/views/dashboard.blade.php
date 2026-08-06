@@ -1459,13 +1459,13 @@ function renderKampModal(){
     '<div class="mbody"><div style="display:flex;justify-content:flex-end;gap:8px;margin-bottom:10px;flex-wrap:wrap"><button class="btn sm" onclick="openShareKamper()">'+ic('link')+' Del til nettside</button><button class="btn sm" onclick="importKamper()">'+ic('refresh')+' Importer fra fotball.no</button><button class="btn solid sm" onclick="openKampForm(null)">'+ic('plus')+' Ny kamp</button></div>'+list+'</div>';
 }
 async function importKamper(){
-  if(!confirm('Hente hjemmekamper fra fotball.no? Nye kamper legges til og tidligere importerte oppdateres.'))return;
-  const mb=document.querySelector('#modal .mbody');if(mb)mb.innerHTML='<div class="emptyrec" style="padding-top:14px">'+ic('refresh')+' Henter kamper fra fotball.no …</div>';
+  if(!confirm('Synkronisere hjemmekamper fra fotball.no? Tidligere importerte kamper erstattes med ferske (flyttede/avlyste oppdateres). Manuelt lagt inn kamper røres ikke.'))return;
+  const mb=document.querySelector('#modal .mbody');if(mb)mb.innerHTML='<div class="emptyrec" style="padding-top:14px">'+ic('refresh')+' Synkroniserer kamper fra fotball.no …</div>';
   try{
     const r=await api('POST','/kamper/import');
     KAMPER=r.kamper||[];
     renderKampModal();renderHome();
-    alert('Import ferdig: '+r.result.imported+' nye, '+r.result.updated+' oppdatert. ('+r.result.home+' hjemmekamper av '+r.result.total+' i feeden.)');
+    alert('Ferdig: '+r.result.synced+' hjemmekamper synkronisert (av '+r.result.total+' i feeden).');
   }catch(err){renderKampModal();alert(err.message);}
 }
 function openKampForm(id){

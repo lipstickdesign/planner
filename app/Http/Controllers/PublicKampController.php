@@ -17,8 +17,9 @@ class PublicKampController extends Controller
     public function feed(string $slug)
     {
         [$company, $sport, $kamper] = $this->collect($slug);
+        $days = $this->groupDays($kamper);
 
-        return view('embed.kamper', compact('company', 'kamper', 'sport'));
+        return view('embed.kamper', compact('company', 'days', 'sport'));
     }
 
     /**
@@ -28,8 +29,9 @@ class PublicKampController extends Controller
     public function feedJs(string $slug)
     {
         [$company, $sport, $kamper] = $this->collect($slug);
+        $days = $this->groupDays($kamper);
 
-        $html = view('embed.kamper_list', compact('company', 'kamper', 'sport'))->render();
+        $html = view('embed.kamper_list', compact('company', 'days', 'sport'))->render();
 
         $js = '(function(){var s=document.currentScript;if(!s)return;'
             .'var w=document.createElement("div");w.innerHTML='.json_encode($html, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES).';'
@@ -77,5 +79,29 @@ class PublicKampController extends Controller
         });
 
         return [$company, $sport, $kamper];
+    }
+
+    /** Grupper kamper per dag med norsk datotekst (gjøres i PHP – ikke i Blade). */
+    private function groupDays(array $kamper): array
+    {
+        $groups = [];
+        foreach ($kamper as $m) {
+            $groups[$m['date'] ?? ''][] = $m;
+        }
+
+        $days = [];
+        foreach ($groups as $date => $matches) {
+            $label = '';
+            if ($date) {
+                try {
+                    $label = ucfirst(\Carbon\Carbon::parse($date)->locale('nb')->isoFormat('dddd D. MMMM'));
+                } catch (\Throwable $e) {
+                    $label = $date;
+                }
+            }
+            $days[] = ['label' => $label, 'matches' => $matches];
+        }
+
+        return $days;
     }
 }
