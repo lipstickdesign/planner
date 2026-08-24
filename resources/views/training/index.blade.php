@@ -147,6 +147,7 @@ footer{margin-top:26px;font-size:12px;color:var(--muted);max-width:80ch}
 <nav style="display:flex;gap:6px;margin:4px 0 2px">
   <a href="/treningstider" style="padding:7px 14px;border-radius:9px;border:1px solid var(--flik);color:var(--flik);background:color-mix(in srgb,var(--flik) 8%,var(--surface));font-weight:600;text-decoration:none">Kontroll</a>
   <a href="/treningstider/lag" style="padding:7px 14px;border-radius:9px;border:1px solid var(--ring);color:var(--ink2);text-decoration:none">Lag</a>
+  <a href="/treningstider/anlegg" style="padding:7px 14px;border-radius:9px;border:1px solid var(--ring);color:var(--ink2);text-decoration:none">Anlegg</a>
 </nav>
 
 <div class="tiles">

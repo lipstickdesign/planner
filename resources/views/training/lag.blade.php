@@ -57,6 +57,7 @@
   <nav class="subnav">
     <a href="/treningstider">Kontroll</a>
     <a href="/treningstider/lag" class="active">Lag</a>
+    <a href="/treningstider/anlegg">Anlegg</a>
   </nav>
   <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
     <span class="sub" id="ttCount"></span>

@@ -117,6 +117,10 @@ Route::middleware('auth')->group(function () {
     Route::post('/treningstider/lag', [TrainingController::class, 'storeTeam']);
     Route::put('/treningstider/lag/{team}', [TrainingController::class, 'updateTeam']);
     Route::delete('/treningstider/lag/{team}', [TrainingController::class, 'destroyTeam']);
+    Route::get('/treningstider/anlegg', [TrainingController::class, 'facilities'])->name('training.anlegg');
+    Route::post('/treningstider/anlegg', [TrainingController::class, 'storeFacility']);
+    Route::put('/treningstider/anlegg/{facility}', [TrainingController::class, 'updateFacility']);
+    Route::delete('/treningstider/anlegg/{facility}', [TrainingController::class, 'destroyFacility']);
 
     // Personlig dashboard-oppsett (alle innloggede kan styre sitt eget)
     Route::post('/dashboard-layout', [DashboardLayoutController::class, 'save']);

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Category;
 use App\Models\Company;
+use App\Models\TrainingFacility;
 use App\Models\TrainingTeam;
 use Illuminate\Http\Request;
 
@@ -118,6 +119,78 @@ class TrainingController extends Controller
             'requires_indoor' => ['nullable', 'boolean'],
             'coach_unavailable' => ['nullable', 'string', 'max:255'],
         ]);
+    }
+
+    /* ---------- Anlegg ---------- */
+
+    public function facilities()
+    {
+        $this->guard();
+        $company = $this->company();
+
+        $facilities = $company
+            ? TrainingFacility::where('company_id', $company->id)->orderBy('name')->get()
+                ->map(fn (TrainingFacility $f) => $this->facilityCard($f))->values()
+            : collect();
+
+        $sports = $company
+            ? Category::where('company_id', $company->id)->whereNull('archived_at')
+                ->orderBy('sort_order')->pluck('name')->values()
+            : collect();
+
+        return view('training.anlegg', [
+            'facilities' => $facilities,
+            'sports' => $sports,
+            'company' => $company,
+        ]);
+    }
+
+    public function storeFacility(Request $request)
+    {
+        $this->guard();
+        $f = TrainingFacility::create($this->validatedFacility($request));
+
+        return response()->json($this->facilityCard($f));
+    }
+
+    public function updateFacility(Request $request, TrainingFacility $facility)
+    {
+        $this->guard();
+        $facility->update($this->validatedFacility($request));
+
+        return response()->json($this->facilityCard($facility->fresh()));
+    }
+
+    public function destroyFacility(TrainingFacility $facility)
+    {
+        $this->guard();
+        $facility->delete();
+
+        return response()->json(['ok' => true]);
+    }
+
+    private function validatedFacility(Request $request): array
+    {
+        return $request->validate([
+            'name' => ['required', 'string', 'max:120'],
+            'type' => ['nullable', 'string', 'max:40'],
+            'zones' => ['nullable', 'integer', 'min:1', 'max:20'],
+            'status' => ['nullable', 'string', 'max:20'],
+            'allowed_sports' => ['nullable', 'array'],
+            'allowed_sports.*' => ['string', 'max:60'],
+        ]);
+    }
+
+    private function facilityCard(TrainingFacility $f): array
+    {
+        return [
+            'id' => $f->id,
+            'name' => $f->name,
+            'type' => $f->type,
+            'zones' => $f->zones,
+            'status' => $f->status,
+            'allowed_sports' => $f->allowed_sports ?? [],
+        ];
     }
 
     private function card(TrainingTeam $t): array
