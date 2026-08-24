@@ -425,6 +425,9 @@ class TrainingController extends Controller
         $ctx = "ANLEGG:\n".$facLines."\n\nLAG:\n".$teamLines."\n\nLÅSTE TIDER (kan ikke brukes):\n".$lockLines
             .($data['instruction'] ? "\n\nEKSTRA INSTRUKS FRA BRUKER:\n".$data['instruction'] : '');
 
+        // Hele planen gir et stort svar + Opus bruker tokens på «tenking» → gi rikelig budsjett.
+        $maxTokens = $data['scope'] === 'alle' ? 16000 : 8000;
+
         // Prøv pro-modellen; fall tilbake til arbeidsmodellen om den ikke finnes.
         $models = array_values(array_unique(array_filter([$model, config('services.anthropic.model')])));
         $resp = null;
@@ -434,9 +437,9 @@ class TrainingController extends Controller
                 'x-api-key' => $key,
                 'anthropic-version' => '2023-06-01',
                 'content-type' => 'application/json',
-            ])->timeout(180)->post('https://api.anthropic.com/v1/messages', [
+            ])->timeout(300)->post('https://api.anthropic.com/v1/messages', [
                 'model' => $m,
-                'max_tokens' => 8000,
+                'max_tokens' => $maxTokens,
                 'system' => $system,
                 'messages' => [['role' => 'user', 'content' => $ctx]],
             ]);
