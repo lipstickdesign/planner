@@ -15,6 +15,7 @@ use App\Http\Controllers\OnboardingController;
 use App\Http\Controllers\PublicKampController;
 use App\Http\Controllers\PublicWheelController;
 use App\Http\Controllers\TaskController;
+use App\Http\Controllers\TrainingController;
 use App\Http\Controllers\TrainingScheduleController;
 use App\Http\Controllers\UserController;
 use Illuminate\Http\Request;
@@ -109,6 +110,9 @@ Route::post('/reset-password', function (Request $request) {
 
 Route::middleware('auth')->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+
+    // Treningstider – fordelingsverktøy (egen side, foreløpig kontroll-visningen)
+    Route::get('/treningstider', [TrainingController::class, 'index'])->name('training');
 
     // Personlig dashboard-oppsett (alle innloggede kan styre sitt eget)
     Route::post('/dashboard-layout', [DashboardLayoutController::class, 'save']);

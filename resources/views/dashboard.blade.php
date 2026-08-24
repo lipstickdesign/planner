@@ -328,6 +328,7 @@ $th = $themes[$brand['theme'] ?? 'blue'] ?? $themes['blue'];
     <button class="tab" data-view="tasks">Oppgaver</button>
     <button class="tab" data-view="klubbliv">Klubbliv</button>
     @if($canEdit)<button class="tab" data-view="team">Brukere</button>@endif
+    @if($canEdit)<a class="tab" href="/treningstider" style="text-decoration:none">Treningstider</a>@endif
   </div>
 </div>
 
