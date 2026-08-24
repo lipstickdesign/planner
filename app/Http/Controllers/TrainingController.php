@@ -4,7 +4,10 @@ namespace App\Http\Controllers;
 
 use App\Models\Category;
 use App\Models\Company;
+use App\Models\TrainingAssignment;
+use App\Models\TrainingAvailability;
 use App\Models\TrainingFacility;
+use App\Models\TrainingSeason;
 use App\Models\TrainingTeam;
 use Illuminate\Http\Request;
 
@@ -119,6 +122,139 @@ class TrainingController extends Controller
             'requires_indoor' => ['nullable', 'boolean'],
             'coach_unavailable' => ['nullable', 'string', 'max:255'],
         ]);
+    }
+
+    /* ---------- Rutenett (tildeling) ---------- */
+
+    private function season(Company $company): TrainingSeason
+    {
+        return TrainingSeason::firstOrCreate(
+            ['company_id' => $company->id, 'name' => '2026/2027 ute'],
+            ['type' => 'ute', 'is_active' => true]
+        );
+    }
+
+    public function grid()
+    {
+        $this->guard();
+        $company = $this->company();
+        if (! $company) {
+            abort(404);
+        }
+        $season = $this->season($company);
+
+        $facilities = TrainingFacility::where('company_id', $company->id)->orderBy('name')
+            ->get()->map(fn (TrainingFacility $f) => $this->facilityCard($f))->values();
+
+        $teams = TrainingTeam::where('company_id', $company->id)->with('category')->orderBy('name')
+            ->get()->map(fn (TrainingTeam $t) => [
+                'id' => $t->id, 'name' => $t->name,
+                'sport' => $t->category?->name, 'color' => $t->category?->color,
+            ])->values();
+
+        $assignments = TrainingAssignment::where('company_id', $company->id)
+            ->where('training_season_id', $season->id)->with('team.category')
+            ->get()->map(fn (TrainingAssignment $a) => [
+                'id' => $a->id,
+                'facility_id' => $a->training_facility_id,
+                'weekday' => $a->weekday,
+                'block_start' => substr((string) $a->block_start, 0, 5),
+                'block_end' => substr((string) $a->block_end, 0, 5),
+                'team_id' => $a->training_team_id,
+                'team_name' => $a->team?->name,
+                'color' => $a->team?->category?->color,
+            ])->values();
+
+        $locks = TrainingAvailability::where('company_id', $company->id)
+            ->where('training_season_id', $season->id)->where('status', 'laast')
+            ->get()->map(fn (TrainingAvailability $l) => [
+                'id' => $l->id,
+                'facility_id' => $l->training_facility_id,
+                'weekday' => $l->weekday,
+                'block_start' => substr((string) $l->from_time, 0, 5),
+                'block_end' => substr((string) $l->to_time, 0, 5),
+                'owner' => $l->owner,
+            ])->values();
+
+        return view('training.rutenett', compact('facilities', 'teams', 'assignments', 'locks', 'company'));
+    }
+
+    public function storeAssignment(Request $request)
+    {
+        $this->guard();
+        $company = $this->company();
+        $data = $request->validate([
+            'facility_id' => ['required', 'exists:training_facilities,id'],
+            'team_id' => ['required', 'exists:training_teams,id'],
+            'weekday' => ['required', 'string', 'max:20'],
+            'block_start' => ['required', 'string', 'max:5'],
+            'block_end' => ['required', 'string', 'max:5'],
+        ]);
+        $season = $this->season($company);
+
+        $a = TrainingAssignment::create([
+            'company_id' => $company->id,
+            'training_season_id' => $season->id,
+            'training_facility_id' => $data['facility_id'],
+            'training_team_id' => $data['team_id'],
+            'weekday' => $data['weekday'],
+            'block_start' => $data['block_start'],
+            'block_end' => $data['block_end'],
+        ]);
+        $a->load('team.category');
+
+        return response()->json([
+            'id' => $a->id, 'facility_id' => $a->training_facility_id, 'weekday' => $a->weekday,
+            'block_start' => $data['block_start'], 'block_end' => $data['block_end'],
+            'team_id' => $a->training_team_id, 'team_name' => $a->team?->name,
+            'color' => $a->team?->category?->color,
+        ]);
+    }
+
+    public function destroyAssignment(TrainingAssignment $assignment)
+    {
+        $this->guard();
+        $assignment->delete();
+
+        return response()->json(['ok' => true]);
+    }
+
+    public function storeLock(Request $request)
+    {
+        $this->guard();
+        $company = $this->company();
+        $data = $request->validate([
+            'facility_id' => ['required', 'exists:training_facilities,id'],
+            'weekday' => ['required', 'string', 'max:20'],
+            'block_start' => ['required', 'string', 'max:5'],
+            'block_end' => ['required', 'string', 'max:5'],
+            'owner' => ['required', 'string', 'max:40'],
+        ]);
+        $season = $this->season($company);
+
+        $l = TrainingAvailability::create([
+            'company_id' => $company->id,
+            'training_season_id' => $season->id,
+            'training_facility_id' => $data['facility_id'],
+            'weekday' => $data['weekday'],
+            'from_time' => $data['block_start'],
+            'to_time' => $data['block_end'],
+            'owner' => $data['owner'],
+            'status' => 'laast',
+        ]);
+
+        return response()->json([
+            'id' => $l->id, 'facility_id' => $l->training_facility_id, 'weekday' => $l->weekday,
+            'block_start' => $data['block_start'], 'block_end' => $data['block_end'], 'owner' => $l->owner,
+        ]);
+    }
+
+    public function destroyLock(TrainingAvailability $availability)
+    {
+        $this->guard();
+        $availability->delete();
+
+        return response()->json(['ok' => true]);
     }
 
     /* ---------- Anlegg ---------- */
