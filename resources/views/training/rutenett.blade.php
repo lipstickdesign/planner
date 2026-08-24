@@ -21,6 +21,17 @@
   .ftab{padding:8px 13px;border-radius:9px;border:1px solid var(--line);background:#fff;color:var(--ink-soft);font-weight:500;cursor:pointer;font-family:inherit;font-size:13px}
   .ftab.active{border-color:var(--flik);color:#fff;background:var(--flik)}
   .ftab .k{font-size:11px;opacity:.7;margin-left:5px}
+  .layout{display:flex;gap:16px;align-items:flex-start}
+  .gridwrap{flex:1;min-width:0}
+  .palette{width:232px;flex:none;position:sticky;top:14px;background:#fff;border:1px solid var(--line);border-radius:12px;padding:12px 12px 14px;max-height:80vh;overflow:auto}
+  .palette h4{margin:0 0 4px;font-size:12px;text-transform:uppercase;letter-spacing:.03em;color:var(--grey)}
+  .palette .hint{font-size:11.5px;color:var(--grey);margin:0 0 10px}
+  .pg{margin-bottom:12px}
+  .pgh{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.02em;color:var(--ink-soft);margin:0 0 5px}
+  .pchip{display:flex;align-items:center;gap:6px;font-size:12.5px;font-weight:600;color:#fff;border-radius:7px;padding:5px 9px;margin-bottom:5px;cursor:grab;user-select:none}
+  .pchip:active{cursor:grabbing}
+  .pchip .ct{margin-left:auto;background:rgba(255,255,255,.28);border-radius:5px;padding:0 6px;font-size:11px;font-variant-numeric:tabular-nums}
+  .cell.drop{border-color:var(--flik);background:#eef4fd;box-shadow:inset 0 0 0 1px var(--flik)}
   .grid{width:100%;border-collapse:separate;border-spacing:4px;table-layout:fixed}
   .grid th{font-size:12px;text-transform:uppercase;letter-spacing:.03em;color:var(--grey);font-weight:600;padding:4px}
   .grid td.tl{font-size:11.5px;color:var(--grey);font-variant-numeric:tabular-nums;width:64px;text-align:right;padding-right:8px;vertical-align:top}
@@ -66,7 +77,10 @@
     <a href="/treningstider/rutenett" class="active">Rutenett</a>
   </nav>
   <div class="ftabs" id="ftabs"></div>
-  <div id="gridHost"></div>
+  <div class="layout">
+    <div id="gridHost" class="gridwrap"></div>
+    <aside class="palette"><h4>Lag</h4><p class="hint">Dra et lag inn i en rute. Tallet viser hvor mange ganger laget er satt opp.</p><div id="palette"></div></aside>
+  </div>
   <p class="legend">Skravert = låst hos annen klubb. Oransje kant på et lag = samme lag er satt opp et annet sted samtidig.</p>
 </div>
 
@@ -110,12 +124,38 @@
         if(lock){inner='<div class="lockowner">🔒 '+esc(lock.owner)+'</div>';}
         else if(as.length){inner=as.map(function(a){return '<span class="chip'+(conf[a.id]?' conf':'')+'" style="background:'+(a.color||'#8795a3')+'">'+esc(a.team_name)+'</span>';}).join('');}
         else{inner='<span class="empty">+</span>';}
-        html+='<td class="cell'+(lock?' locked':'')+'" onclick="openCell(\''+d+'\','+BANDS.indexOf(b)+')">'+inner+'</td>';
+        var bi=BANDS.indexOf(b);
+        var drop=lock?'':' ondragover="allowDrop(event,this)" ondragleave="this.classList.remove(\'drop\')" ondrop="dropTeam(event,this,\''+d+'\','+bi+')"';
+        html+='<td class="cell'+(lock?' locked':'')+'" onclick="openCell(\''+d+'\','+bi+')"'+drop+'>'+inner+'</td>';
       });
       html+='</tr>';
     });
     html+='</tbody></table>';
     document.getElementById('gridHost').innerHTML=html;
+    renderPalette();
+  }
+  function renderPalette(){
+    var host=document.getElementById('palette');if(!host)return;
+    var fac=FAC.find(function(f){return f.id===curFac;})||{};
+    var allowed=(fac.allowed_sports||[]).map(function(s){return String(s).toLowerCase();});
+    var list=TEAMS.filter(function(t){return !allowed.length || (t.sport && allowed.indexOf(String(t.sport).toLowerCase())>-1);});
+    if(!list.length){host.innerHTML='<p class="hint">Ingen lag knyttet til idrettene på dette anlegget.</p>';return;}
+    var groups={};list.forEach(function(t){(groups[t.sport||'Uten idrett']=groups[t.sport||'Uten idrett']||[]).push(t);});
+    host.innerHTML=Object.keys(groups).sort().map(function(g){
+      return '<div class="pg"><div class="pgh">'+esc(g)+'</div>'+groups[g].map(function(t){
+        var n=ASSIGN.filter(function(a){return a.team_id===t.id;}).length;
+        return '<div class="pchip" draggable="true" ondragstart="dragTeam(event,'+t.id+')" style="background:'+(t.color||'#8795a3')+'">'+esc(t.name)+(n?'<span class="ct">'+n+'</span>':'')+'</div>';
+      }).join('')+'</div>';
+    }).join('');
+  }
+  function dragTeam(ev,id){ev.dataTransfer.setData('text/plain',String(id));ev.dataTransfer.effectAllowed='copy';}
+  function allowDrop(ev,el){ev.preventDefault();ev.dataTransfer.dropEffect='copy';el.classList.add('drop');}
+  function dropTeam(ev,el,day,bi){ev.preventDefault();el.classList.remove('drop');var tid=+ev.dataTransfer.getData('text/plain');if(tid)placeTeam(tid,day,bi);}
+  async function placeTeam(tid,day,bi){
+    var b=BANDS[bi];
+    var dup=ASSIGN.some(function(a){return a.facility_id===curFac&&a.weekday===day&&a.block_start===b[0]&&a.team_id===tid;});
+    if(dup)return;
+    try{var a=await api('POST','/treningstider/tildeling',{facility_id:curFac,team_id:tid,weekday:day,block_start:b[0],block_end:b[1]});ASSIGN.push(a);render();}catch(e){alert(e.message);}
   }
   function selFac(id){curFac=id;render();}
   function closeModal(){document.getElementById('gOverlay').classList.remove('open');}
@@ -141,7 +181,7 @@
   }
   async function addTeam(){
     var tid=+document.getElementById('g_team').value;if(!tid)return;
-    try{var a=await api('POST','/treningstider/tildeling',{facility_id:curFac,team_id:tid,weekday:cur.day,block_start:cur.start,block_end:cur.end});ASSIGN.push(a);render();openCell(cur.day,cur.bi);}catch(e){alert(e.message);}
+    await placeTeam(tid,cur.day,cur.bi);openCell(cur.day,cur.bi);
   }
   async function rmTeam(id){
     try{await api('DELETE','/treningstider/tildeling/'+id);ASSIGN=ASSIGN.filter(function(x){return x.id!==id;});render();openCell(cur.day,cur.bi);}catch(e){alert(e.message);}
