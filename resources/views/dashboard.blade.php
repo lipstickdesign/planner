@@ -688,8 +688,14 @@ document.querySelectorAll('.tab').forEach(t=>t.addEventListener('click',()=>{
   if(t.dataset.view==='klubbliv')renderKlubbliv();
   if(t.dataset.view==='team')renderTeam();
 }));
-/* Dyplenke: /dashboard#wheel osv. (fra Treningstider-headeren) åpner riktig fane */
-(function(){var h=(location.hash||'').replace('#','');if(h){var tb=document.querySelector('.tab[data-view="'+h+'"]');if(tb)tb.click();}})();
+/* Dyplenke: /dashboard#wheel osv. (fra Treningstider-headeren) åpner riktig fane.
+   Kjøres etter at HELE siden er lastet, ellers ville den kjørt før CANEDIT/data er satt. */
+window.addEventListener('load',function(){
+  var h=(location.hash||'').replace('#','');if(!h)return;
+  var tb=document.querySelector('.tab[data-view="'+h+'"]');
+  if(tb){tb.click();}
+  else if(h==='settings'&&typeof openSettings==='function'){openSettings();}
+});
 ['search','fSport','fStatus'].forEach(id=>document.getElementById(id).addEventListener('input',renderList));
 ['tsearch','tSport'].forEach(id=>{const el=document.getElementById(id);if(el){el.addEventListener('input',renderTaskList);el.addEventListener('change',renderTaskList);}});
 
