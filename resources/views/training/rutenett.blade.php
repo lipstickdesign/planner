@@ -63,6 +63,13 @@
   .btn{font-family:inherit;font-size:13px;font-weight:500;padding:9px 15px;border-radius:9px;border:1px solid var(--line);background:#fff;color:var(--flik);cursor:pointer}
   .btn.solid{background:var(--flik);color:#fff;border-color:var(--flik)}
   .btn.danger{color:#b23535;border-color:#f0d2d2}
+  .loadov{position:fixed;inset:0;background:rgba(247,249,253,.82);display:none;align-items:center;justify-content:center;flex-direction:column;gap:14px;z-index:200}
+  .loadov.on{display:flex}
+  .spin{width:42px;height:42px;border:4px solid #dfe6f3;border-top-color:var(--flik);border-radius:50%}
+  .loadov .msg{font-weight:700;color:var(--ink);font-size:15px}
+  .loadov .sub2{font-size:12.5px;color:var(--ink-soft)}
+  .toast{position:fixed;left:50%;top:18px;transform:translateX(-50%);background:var(--ink);color:#fff;padding:12px 18px;border-radius:10px;font-size:13px;line-height:1.45;max-width:600px;box-shadow:0 10px 34px rgba(20,40,80,.32);z-index:250;display:none}
+  .toast.on{display:block}
 </style>
 </head>
 <body>
@@ -100,6 +107,8 @@
 </div>
 
 <div class="overlay" id="ov"><div class="modal" id="modal"></div></div>
+<div class="loadov" id="loadov"><div class="spin" id="spin"></div><div class="msg" id="loadMsg">Jobber …</div><div class="sub2">Vent litt – dette kan ta opptil et minutt.</div></div>
+<div class="toast" id="toast"></div>
 
 <script>
   window.TG_FAC=@json($facilities); window.TG_TEAMS=@json($teams);
@@ -113,6 +122,10 @@
   var ENDS=TIMES.concat(['22:00']);
   var SLOTH=34, curFac=FAC.length?FAC[0].id:null, editing=null, dragTeamId=null;
   function esc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');}
+  var spinAnim=null,toastT=null;
+  function showLoading(msg){document.getElementById('loadMsg').textContent=msg||'Jobber …';document.getElementById('loadov').classList.add('on');var s=document.getElementById('spin');if(s&&s.animate){if(spinAnim)spinAnim.cancel();spinAnim=s.animate([{transform:'rotate(0deg)'},{transform:'rotate(360deg)'}],{duration:900,iterations:Infinity});}}
+  function hideLoading(){document.getElementById('loadov').classList.remove('on');if(spinAnim){spinAnim.cancel();spinAnim=null;}}
+  function toast(msg){var t=document.getElementById('toast');t.textContent=msg;t.classList.add('on');if(toastT)clearTimeout(toastT);toastT=setTimeout(function(){t.classList.remove('on');},7000);}
   function mins(t){var p=t.split(':');return +p[0]*60+ +p[1];}
   function facName(id){var f=FAC.find(function(x){return x.id===id;});return f?f.name:'';}
   function is3er(id){return /^3er bane/.test(facName(id));}
@@ -207,12 +220,14 @@
   async function saveVersion(){
     var name=prompt('Navn på versjonen:', 'Utkast '+new Date().toLocaleDateString('no-NO'));
     if(!name)return;
-    try{var r=await api('POST','/treningstider/versjon',{name:name});VERSIONS=r.versions;renderVbar();alert('Lagret som versjon «'+name+'».');}catch(e){alert(e.message);}
+    try{var r=await api('POST','/treningstider/versjon',{name:name});VERSIONS=r.versions;renderVbar();toast('Lagret som versjon «'+name+'».');}catch(e){toast(e.message);}
   }
   async function restoreVersion(){
     var id=document.getElementById('vsel').value;if(!id)return;
     if(!confirm('Gjenopprette denne versjonen? Dagens plan lagres automatisk som en versjon først, så du kan gå tilbake.'))return;
-    try{var r=await api('POST','/treningstider/versjon/'+id+'/gjenopprett');ASSIGN=r.assignments;VERSIONS=r.versions;UNDO=[];render();}catch(e){alert(e.message);}
+    showLoading('Gjenoppretter versjon …');
+    try{var r=await api('POST','/treningstider/versjon/'+id+'/gjenopprett');ASSIGN=r.assignments;VERSIONS=r.versions;UNDO=[];render();toast('Versjon gjenopprettet.');}catch(e){toast('Gjenoppretting feilet: '+e.message);}
+    finally{hideLoading();}
   }
   async function deleteVersion(){
     var id=document.getElementById('vsel').value;if(!id)return;
@@ -237,12 +252,14 @@
   function aiScope(){var s=document.getElementById('ai_scope').value;document.getElementById('ai_day_wrap').style.display=s==='dag'?'block':'none';document.getElementById('ai_fac_wrap').style.display=s==='anlegg'?'block':'none';}
   async function runAi(){
     var body={scope:document.getElementById('ai_scope').value,day:document.getElementById('ai_day').value,facility_id:+document.getElementById('ai_fac').value,instruction:document.getElementById('ai_instr').value.trim()};
-    var btn=document.getElementById('ai_run');btn.disabled=true;btn.textContent='Jobber … (kan ta et halvt minutt)';
+    closeModal();
+    showLoading('AI planlegger treningstider …');
     try{
       var r=await api('POST','/treningstider/ai-forslag',body);
-      ASSIGN=r.assignments;VERSIONS=r.versions;UNDO=[];closeModal();render();
-      alert('AI la inn '+r.placed+' blokker (modell: '+(r.model||'?')+'). Dagens plan er nå AI-forslaget – forrige plan ligger som «Før AI …». Kjør Kontroll for å se om det løser seg.'+(r.note?'\n\nMerk: '+r.note:''));
-    }catch(e){btn.disabled=false;btn.textContent='Kjør forslag';alert(e.message);}
+      ASSIGN=r.assignments;VERSIONS=r.versions;UNDO=[];render();
+      toast('AI la inn '+r.placed+' blokker (modell: '+(r.model||'?')+'). Forrige plan ligger som «Før AI …» – kjør Kontroll for å se om det løser seg.'+(r.note?' '+r.note:''));
+    }catch(e){toast('AI feilet: '+e.message);}
+    finally{hideLoading();}
   }
   function renderPalette(){
     var host=document.getElementById('palette');if(!host)return;
