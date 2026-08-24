@@ -141,6 +141,11 @@ footer{margin-top:26px;font-size:12px;color:var(--muted);max-width:80ch}
   <button class="tgl" id="theme">Mørk visning</button>
 </header>
 
+<nav style="display:flex;gap:6px;margin:4px 0 2px">
+  <a href="/treningstider" style="padding:7px 14px;border-radius:9px;border:1px solid var(--flik);color:var(--flik);background:color-mix(in srgb,var(--flik) 8%,var(--surface));font-weight:600;text-decoration:none">Kontroll</a>
+  <a href="/treningstider/lag" style="padding:7px 14px;border-radius:9px;border:1px solid var(--ring);color:var(--ink2);text-decoration:none">Lag</a>
+</nav>
+
 <div class="tiles">
   <div class="tile"><div class="lbl">FLIK disponerer</div><div class="val" id="t-flik">–</div><div class="foot">timer per uke</div></div>
   <div class="tile"><div class="lbl">Låst hos andre</div><div class="val" id="t-lock">–</div><div class="foot">Spind og Bobcats</div></div>

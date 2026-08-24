@@ -113,6 +113,7 @@ Route::middleware('auth')->group(function () {
 
     // Treningstider – fordelingsverktøy (egen side, foreløpig kontroll-visningen)
     Route::get('/treningstider', [TrainingController::class, 'index'])->name('training');
+    Route::get('/treningstider/lag', [TrainingController::class, 'teams'])->name('training.lag');
 
     // Personlig dashboard-oppsett (alle innloggede kan styre sitt eget)
     Route::post('/dashboard-layout', [DashboardLayoutController::class, 'save']);

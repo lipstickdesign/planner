@@ -1,0 +1,1046 @@
+{
+ "kilde": "FLIK v/Karstein, Google-dok «FLIKsporsmaltreningstider», besvart 19.08.2026",
+ "sesong": "2026/2027",
+ "tidsband": [
+  "16:00-17:30",
+  "17:30-19:00",
+  "19:00-20:30",
+  "20:30-22:00"
+ ],
+ "anlegg_per_idrett": {
+  "Listahallen": [
+   "Turn",
+   "Håndball"
+  ],
+  "Eilert": [
+   "Bueskyting",
+   "Håndball",
+   "Basketball"
+  ],
+  "Alcoa flerbrukshall": [
+   "Volleyball",
+   "Håndball"
+  ],
+  "Alcoa fotballhall": [
+   "Friidrett",
+   "Fotball"
+  ]
+ },
+ "regler_fra_klubb": {
+  "allidrett_onsdag": "6-7-åringer trener ikke onsdag",
+  "yngste_start": "Yngste lag starter ofte 16:30 og trener én time",
+  "sluttid_yngste": "10-åringer bør være ferdige senest 19:00",
+  "siste_band": "Fra 14 år, helst 15 som nedre grense",
+  "deling": "To lag deler hele flaten. De tre yngste fotballkullene deler gutter/jenter",
+  "kryssidrett": "Kullene 10, 11, 12 og 13 har mange i både fotball og håndball. Ikke samme dag",
+  "volleyball": "Trener torsdag - unngå samme grupper den dagen",
+  "hall_deling": "Inne kan deles i to. Ute kan deles i flere",
+  "dobbeltokt": "Ingen lag trenger to bånd samme dag"
+ },
+ "ubesvart": [
+  "D4 faste bindinger",
+  "F trenertilgjengelighet",
+  "G prioritering ved konflikt",
+  "H anlegg og sesong",
+  "I ønsker per lag",
+  "øktkrav for 7 av 9 idretter"
+ ],
+ "lag": [
+  {
+   "id": "fotball-gj6",
+   "navn": "G/J 6",
+   "idrett": "Fotball",
+   "arskull": "2020",
+   "trinn": "1",
+   "antall_spillere": 0,
+   "antall_trenere": 0,
+   "areal_inne": "Hel hall",
+   "areal_ute": "3er-bane",
+   "okter_per_uke": {
+    "gruppe": "6-7",
+    "okter": 1,
+    "usikker": false
+   },
+   "onsker": null,
+   "trener_utilgjengelig": null
+  },
+  {
+   "id": "fotball-g7",
+   "navn": "G 7",
+   "idrett": "Fotball",
+   "arskull": "2019",
+   "trinn": "2",
+   "antall_spillere": 32,
+   "antall_trenere": 6,
+   "areal_inne": "Halv hall",
+   "areal_ute": "3er-bane",
+   "okter_per_uke": {
+    "gruppe": "6-7",
+    "okter": 1,
+    "usikker": false
+   },
+   "onsker": null,
+   "trener_utilgjengelig": null
+  },
+  {
+   "id": "fotball-j7",
+   "navn": "J 7",
+   "idrett": "Fotball",
+   "arskull": "2019",
+   "trinn": "2",
+   "antall_spillere": 18,
+   "antall_trenere": 4,
+   "areal_inne": "Halv hall",
+   "areal_ute": "3er-bane",
+   "okter_per_uke": {
+    "gruppe": "6-7",
+    "okter": 1,
+    "usikker": false
+   },
+   "onsker": null,
+   "trener_utilgjengelig": null
+  },
+  {
+   "id": "fotball-g8",
+   "navn": "G 8",
+   "idrett": "Fotball",
+   "arskull": "2018",
+   "trinn": "3",
+   "antall_spillere": 18,
+   "antall_trenere": 5,
+   "areal_inne": "Halv hall",
+   "areal_ute": "3er-bane",
+   "okter_per_uke": {
+    "gruppe": "8-9",
+    "okter": 1,
+    "usikker": false
+   },
+   "onsker": null,
+   "trener_utilgjengelig": null
+  },
+  {
+   "id": "fotball-j8",
+   "navn": "J 8",
+   "idrett": "Fotball",
+   "arskull": "2018",
+   "trinn": "3",
+   "antall_spillere": 13,
+   "antall_trenere": 3,
+   "areal_inne": "Halv hall",
+   "areal_ute": "3er-bane",
+   "okter_per_uke": {
+    "gruppe": "8-9",
+    "okter": 1,
+    "usikker": false
+   },
+   "onsker": null,
+   "trener_utilgjengelig": null
+  },
+  {
+   "id": "fotball-g9",
+   "navn": "G 9",
+   "idrett": "Fotball",
+   "arskull": "2017",
+   "trinn": "4",
+   "antall_spillere": 25,
+   "antall_trenere": 6,
+   "areal_inne": "Hel hall",
+   "areal_ute": "Halv bane",
+   "okter_per_uke": {
+    "gruppe": "8-9",
+    "okter": 1,
+    "usikker": false
+   },
+   "onsker": null,
+   "trener_utilgjengelig": null
+  },
+  {
+   "id": "fotball-j9",
+   "navn": "J 9",
+   "idrett": "Fotball",
+   "arskull": "2017",
+   "trinn": "4",
+   "antall_spillere": 10,
+   "antall_trenere": 2,
+   "areal_inne": "Halv hall",
+   "areal_ute": "Halv bane",
+   "okter_per_uke": {
+    "gruppe": "8-9",
+    "okter": 1,
+    "usikker": false
+   },
+   "onsker": null,
+   "trener_utilgjengelig": null
+  },
+  {
+   "id": "fotball-g10",
+   "navn": "G 10",
+   "idrett": "Fotball",
+   "arskull": "2016",
+   "trinn": "5",
+   "antall_spillere": 32,
+   "antall_trenere": 6,
+   "areal_inne": "Hel hall",
+   "areal_ute": "Halv bane",
+   "okter_per_uke": {
+    "gruppe": "10-11",
+    "okter": 2,
+    "usikker": false
+   },
+   "onsker": null,
+   "trener_utilgjengelig": null
+  },
+  {
+   "id": "fotball-j10",
+   "navn": "J 10",
+   "idrett": "Fotball",
+   "arskull": "2016",
+   "trinn": "5",
+   "antall_spillere": 11,
+   "antall_trenere": 3,
+   "areal_inne": "Halv hall",
+   "areal_ute": "Halv bane",
+   "okter_per_uke": {
+    "gruppe": "10-11",
+    "okter": 2,
+    "usikker": false
+   },
+   "onsker": null,
+   "trener_utilgjengelig": null
+  },
+  {
+   "id": "fotball-g12",
+   "navn": "G 12",
+   "idrett": "Fotball",
+   "arskull": "2014",
+   "trinn": "7",
+   "antall_spillere": 25,
+   "antall_trenere": 4,
+   "areal_inne": "Hel hall",
+   "areal_ute": "Halv bane",
+   "okter_per_uke": {
+    "gruppe": "12-13",
+    "okter": 2,
+    "usikker": false
+   },
+   "onsker": null,
+   "trener_utilgjengelig": null
+  },
+  {
+   "id": "fotball-j12",
+   "navn": "J 12",
+   "idrett": "Fotball",
+   "arskull": "2014",
+   "trinn": "7",
+   "antall_spillere": 15,
+   "antall_trenere": 4,
+   "areal_inne": "Halv hall",
+   "areal_ute": "Halv bane",
+   "okter_per_uke": {
+    "gruppe": "12-13",
+    "okter": 2,
+    "usikker": false
+   },
+   "onsker": null,
+   "trener_utilgjengelig": null
+  },
+  {
+   "id": "fotball-g13",
+   "navn": "G 13",
+   "idrett": "Fotball",
+   "arskull": "2013",
+   "trinn": "8",
+   "antall_spillere": 16,
+   "antall_trenere": 2,
+   "areal_inne": "Halv hall",
+   "areal_ute": "Halv bane",
+   "okter_per_uke": {
+    "gruppe": "12-13",
+    "okter": 2,
+    "usikker": false
+   },
+   "onsker": null,
+   "trener_utilgjengelig": null
+  },
+  {
+   "id": "fotball-g14",
+   "navn": "G 14",
+   "idrett": "Fotball",
+   "arskull": "2012",
+   "trinn": "9",
+   "antall_spillere": 16,
+   "antall_trenere": 2,
+   "areal_inne": "Halv hall",
+   "areal_ute": "Halv bane",
+   "okter_per_uke": {
+    "gruppe": "14-16",
+    "okter": 2,
+    "usikker": false
+   },
+   "onsker": null,
+   "trener_utilgjengelig": null
+  },
+  {
+   "id": "fotball-j15",
+   "navn": "J 15",
+   "idrett": "Fotball",
+   "arskull": "2011",
+   "trinn": "10",
+   "antall_spillere": 13,
+   "antall_trenere": 2,
+   "areal_inne": "Halv hall",
+   "areal_ute": "Halv bane",
+   "okter_per_uke": {
+    "gruppe": "14-16",
+    "okter": 2,
+    "usikker": false
+   },
+   "onsker": null,
+   "trener_utilgjengelig": null
+  },
+  {
+   "id": "fotball-g16",
+   "navn": "G 16",
+   "idrett": "Fotball",
+   "arskull": "2010",
+   "trinn": "vg1",
+   "antall_spillere": 17,
+   "antall_trenere": 3,
+   "areal_inne": "Halv hall",
+   "areal_ute": "Halv bane",
+   "okter_per_uke": {
+    "gruppe": "14-16",
+    "okter": 2,
+    "usikker": false
+   },
+   "onsker": null,
+   "trener_utilgjengelig": null
+  },
+  {
+   "id": "fotball-g19",
+   "navn": "G 19",
+   "idrett": "Fotball",
+   "arskull": "2009-2006",
+   "trinn": "",
+   "antall_spillere": 27,
+   "antall_trenere": 3,
+   "areal_inne": "Hel hall",
+   "areal_ute": "Halv bane",
+   "okter_per_uke": {
+    "gruppe": "17+/senior",
+    "okter": "2-3",
+    "usikker": true
+   },
+   "onsker": null,
+   "trener_utilgjengelig": null
+  },
+  {
+   "id": "fotball-damea",
+   "navn": "Dame A",
+   "idrett": "Fotball",
+   "arskull": "2010-",
+   "trinn": "",
+   "antall_spillere": 24,
+   "antall_trenere": 4,
+   "areal_inne": "Hel hall",
+   "areal_ute": "Halv bane",
+   "okter_per_uke": {
+    "gruppe": "17+/senior",
+    "okter": "2-3",
+    "usikker": true
+   },
+   "onsker": null,
+   "trener_utilgjengelig": null
+  },
+  {
+   "id": "fotball-herreb",
+   "navn": "Herre B",
+   "idrett": "Fotball",
+   "arskull": "",
+   "trinn": "",
+   "antall_spillere": 25,
+   "antall_trenere": 2,
+   "areal_inne": "Halv hall",
+   "areal_ute": "Halv bane",
+   "okter_per_uke": {
+    "gruppe": "17+/senior",
+    "okter": "2-3",
+    "usikker": true
+   },
+   "onsker": null,
+   "trener_utilgjengelig": null
+  },
+  {
+   "id": "fotball-herrea",
+   "navn": "Herre A",
+   "idrett": "Fotball",
+   "arskull": "2010-",
+   "trinn": "",
+   "antall_spillere": 21,
+   "antall_trenere": 3,
+   "areal_inne": "Hel hall",
+   "areal_ute": "Halv bane",
+   "okter_per_uke": {
+    "gruppe": "17+/senior",
+    "okter": "2-3",
+    "usikker": true
+   },
+   "onsker": null,
+   "trener_utilgjengelig": null
+  },
+  {
+   "id": "fotball-oldboys",
+   "navn": "Old boys",
+   "idrett": "Fotball",
+   "arskull": "",
+   "trinn": "",
+   "antall_spillere": 20,
+   "antall_trenere": 1,
+   "areal_inne": "Halv hall",
+   "areal_ute": "Halv bane",
+   "okter_per_uke": {
+    "gruppe": "17+/senior",
+    "okter": "2-3",
+    "usikker": true
+   },
+   "onsker": null,
+   "trener_utilgjengelig": null
+  },
+  {
+   "id": "håndball-gj6",
+   "navn": "G/J 6",
+   "idrett": "Håndball",
+   "arskull": "2020",
+   "trinn": "1",
+   "antall_spillere": 0,
+   "antall_trenere": 0,
+   "areal_inne": "Halv hall",
+   "areal_ute": "",
+   "okter_per_uke": {
+    "gruppe": "6-7",
+    "okter": 1,
+    "usikker": false
+   },
+   "onsker": null,
+   "trener_utilgjengelig": null
+  },
+  {
+   "id": "håndball-g7-8",
+   "navn": "G 7-8",
+   "idrett": "Håndball",
+   "arskull": "2019-2018",
+   "trinn": "2-3",
+   "antall_spillere": 8,
+   "antall_trenere": 3,
+   "areal_inne": "Halv hall",
+   "areal_ute": "",
+   "okter_per_uke": {
+    "gruppe": "6-7",
+    "okter": 1,
+    "usikker": false
+   },
+   "onsker": null,
+   "trener_utilgjengelig": null
+  },
+  {
+   "id": "håndball-j7",
+   "navn": "J 7",
+   "idrett": "Håndball",
+   "arskull": "2019",
+   "trinn": "2",
+   "antall_spillere": 24,
+   "antall_trenere": 5,
+   "areal_inne": "Hel hall",
+   "areal_ute": "",
+   "okter_per_uke": {
+    "gruppe": "6-7",
+    "okter": 1,
+    "usikker": false
+   },
+   "onsker": null,
+   "trener_utilgjengelig": null
+  },
+  {
+   "id": "håndball-j8",
+   "navn": "J 8",
+   "idrett": "Håndball",
+   "arskull": "2018",
+   "trinn": "3",
+   "antall_spillere": 18,
+   "antall_trenere": 1,
+   "areal_inne": "Halv hall",
+   "areal_ute": "",
+   "okter_per_uke": {
+    "gruppe": "8-9",
+    "okter": 1,
+    "usikker": false
+   },
+   "onsker": null,
+   "trener_utilgjengelig": null
+  },
+  {
+   "id": "håndball-gj9",
+   "navn": "G/J 9",
+   "idrett": "Håndball",
+   "arskull": "2017",
+   "trinn": "4",
+   "antall_spillere": 21,
+   "antall_trenere": 2,
+   "areal_inne": "Halv hall",
+   "areal_ute": "",
+   "okter_per_uke": {
+    "gruppe": "8-9",
+    "okter": 1,
+    "usikker": false
+   },
+   "onsker": null,
+   "trener_utilgjengelig": null
+  },
+  {
+   "id": "håndball-j10",
+   "navn": "J 10",
+   "idrett": "Håndball",
+   "arskull": "2016",
+   "trinn": "5",
+   "antall_spillere": 20,
+   "antall_trenere": 4,
+   "areal_inne": "Halv hall",
+   "areal_ute": "",
+   "okter_per_uke": {
+    "gruppe": "10-11",
+    "okter": 2,
+    "usikker": false
+   },
+   "onsker": null,
+   "trener_utilgjengelig": null
+  },
+  {
+   "id": "håndball-g11",
+   "navn": "G 11",
+   "idrett": "Håndball",
+   "arskull": "2015-2016",
+   "trinn": "5-6",
+   "antall_spillere": 14,
+   "antall_trenere": 3,
+   "areal_inne": "Hel hall",
+   "areal_ute": "",
+   "okter_per_uke": {
+    "gruppe": "10-11",
+    "okter": 2,
+    "usikker": false
+   },
+   "onsker": null,
+   "trener_utilgjengelig": null
+  },
+  {
+   "id": "håndball-j11",
+   "navn": "J 11",
+   "idrett": "Håndball",
+   "arskull": "2015",
+   "trinn": "6",
+   "antall_spillere": 33,
+   "antall_trenere": 5,
+   "areal_inne": "Hel hall",
+   "areal_ute": "",
+   "okter_per_uke": {
+    "gruppe": "10-11",
+    "okter": 2,
+    "usikker": false
+   },
+   "onsker": null,
+   "trener_utilgjengelig": null
+  },
+  {
+   "id": "håndball-g12",
+   "navn": "G 12",
+   "idrett": "Håndball",
+   "arskull": "2014",
+   "trinn": "7",
+   "antall_spillere": 12,
+   "antall_trenere": 4,
+   "areal_inne": "Halv hall",
+   "areal_ute": "",
+   "okter_per_uke": {
+    "gruppe": "12-13",
+    "okter": 2,
+    "usikker": false
+   },
+   "onsker": null,
+   "trener_utilgjengelig": null
+  },
+  {
+   "id": "håndball-j12",
+   "navn": "J 12",
+   "idrett": "Håndball",
+   "arskull": "2014",
+   "trinn": "7",
+   "antall_spillere": 21,
+   "antall_trenere": 4,
+   "areal_inne": "Halv hall",
+   "areal_ute": "",
+   "okter_per_uke": {
+    "gruppe": "12-13",
+    "okter": 2,
+    "usikker": false
+   },
+   "onsker": null,
+   "trener_utilgjengelig": null
+  },
+  {
+   "id": "håndball-g13",
+   "navn": "G 13",
+   "idrett": "Håndball",
+   "arskull": "2013",
+   "trinn": "8",
+   "antall_spillere": 11,
+   "antall_trenere": 4,
+   "areal_inne": "Halv hall",
+   "areal_ute": "",
+   "okter_per_uke": {
+    "gruppe": "12-13",
+    "okter": 2,
+    "usikker": false
+   },
+   "onsker": null,
+   "trener_utilgjengelig": null
+  },
+  {
+   "id": "håndball-j13",
+   "navn": "J 13",
+   "idrett": "Håndball",
+   "arskull": "2013",
+   "trinn": "8",
+   "antall_spillere": 26,
+   "antall_trenere": 5,
+   "areal_inne": "Hel hall",
+   "areal_ute": "",
+   "okter_per_uke": {
+    "gruppe": "12-13",
+    "okter": 2,
+    "usikker": false
+   },
+   "onsker": null,
+   "trener_utilgjengelig": null
+  },
+  {
+   "id": "håndball-j14",
+   "navn": "J 14",
+   "idrett": "Håndball",
+   "arskull": "2012",
+   "trinn": "9",
+   "antall_spillere": 12,
+   "antall_trenere": 4,
+   "areal_inne": "Halv hall",
+   "areal_ute": "",
+   "okter_per_uke": {
+    "gruppe": "14-16",
+    "okter": 3,
+    "usikker": false
+   },
+   "onsker": null,
+   "trener_utilgjengelig": null
+  },
+  {
+   "id": "håndball-g15",
+   "navn": "G 15",
+   "idrett": "Håndball",
+   "arskull": "2010-2012",
+   "trinn": "",
+   "antall_spillere": 14,
+   "antall_trenere": 2,
+   "areal_inne": "Halv hall",
+   "areal_ute": "",
+   "okter_per_uke": {
+    "gruppe": "14-16",
+    "okter": 3,
+    "usikker": false
+   },
+   "onsker": null,
+   "trener_utilgjengelig": null
+  },
+  {
+   "id": "håndball-j15",
+   "navn": "J 15",
+   "idrett": "Håndball",
+   "arskull": "2011",
+   "trinn": "10",
+   "antall_spillere": 24,
+   "antall_trenere": 2,
+   "areal_inne": "Halv hall",
+   "areal_ute": "",
+   "okter_per_uke": {
+    "gruppe": "14-16",
+    "okter": 3,
+    "usikker": false
+   },
+   "onsker": null,
+   "trener_utilgjengelig": null
+  },
+  {
+   "id": "håndball-j16",
+   "navn": "J 16",
+   "idrett": "Håndball",
+   "arskull": "2010",
+   "trinn": "",
+   "antall_spillere": 10,
+   "antall_trenere": 2,
+   "areal_inne": "Halv hall",
+   "areal_ute": "",
+   "okter_per_uke": {
+    "gruppe": "14-16",
+    "okter": 3,
+    "usikker": false
+   },
+   "onsker": null,
+   "trener_utilgjengelig": null
+  },
+  {
+   "id": "håndball-damea",
+   "navn": "Dame A",
+   "idrett": "Håndball",
+   "arskull": "2009",
+   "trinn": "",
+   "antall_spillere": 16,
+   "antall_trenere": 2,
+   "areal_inne": "Halv hall",
+   "areal_ute": "",
+   "okter_per_uke": {
+    "gruppe": "17+/senior",
+    "okter": "2-3",
+    "usikker": true
+   },
+   "onsker": null,
+   "trener_utilgjengelig": null
+  },
+  {
+   "id": "håndball-dameb",
+   "navn": "Dame B",
+   "idrett": "Håndball",
+   "arskull": "",
+   "trinn": "",
+   "antall_spillere": 17,
+   "antall_trenere": 2,
+   "areal_inne": "Halv hall",
+   "areal_ute": "",
+   "okter_per_uke": {
+    "gruppe": "17+/senior",
+    "okter": "2-3",
+    "usikker": true
+   },
+   "onsker": null,
+   "trener_utilgjengelig": null
+  },
+  {
+   "id": "håndball-lavterskel",
+   "navn": "Lavterskel",
+   "idrett": "Håndball",
+   "arskull": "",
+   "trinn": "",
+   "antall_spillere": 29,
+   "antall_trenere": 1,
+   "areal_inne": "Hel hall",
+   "areal_ute": "",
+   "okter_per_uke": {
+    "gruppe": "17+/senior",
+    "okter": "2-3",
+    "usikker": true
+   },
+   "onsker": null,
+   "trener_utilgjengelig": null
+  },
+  {
+   "id": "volleyball-teen",
+   "navn": "Teen",
+   "idrett": "Volleyball",
+   "arskull": "2016-2019",
+   "trinn": "2-5",
+   "antall_spillere": 10,
+   "antall_trenere": 3,
+   "areal_inne": "Halv hall",
+   "areal_ute": "",
+   "okter_per_uke": null,
+   "onsker": null,
+   "trener_utilgjengelig": null
+  },
+  {
+   "id": "volleyball-u13",
+   "navn": "U 13",
+   "idrett": "Volleyball",
+   "arskull": "2014-2015",
+   "trinn": "6-7",
+   "antall_spillere": 15,
+   "antall_trenere": 2,
+   "areal_inne": "Halv hall",
+   "areal_ute": "",
+   "okter_per_uke": null,
+   "onsker": null,
+   "trener_utilgjengelig": null
+  },
+  {
+   "id": "volleyball-g15",
+   "navn": "G 15",
+   "idrett": "Volleyball",
+   "arskull": "2012-2014",
+   "trinn": "7-9",
+   "antall_spillere": 14,
+   "antall_trenere": 3,
+   "areal_inne": "Halv hall",
+   "areal_ute": "",
+   "okter_per_uke": null,
+   "onsker": null,
+   "trener_utilgjengelig": null
+  },
+  {
+   "id": "volleyball-j15",
+   "navn": "J 15",
+   "idrett": "Volleyball",
+   "arskull": "2012-2014",
+   "trinn": "7-9",
+   "antall_spillere": 9,
+   "antall_trenere": 5,
+   "areal_inne": "Halv hall",
+   "areal_ute": "",
+   "okter_per_uke": null,
+   "onsker": null,
+   "trener_utilgjengelig": null
+  },
+  {
+   "id": "volleyball-g17",
+   "navn": "G 17",
+   "idrett": "Volleyball",
+   "arskull": "2010-2012",
+   "trinn": "9-vg",
+   "antall_spillere": 10,
+   "antall_trenere": 5,
+   "areal_inne": "Halv hall",
+   "areal_ute": "",
+   "okter_per_uke": null,
+   "onsker": null,
+   "trener_utilgjengelig": null
+  },
+  {
+   "id": "volleyball-j17",
+   "navn": "J 17",
+   "idrett": "Volleyball",
+   "arskull": "2010-2011",
+   "trinn": "9-10",
+   "antall_spillere": 8,
+   "antall_trenere": 4,
+   "areal_inne": "Halv hall",
+   "areal_ute": "",
+   "okter_per_uke": null,
+   "onsker": null,
+   "trener_utilgjengelig": null
+  },
+  {
+   "id": "volleyball-dame",
+   "navn": "Dame",
+   "idrett": "Volleyball",
+   "arskull": "",
+   "trinn": "",
+   "antall_spillere": 17,
+   "antall_trenere": 4,
+   "areal_inne": "Halv hall",
+   "areal_ute": "",
+   "okter_per_uke": null,
+   "onsker": null,
+   "trener_utilgjengelig": null
+  },
+  {
+   "id": "volleyball-herre",
+   "navn": "Herre",
+   "idrett": "Volleyball",
+   "arskull": "",
+   "trinn": "",
+   "antall_spillere": 22,
+   "antall_trenere": 2,
+   "areal_inne": "Halv hall",
+   "areal_ute": "",
+   "okter_per_uke": null,
+   "onsker": null,
+   "trener_utilgjengelig": null
+  },
+  {
+   "id": "turn-2-3år",
+   "navn": "2-3 år",
+   "idrett": "Turn",
+   "arskull": "2023-2024",
+   "trinn": "",
+   "antall_spillere": 19,
+   "antall_trenere": 2,
+   "areal_inne": "Halv hall",
+   "areal_ute": "",
+   "okter_per_uke": null,
+   "onsker": null,
+   "trener_utilgjengelig": null
+  },
+  {
+   "id": "turn-4-6år",
+   "navn": "4-6 år",
+   "idrett": "Turn",
+   "arskull": "2021-2022",
+   "trinn": "",
+   "antall_spillere": 32,
+   "antall_trenere": 2,
+   "areal_inne": "Halv hall",
+   "areal_ute": "",
+   "okter_per_uke": null,
+   "onsker": null,
+   "trener_utilgjengelig": null
+  },
+  {
+   "id": "turn-7-9år",
+   "navn": "7-9 år",
+   "idrett": "Turn",
+   "arskull": "2020-2018",
+   "trinn": "1-3",
+   "antall_spillere": 42,
+   "antall_trenere": 4,
+   "areal_inne": "Halv hall",
+   "areal_ute": "",
+   "okter_per_uke": null,
+   "onsker": null,
+   "trener_utilgjengelig": null
+  },
+  {
+   "id": "turn-10-12år",
+   "navn": "10-12 år",
+   "idrett": "Turn",
+   "arskull": "2017-2014",
+   "trinn": "4-6",
+   "antall_spillere": 24,
+   "antall_trenere": 3,
+   "areal_inne": "Halv hall",
+   "areal_ute": "",
+   "okter_per_uke": null,
+   "onsker": null,
+   "trener_utilgjengelig": null
+  },
+  {
+   "id": "turn-13-18år",
+   "navn": "13-18 år",
+   "idrett": "Turn",
+   "arskull": "2013-2008",
+   "trinn": "7-vg",
+   "antall_spillere": 9,
+   "antall_trenere": 4,
+   "areal_inne": "Halv hall",
+   "areal_ute": "",
+   "okter_per_uke": null,
+   "onsker": null,
+   "trener_utilgjengelig": null
+  },
+  {
+   "id": "friidrett-6-8år",
+   "navn": "6-8 år",
+   "idrett": "Friidrett",
+   "arskull": "2018-2020",
+   "trinn": "1-3",
+   "antall_spillere": 7,
+   "antall_trenere": 2,
+   "areal_inne": "Halv hall",
+   "areal_ute": "",
+   "okter_per_uke": null,
+   "onsker": null,
+   "trener_utilgjengelig": null
+  },
+  {
+   "id": "friidrett-9-12år",
+   "navn": "9-12 år",
+   "idrett": "Friidrett",
+   "arskull": "2017-2014",
+   "trinn": "4-7",
+   "antall_spillere": 6,
+   "antall_trenere": 2,
+   "areal_inne": "Halv hall",
+   "areal_ute": "",
+   "okter_per_uke": null,
+   "onsker": null,
+   "trener_utilgjengelig": null
+  },
+  {
+   "id": "friidrett-13-eldre",
+   "navn": "13-eldre",
+   "idrett": "Friidrett",
+   "arskull": "",
+   "trinn": "8+",
+   "antall_spillere": 5,
+   "antall_trenere": 2,
+   "areal_inne": "",
+   "areal_ute": "",
+   "okter_per_uke": null,
+   "onsker": null,
+   "trener_utilgjengelig": null
+  },
+  {
+   "id": "via-via",
+   "navn": "VIA",
+   "idrett": "VIA",
+   "arskull": "",
+   "trinn": "",
+   "antall_spillere": 11,
+   "antall_trenere": 6,
+   "areal_inne": "Hel hall",
+   "areal_ute": "",
+   "okter_per_uke": null,
+   "onsker": null,
+   "trener_utilgjengelig": null
+  },
+  {
+   "id": "bueskyting-11-16år",
+   "navn": "11-16 år",
+   "idrett": "Bueskyting",
+   "arskull": "",
+   "trinn": "",
+   "antall_spillere": 5,
+   "antall_trenere": 1,
+   "areal_inne": "",
+   "areal_ute": "",
+   "okter_per_uke": null,
+   "onsker": null,
+   "trener_utilgjengelig": null
+  },
+  {
+   "id": "bueskyting-17+",
+   "navn": "17 +",
+   "idrett": "Bueskyting",
+   "arskull": "",
+   "trinn": "",
+   "antall_spillere": 9,
+   "antall_trenere": 4,
+   "areal_inne": "Hel hall",
+   "areal_ute": "",
+   "okter_per_uke": null,
+   "onsker": null,
+   "trener_utilgjengelig": null
+  },
+  {
+   "id": "basketball-4-7klasse",
+   "navn": "4-7 Klasse",
+   "idrett": "Basketball",
+   "arskull": "",
+   "trinn": "",
+   "antall_spillere": 0,
+   "antall_trenere": 0,
+   "areal_inne": "Hel hall",
+   "areal_ute": "",
+   "okter_per_uke": null,
+   "onsker": null,
+   "trener_utilgjengelig": null
+  },
+  {
+   "id": "allidrett-allidrett",
+   "navn": "Allidrett",
+   "idrett": "Allidrett",
+   "arskull": "2019-2020",
+   "trinn": "1-2",
+   "antall_spillere": 45,
+   "antall_trenere": 4,
+   "areal_inne": "Hel hall",
+   "areal_ute": "",
+   "okter_per_uke": null,
+   "onsker": null,
+   "trener_utilgjengelig": null
+  }
+ ]
+}
