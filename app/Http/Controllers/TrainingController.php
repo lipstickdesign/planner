@@ -11,6 +11,7 @@ use App\Models\TrainingPlanVersion;
 use App\Models\TrainingSeason;
 use App\Models\TrainingTeam;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 
 class TrainingController extends Controller
@@ -258,16 +259,30 @@ class TrainingController extends Controller
         // Ta en auto-versjon av det som er nå, så «gjenopprett» også kan angres
         $this->makeVersion($company, $season, 'Før gjenoppretting '.now()->format('d.m H:i'), true);
 
-        TrainingAssignment::where('company_id', $company->id)
-            ->where('training_season_id', $season->id)->delete();
+        DB::transaction(function () use ($company, $season, $version) {
+            TrainingAssignment::where('company_id', $company->id)
+                ->where('training_season_id', $season->id)->delete();
 
-        foreach ($version->snapshot ?? [] as $row) {
-            TrainingAssignment::create(array_merge($row, [
-                'company_id' => $company->id,
-                'training_season_id' => $season->id,
-                'manual_override' => true,
-            ]));
-        }
+            foreach ($version->snapshot ?? [] as $row) {
+                $fid = $row['facility_id'] ?? $row['training_facility_id'] ?? null;
+                if (! $fid || empty($row['weekday']) || empty($row['block_start']) || empty($row['block_end'])) {
+                    continue;
+                }
+                TrainingAssignment::create([
+                    'company_id' => $company->id,
+                    'training_season_id' => $season->id,
+                    'training_facility_id' => $fid,
+                    'training_team_id' => $row['team_id'] ?? $row['training_team_id'] ?? null,
+                    'label' => $row['label'] ?? null,
+                    'org' => $row['org'] ?? 'FLIK',
+                    'locked' => $row['locked'] ?? false,
+                    'weekday' => $row['weekday'],
+                    'block_start' => $row['block_start'],
+                    'block_end' => $row['block_end'],
+                    'manual_override' => true,
+                ]);
+            }
+        });
 
         $assignments = TrainingAssignment::where('company_id', $company->id)
             ->where('training_season_id', $season->id)->with('team.category')
@@ -401,7 +416,9 @@ class TrainingController extends Controller
             ."- Bruk aldri tider som er låst hos annen klubb (listen under).\n"
             ."- Bruk kun anlegg som tillater lagets idrett.\n"
             ."- Tider er mellom 16:00 og 22:00 i 30-minutters steg. Respekter lagenes ønsker og trenernes utilgjengelighet der det går.\n"
-            ."- Ta hensyn til antall soner på anlegget (flere lag kan dele samtidig opp til antall soner).\n\n"
+            ."- Maks ETT lag per sone samtidig på samme anlegg. De fleste anlegg har 1 sone = kun ett lag om gangen. Sett aldri to eller flere lag på samme anlegg til samme tid med mindre «soner» er større enn 1 (unntaket er 3er bane A/B/C som er én delt ressurs).\n"
+            ."- Gi ALDRI et lag flere økter enn «økter/uke». Ved forslag for én enkelt dag: maks én økt per lag den dagen.\n"
+            ."- Ikke fyll ledige felt bare for å fylle – det er helt greit at et anlegg står tomt. Kvalitet framfor mengde.\n\n"
             .'Svar KUN med JSON på formen {"blocks":[{"facility":"<anleggsnavn>","weekday":"Mandag","start":"16:00","end":"17:30","team":"<lagnavn>"}]}. '
             .'Bruk eksakte anleggsnavn og lagnavn fra listene. Ingen forklaring utenfor JSON.';
 
