@@ -6,6 +6,8 @@
   $vpMark = $vpCo->logo_path ?? null;
   $vpCanEdit = $vpU?->isCompanyAdmin() ?? false;
   $vpSuper = (bool) ($vpU?->is_platform_admin);
+  $vpParts = preg_split('/\s+/', trim($vpU?->name ?? '')) ?: [];
+  $vpInit = mb_strtoupper(mb_substr($vpParts[0] ?? '', 0, 1).(count($vpParts) > 1 ? mb_substr(end($vpParts), 0, 1) : ''));
   $active = $active ?? 'home';
 @endphp
 <style>
@@ -23,6 +25,7 @@
   .usermenu{position:relative}
   .userchip{display:flex;align-items:center;gap:9px;background:rgba(255,255,255,.13);padding:6px 13px;border-radius:24px;font-size:13px;border:none;color:#fff;cursor:pointer;font-family:'Ubuntu',system-ui,sans-serif}
   .userchip:hover{background:rgba(255,255,255,.22)}
+  .userchip .av{width:28px;height:28px;border-radius:50%;background:var(--accent,#fb471f);color:#3a2c00;display:grid;place-items:center;font-weight:700;font-size:11px;margin-left:-6px}
   .usermenudd{position:absolute;top:46px;right:0;background:#fff;border-radius:12px;box-shadow:0 16px 44px rgba(20,40,80,.24);border:1px solid var(--line,#e6eaf2);min-width:236px;padding:6px;display:none;z-index:70}
   .usermenudd.open{display:block}
   .usermenudd .ddi{display:flex;align-items:center;gap:9px;width:100%;text-align:left;background:none;border:none;font-family:'Ubuntu',system-ui,sans-serif;font-size:13.5px;color:var(--ink,#1a1f33);padding:9px 11px;border-radius:8px;cursor:pointer;text-decoration:none}
@@ -49,7 +52,7 @@
   <div class="spacer"></div>
   @if($vpCanEdit)<button class="iconbtn" title="Innstillinger" onclick="openSettings()"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10.325 4.317c.426 -1.756 2.924 -1.756 3.35 0a1.724 1.724 0 0 0 2.573 1.066c1.543 -.94 3.31 .826 2.37 2.37a1.724 1.724 0 0 0 1.065 2.572c1.756 .426 1.756 2.924 0 3.35a1.724 1.724 0 0 0 -1.066 2.573c.94 1.543 -.826 3.31 -2.37 2.37a1.724 1.724 0 0 0 -2.572 1.065c-.426 1.756 -2.924 1.756 -3.35 0a1.724 1.724 0 0 0 -2.573 -1.066c-1.543 .94 -3.31 -.826 -2.37 -2.37a1.724 1.724 0 0 0 -1.065 -2.572c-1.756 -.426 -1.756 -2.924 0 -3.35a1.724 1.724 0 0 0 1.066 -2.573c-.94 -1.543 .826 -3.31 2.37 -2.37c1 .608 2.296 .07 2.572 -1.065z"/><path d="M9 12a3 3 0 1 0 6 0a3 3 0 0 0 -6 0"/></svg></button>@endif
   <div class="usermenu">
-    <button class="userchip" onclick="toggleUserMenu(event)" title="Meny"><span>{{ $vpU?->name }}</span></button>
+    <button class="userchip" onclick="toggleUserMenu(event)" title="Meny"><span>{{ $vpU?->name }}</span><span class="av">{{ $vpInit }}</span></button>
     <div class="usermenudd" id="userDD"></div>
   </div>
   <form method="POST" action="{{ route('logout') }}" id="logoutForm" style="display:none">@csrf</form>
