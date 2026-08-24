@@ -7,6 +7,7 @@ use App\Models\Company;
 use App\Models\TrainingAssignment;
 use App\Models\TrainingAvailability;
 use App\Models\TrainingFacility;
+use App\Models\TrainingPlanVersion;
 use App\Models\TrainingSeason;
 use App\Models\TrainingTeam;
 use Illuminate\Http\Request;
@@ -186,7 +187,104 @@ class TrainingController extends Controller
             ->where('training_season_id', $season->id)->with('team.category')
             ->get()->map(fn (TrainingAssignment $a) => $this->assignmentCard($a))->values();
 
-        return view('training.rutenett', compact('facilities', 'teams', 'assignments', 'company'));
+        $versions = $this->versionList($company, $season);
+
+        return view('training.rutenett', compact('facilities', 'teams', 'assignments', 'versions', 'company'));
+    }
+
+    /* ---------- Versjoner (øyeblikksbilder av rutenettet) ---------- */
+
+    private function versionList(Company $company, TrainingSeason $season)
+    {
+        return TrainingPlanVersion::where('company_id', $company->id)
+            ->where('training_season_id', $season->id)->orderByDesc('created_at')
+            ->get()->map(fn (TrainingPlanVersion $v) => [
+                'id' => $v->id,
+                'name' => $v->name,
+                'is_auto' => $v->is_auto,
+                'created_at' => $v->created_at?->format('d.m.Y H:i'),
+                'count' => is_array($v->snapshot) ? count($v->snapshot) : 0,
+            ])->values();
+    }
+
+    /** Serialiser gjeldende arbeidsplan til et øyeblikksbilde. */
+    private function snapshotCurrent(Company $company, TrainingSeason $season): array
+    {
+        return TrainingAssignment::where('company_id', $company->id)
+            ->where('training_season_id', $season->id)->get()
+            ->map(fn (TrainingAssignment $a) => [
+                'facility_id' => $a->training_facility_id,
+                'team_id' => $a->training_team_id,
+                'label' => $a->label,
+                'org' => $a->org,
+                'locked' => (bool) $a->locked,
+                'weekday' => $a->weekday,
+                'block_start' => substr((string) $a->block_start, 0, 5),
+                'block_end' => substr((string) $a->block_end, 0, 5),
+            ])->values()->all();
+    }
+
+    /** Lag en versjon av gjeldende plan (brukes av «Lagre» og auto før AI). */
+    private function makeVersion(Company $company, TrainingSeason $season, string $name, bool $auto = false): TrainingPlanVersion
+    {
+        return TrainingPlanVersion::create([
+            'company_id' => $company->id,
+            'training_season_id' => $season->id,
+            'name' => $name,
+            'snapshot' => $this->snapshotCurrent($company, $season),
+            'is_auto' => $auto,
+            'created_by' => auth()->id(),
+        ]);
+    }
+
+    public function saveVersion(Request $request)
+    {
+        $this->guard();
+        $company = $this->company();
+        $data = $request->validate(['name' => ['required', 'string', 'max:80']]);
+        $season = $this->season($company);
+        $this->makeVersion($company, $season, $data['name']);
+
+        return response()->json(['versions' => $this->versionList($company, $season)]);
+    }
+
+    public function restoreVersion(TrainingPlanVersion $version)
+    {
+        $this->guard();
+        $company = $this->company();
+        $season = $this->season($company);
+
+        // Ta en auto-versjon av det som er nå, så «gjenopprett» også kan angres
+        $this->makeVersion($company, $season, 'Før gjenoppretting '.now()->format('d.m H:i'), true);
+
+        TrainingAssignment::where('company_id', $company->id)
+            ->where('training_season_id', $season->id)->delete();
+
+        foreach ($version->snapshot ?? [] as $row) {
+            TrainingAssignment::create(array_merge($row, [
+                'company_id' => $company->id,
+                'training_season_id' => $season->id,
+                'manual_override' => true,
+            ]));
+        }
+
+        $assignments = TrainingAssignment::where('company_id', $company->id)
+            ->where('training_season_id', $season->id)->with('team.category')
+            ->get()->map(fn (TrainingAssignment $a) => $this->assignmentCard($a))->values();
+
+        return response()->json([
+            'assignments' => $assignments,
+            'versions' => $this->versionList($company, $season),
+        ]);
+    }
+
+    public function destroyVersion(TrainingPlanVersion $version)
+    {
+        $this->guard();
+        $company = $this->company();
+        $version->delete();
+
+        return response()->json(['versions' => $this->versionList($company, $this->season($company))]);
     }
 
     private function validatedAssignment(Request $request): array

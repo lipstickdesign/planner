@@ -125,6 +125,9 @@ Route::middleware('auth')->group(function () {
     Route::post('/treningstider/tildeling', [TrainingController::class, 'storeAssignment']);
     Route::put('/treningstider/tildeling/{assignment}', [TrainingController::class, 'updateAssignment']);
     Route::delete('/treningstider/tildeling/{assignment}', [TrainingController::class, 'destroyAssignment']);
+    Route::post('/treningstider/versjon', [TrainingController::class, 'saveVersion']);
+    Route::post('/treningstider/versjon/{version}/gjenopprett', [TrainingController::class, 'restoreVersion']);
+    Route::delete('/treningstider/versjon/{version}', [TrainingController::class, 'destroyVersion']);
 
     // Personlig dashboard-oppsett (alle innloggede kan styre sitt eget)
     Route::post('/dashboard-layout', [DashboardLayoutController::class, 'save']);

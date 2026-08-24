@@ -21,6 +21,11 @@
   .ftab{padding:8px 13px;border-radius:9px;border:1px solid var(--line);background:#fff;color:var(--ink-soft);font-weight:500;cursor:pointer;font-family:inherit;font-size:13px}
   .ftab.active{border-color:var(--flik);color:#fff;background:var(--flik)}
   .ftab .k{font-size:11px;opacity:.7;margin-left:5px}
+  .vbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;background:#fff;border:1px solid var(--line);border-radius:11px;padding:9px 12px;margin-bottom:14px}
+  .vbar .btn.sm{padding:6px 11px;font-size:12.5px}
+  .vbar select{max-width:280px;font-family:inherit;font-size:13px;padding:7px 9px;border:1px solid var(--line);border-radius:8px;background:#fbfcfe}
+  .vbar .vsep{flex:1}
+  .btn.danger{color:#b23535;border-color:#f0d2d2}
   .layout{display:flex;gap:16px;align-items:flex-start}
   .gridwrap{flex:1;min-width:0;overflow-x:auto}
   .palette{width:210px;flex:none;position:sticky;top:14px;background:#fff;border:1px solid var(--line);border-radius:12px;padding:12px;max-height:80vh;overflow:auto}
@@ -72,6 +77,14 @@
     <a href="/treningstider/anlegg">Anlegg</a>
     <a href="/treningstider/rutenett" class="active">Rutenett</a>
   </nav>
+  <div class="vbar">
+    <button class="btn sm solid" onclick="saveVersion()">Lagre versjon</button>
+    <button class="btn sm" id="undoBtn" onclick="undo()" disabled>↶ Angre</button>
+    <span class="vsep"></span>
+    <select id="vsel" title="Lagrede versjoner"></select>
+    <button class="btn sm" onclick="restoreVersion()">Gjenopprett</button>
+    <button class="btn sm danger" onclick="deleteVersion()">Slett</button>
+  </div>
   <div class="ftabs" id="ftabs"></div>
   <div class="layout">
     <div class="gridwrap"><div class="sg" id="sg"></div></div>
@@ -89,10 +102,11 @@
 
 <script>
   window.TG_FAC=@json($facilities); window.TG_TEAMS=@json($teams);
-  window.TG_ASSIGN=@json($assignments); window.TG_CSRF='{{ csrf_token() }}';
+  window.TG_ASSIGN=@json($assignments); window.TG_VERSIONS=@json($versions); window.TG_CSRF='{{ csrf_token() }}';
 </script>
 <script>
-  var FAC=window.TG_FAC||[], TEAMS=window.TG_TEAMS||[], ASSIGN=window.TG_ASSIGN||[], CSRF=window.TG_CSRF;
+  var FAC=window.TG_FAC||[], TEAMS=window.TG_TEAMS||[], ASSIGN=window.TG_ASSIGN||[], VERSIONS=window.TG_VERSIONS||[], CSRF=window.TG_CSRF;
+  var UNDO=[];
   var DAYS=['Mandag','Tirsdag','Onsdag','Torsdag','Fredag'];
   var TIMES=['16:00','16:30','17:00','17:30','18:00','18:30','19:00','19:30','20:00','20:30','21:00','21:30'];
   var ENDS=TIMES.concat(['22:00']);
@@ -170,6 +184,39 @@
     });
     document.getElementById('sg').innerHTML=html;
     renderPalette();
+    renderVbar();
+  }
+  function cardToPayload(c){return {facility_id:c.facility_id,team_id:c.team_id||null,label:c.label||null,org:c.org||'FLIK',locked:!!c.locked,weekday:c.weekday,block_start:c.block_start,block_end:c.block_end};}
+  function updateUndoBtn(){var b=document.getElementById('undoBtn');if(b)b.disabled=!UNDO.length;}
+  function pushUndo(e){UNDO.push(e);if(UNDO.length>30)UNDO.shift();updateUndoBtn();}
+  async function undo(){
+    var u=UNDO.pop();if(!u)return;
+    try{
+      if(u.op==='del'){await api('DELETE','/treningstider/tildeling/'+u.id);ASSIGN=ASSIGN.filter(function(x){return x.id!==u.id;});}
+      else if(u.op==='put'){var r=await api('PUT','/treningstider/tildeling/'+u.id,u.payload);var i=ASSIGN.findIndex(function(x){return x.id===u.id;});if(i>-1)ASSIGN[i]=r;}
+      else if(u.op==='post'){var a=await api('POST','/treningstider/tildeling',u.payload);ASSIGN.push(a);}
+      updateUndoBtn();render();
+    }catch(e){alert(e.message);}
+  }
+  function renderVbar(){
+    var sel=document.getElementById('vsel');if(!sel)return;
+    sel.innerHTML=VERSIONS.length?VERSIONS.map(function(v){return '<option value="'+v.id+'">'+esc(v.name)+' · '+esc(v.created_at||'')+' ('+v.count+' blokker)'+(v.is_auto?' · auto':'')+'</option>';}).join(''):'<option value="">Ingen lagrede versjoner ennå</option>';
+    updateUndoBtn();
+  }
+  async function saveVersion(){
+    var name=prompt('Navn på versjonen:', 'Utkast '+new Date().toLocaleDateString('no-NO'));
+    if(!name)return;
+    try{var r=await api('POST','/treningstider/versjon',{name:name});VERSIONS=r.versions;renderVbar();alert('Lagret som versjon «'+name+'».');}catch(e){alert(e.message);}
+  }
+  async function restoreVersion(){
+    var id=document.getElementById('vsel').value;if(!id)return;
+    if(!confirm('Gjenopprette denne versjonen? Dagens plan lagres automatisk som en versjon først, så du kan gå tilbake.'))return;
+    try{var r=await api('POST','/treningstider/versjon/'+id+'/gjenopprett');ASSIGN=r.assignments;VERSIONS=r.versions;UNDO=[];render();}catch(e){alert(e.message);}
+  }
+  async function deleteVersion(){
+    var id=document.getElementById('vsel').value;if(!id)return;
+    if(!confirm('Slette denne versjonen?'))return;
+    try{var r=await api('DELETE','/treningstider/versjon/'+id);VERSIONS=r.versions;renderVbar();}catch(e){alert(e.message);}
   }
   function renderPalette(){
     var host=document.getElementById('palette');if(!host)return;
@@ -234,14 +281,14 @@
     var p=payload();
     if(mins(p.block_end)<=mins(p.block_start)){alert('«Til» må være etter «Fra».');return;}
     try{
-      if(editing){var u=await api('PUT','/treningstider/tildeling/'+editing.id,p);var i=ASSIGN.findIndex(function(x){return x.id===editing.id;});ASSIGN[i]=u;}
-      else{var a=await api('POST','/treningstider/tildeling',p);ASSIGN.push(a);}
+      if(editing){var before=cardToPayload(editing);var u=await api('PUT','/treningstider/tildeling/'+editing.id,p);var i=ASSIGN.findIndex(function(x){return x.id===editing.id;});ASSIGN[i]=u;pushUndo({op:'put',id:editing.id,payload:before});}
+      else{var a=await api('POST','/treningstider/tildeling',p);ASSIGN.push(a);pushUndo({op:'del',id:a.id});}
       closeModal();render();
     }catch(e){alert(e.message);}
   }
   async function delBlk(){
     if(!editing)return;
-    try{await api('DELETE','/treningstider/tildeling/'+editing.id);ASSIGN=ASSIGN.filter(function(x){return x.id!==editing.id;});closeModal();render();}catch(e){alert(e.message);}
+    try{var restore=cardToPayload(editing);await api('DELETE','/treningstider/tildeling/'+editing.id);ASSIGN=ASSIGN.filter(function(x){return x.id!==editing.id;});pushUndo({op:'post',payload:restore});closeModal();render();}catch(e){alert(e.message);}
   }
   render();
 </script>
