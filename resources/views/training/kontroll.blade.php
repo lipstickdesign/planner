@@ -216,6 +216,7 @@ footer{margin-top:26px;font-size:12px;color:var(--muted);max-width:80ch}
 const DAYS = DATA.days, TIMES = DATA.times, VENUES = DATA.venues;
 const HALL = 'Alcoa fotball hall';
 const KG = 'Alcoa Kunstgressbane', LISTA = 'Lista Ungdomsskole';
+const is3er = v => /^3er bane/.test(v); // A/B/C er én delt ressurs – samme lag samtidig er OK
 const NONTEAM = new Set(['Kamper', 'Bobcats', 'Spind mosjon', 'FLIK (uspes.)']);
 const isTeam = t => !NONTEAM.has(t) && !t.startsWith('Friidrett');
 const ti = t => TIMES.indexOf(t);
@@ -256,7 +257,7 @@ function analyse() {
       const [t, d] = k.split('|');
       for (let i = 0; i < bs.length; i++) for (let j = i + 1; j < bs.length; j++) {
         const a = bs[i], c = bs[j];
-        if (a.venue !== c.venue && mins(a.start) < mins(c.endx) && mins(c.start) < mins(a.endx)) {
+        if (a.venue !== c.venue && !(is3er(a.venue) && is3er(c.venue)) && mins(a.start) < mins(c.endx) && mins(c.start) < mins(a.endx)) {
           out.push({ sev: 'critical', rule: 'dup', ttl: `${t} står på to anlegg samtidig`,
             det: `${d} ${a.start}–${a.endx} · ${short(a.venue)} og ${short(c.venue)}` });
           flagged.add(key(a)); flagged.add(key(c));
