@@ -16,30 +16,7 @@
 body{margin:0;background:var(--bg);color:var(--ink);font-family:'Ubuntu',system-ui,sans-serif;line-height:1.55}
 a{color:var(--flik-blue);text-decoration:none}a:hover{text-decoration:underline}
 .wrap{max-width:1240px;margin:0 auto;padding:0 28px}
-.topbar{background:var(--brand-grad,linear-gradient(125deg,#26406e,#1c3155 55%,#1a1e39));color:#fff}
-.topbar .wrap{display:flex;align-items:center;gap:14px;padding:16px 28px}
-.brand{display:flex;align-items:center;gap:12px}
-.brandmark{height:38px;width:auto;color:#fff;display:block}
-.brand h1{font-size:17px;margin:0;font-weight:500}
-.brand .sub{font-size:12px;opacity:.82;font-weight:300}
-.spacer{flex:1}
-.usermenu{position:relative}
-.userchip{display:flex;align-items:center;gap:9px;background:rgba(255,255,255,.13);padding:6px 13px;border-radius:24px;font-size:13px;border:none;color:#fff;cursor:pointer;font-family:inherit}
-.userchip:hover{background:rgba(255,255,255,.22)}
-.usermenudd{position:absolute;top:46px;right:0;background:#fff;border-radius:12px;box-shadow:0 16px 44px rgba(20,40,80,.24);border:1px solid var(--line);min-width:236px;padding:6px;display:none;z-index:70}
-.usermenudd.open{display:block}
-.usermenudd .ddi{display:flex;align-items:center;gap:9px;width:100%;text-align:left;background:none;border:none;font-family:inherit;font-size:13.5px;color:var(--ink);padding:9px 11px;border-radius:8px;cursor:pointer}
-.usermenudd .ddi:hover{background:#f3f7fc}
-.usermenudd .ddi.cur{color:var(--flik-blue);font-weight:600}
-.usermenudd .ddsep{font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:var(--ink-soft);padding:9px 11px 4px}
-.usermenudd .ddsep2{border-top:1px solid var(--line);margin:6px 0}
-.userchip .av{width:28px;height:28px;border-radius:50%;background:var(--accent);color:#3a2c00;display:grid;place-items:center;font-weight:700;font-size:11px;margin-left:-6px}
-.logoutbtn{background:rgba(255,255,255,.16);border:none;color:#fff;border-radius:20px;padding:7px 13px;cursor:pointer;font-family:inherit;font-size:13px}
-.logoutbtn:hover{background:rgba(255,255,255,.3)}
-.tabbar{background:var(--flik-blue-deep)}
-.tabs{display:flex;gap:4px;max-width:1240px;margin:0 auto;padding:0 20px;flex-wrap:wrap}
-.tab{padding:15px 20px;color:rgba(255,255,255,.72);font-family:inherit;font-size:14px;font-weight:500;cursor:pointer;border:none;background:none;border-bottom:3px solid transparent;line-height:1.55}
-.tab:hover{color:#fff}.tab.active{color:#fff;border-bottom-color:var(--accent)}
+/* Header-CSS ligger nå i partials/topbar.blade.php (delt av dashbord + Treningstider). */
 main.wrap{padding:44px 28px 90px}.view{display:none}.view.active{display:block}
 .ico{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:none;vertical-align:-3px}
 .ico.chk{width:12px;height:12px;stroke-width:2.5;vertical-align:0}
@@ -302,35 +279,7 @@ $th = $themes[$brand['theme'] ?? 'blue'] ?? $themes['blue'];
 <style>:root{--flik-blue:#{{ $th['blue'] }};--flik-blue-dark:#{{ $th['dark'] }};--flik-blue-deep:#{{ $th['deep'] }};--navy:#{{ $th['navy'] }};--sky:#{{ $th['sky'] }};--accent:#{{ $th['accent'] }};--brand-grad:{{ $th['grad'] }}}</style>
 </head>
 <body>
-<div class="topbar">
-  <div class="wrap">
-    <div class="brand">
-      <span class="logosvg"></span>
-      <div>
-        <h1>Vivu Planner</h1>
-        <div class="sub">{{ $brand['subtitle'] ?? 'Årshjul' }}</div>
-      </div>
-    </div>
-    <div class="spacer"></div>
-    @if($canEdit)<button class="iconbtn" title="Innstillinger" onclick="openSettings()"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10.325 4.317c.426 -1.756 2.924 -1.756 3.35 0a1.724 1.724 0 0 0 2.573 1.066c1.543 -.94 3.31 .826 2.37 2.37a1.724 1.724 0 0 0 1.065 2.572c1.756 .426 1.756 2.924 0 3.35a1.724 1.724 0 0 0 -1.066 2.573c.94 1.543 -.826 3.31 -2.37 2.37a1.724 1.724 0 0 0 -2.572 1.065c-.426 1.756 -2.924 1.756 -3.35 0a1.724 1.724 0 0 0 -2.573 -1.066c-1.543 .94 -3.31 -.826 -2.37 -2.37a1.724 1.724 0 0 0 -1.065 -2.572c-1.756 -.426 -1.756 -2.924 0 -3.35a1.724 1.724 0 0 0 1.066 -2.573c-.94 -1.543 .826 -3.31 2.37 -2.37c1 .608 2.296 .07 2.572 -1.065z"/><path d="M9 12a3 3 0 1 0 6 0a3 3 0 0 0 -6 0"/></svg></button>@endif
-    <div class="usermenu">
-      <button class="userchip" onclick="toggleUserMenu(event)" title="Meny"><span>{{ $user->name }}</span></button>
-      <div class="usermenudd" id="userDD"></div>
-    </div>
-    <form method="POST" action="{{ route('logout') }}" id="logoutForm" style="display:none">@csrf</form>
-  </div>
-</div>
-<div class="tabbar">
-  <div class="tabs">
-    <button class="tab active" data-view="home">Dashboard</button>
-    <button class="tab" data-view="wheel">Årshjul</button>
-    <button class="tab" data-view="list">Eventliste</button>
-    <button class="tab" data-view="tasks">Oppgaver</button>
-    <button class="tab" data-view="klubbliv">Klubbliv</button>
-    @if($canEdit)<button class="tab" data-view="team">Brukere</button>@endif
-    @if($isSuperadmin)<a class="tab" href="/treningstider" style="text-decoration:none">Treningstider</a>@endif
-  </div>
-</div>
+@include('partials.topbar', ['active' => 'home'])
 
 <main class="wrap">
   <section class="view active" id="view-home">
@@ -678,6 +627,7 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal();});
 
 /* TABS */
 document.querySelectorAll('.tab').forEach(t=>t.addEventListener('click',()=>{
+  if(!t.dataset.view)return; /* lenker (Treningstider) navigerer selv */
   document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
   document.querySelectorAll('.view').forEach(x=>x.classList.remove('active'));
   t.classList.add('active');document.getElementById('view-'+t.dataset.view).classList.add('active');
@@ -695,6 +645,7 @@ window.addEventListener('load',function(){
   var tb=document.querySelector('.tab[data-view="'+h+'"]');
   if(tb){tb.click();}
   else if(h==='settings'&&typeof openSettings==='function'){openSettings();}
+  else if(h==='profile'&&typeof openMyProfile==='function'){openMyProfile();}
 });
 ['search','fSport','fStatus'].forEach(id=>document.getElementById(id).addEventListener('input',renderList));
 ['tsearch','tSport'].forEach(id=>{const el=document.getElementById(id);if(el){el.addEventListener('input',renderTaskList);el.addEventListener('change',renderTaskList);}});

@@ -31,7 +31,8 @@
 </style>
 </head>
 <body>
-@include('partials.appbar', ['active' => 'training'])
+@include('partials.topbar', ['active' => 'training'])
+@include('partials.topbar-js')
 <div class="wrap">
   <h1>Treningstider</h1>
   <p class="sub">Lagene som skal fordeles treningstid, importert fra klubbens lagdata.</p>

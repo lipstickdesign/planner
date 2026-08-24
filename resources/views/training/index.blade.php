@@ -112,7 +112,8 @@ footer{margin-top:26px;font-size:12px;color:var(--muted);max-width:80ch}
 </head>
 @endverbatim
 <body>
-@include('partials.appbar', ['active' => 'training'])
+@include('partials.topbar', ['active' => 'training'])
+@include('partials.topbar-js')
 @verbatim
 <div class="wrap">
 <style>
