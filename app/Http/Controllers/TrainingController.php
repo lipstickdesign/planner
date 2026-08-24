@@ -303,6 +303,37 @@ class TrainingController extends Controller
         return response()->json(['versions' => $this->versionList($company, $this->season($company))]);
     }
 
+    /** Tøm planen (ett anlegg eller alt) – beholder låste tider, tar auto-versjon først. */
+    public function clearPlan(Request $request)
+    {
+        $this->guard();
+        $company = $this->company();
+        $data = $request->validate([
+            'scope' => ['required', 'in:alle,anlegg'],
+            'facility_id' => ['nullable', 'exists:training_facilities,id'],
+        ]);
+        $season = $this->season($company);
+        $this->makeVersion($company, $season, 'Før tømming '.now()->format('d.m H:i'), true);
+
+        $q = TrainingAssignment::where('company_id', $company->id)
+            ->where('training_season_id', $season->id)->where('locked', false);
+        if ($data['scope'] === 'anlegg') {
+            $q->where('training_facility_id', $data['facility_id']);
+        }
+        $removed = $q->count();
+        $q->delete();
+
+        $assignments = TrainingAssignment::where('company_id', $company->id)
+            ->where('training_season_id', $season->id)->with('team.category')
+            ->get()->map(fn (TrainingAssignment $a) => $this->assignmentCard($a))->values();
+
+        return response()->json([
+            'assignments' => $assignments,
+            'versions' => $this->versionList($company, $season),
+            'removed' => $removed,
+        ]);
+    }
+
     /* ---------- AI-forslag (steg 4) ---------- */
 
     private function extractJson(string $text): array
@@ -414,7 +445,7 @@ class TrainingController extends Controller
             ."- Unngå fredager når det er mulig – mange lag ønsker ikke å trene fredag.\n"
             ."- Samme lag kan ALDRI være på to anlegg samtidig – MEN 3er bane A, B og C er én delt ressurs, så samme lag kan stå på alle tre samtidig.\n"
             ."- Bruk aldri tider som er låst hos annen klubb (listen under).\n"
-            ."- Bruk kun anlegg som tillater lagets idrett.\n"
+            ."- HARD REGEL: Et lag kan BARE stå på et anlegg som har lagets idrett i «idretter»-lista. Aldri håndball eller volleyball på et fotball-anlegg, aldri fotball i en håndballhall, osv. Plasseringer som bryter dette blir forkastet.\n"
             ."- Tider er mellom 16:00 og 22:00 i 30-minutters steg. Respekter lagenes ønsker og trenernes utilgjengelighet der det går.\n"
             ."- Maks ETT lag per sone samtidig på samme anlegg. De fleste anlegg har 1 sone = kun ett lag om gangen. Sett aldri to eller flere lag på samme anlegg til samme tid med mindre «soner» er større enn 1 (unntaket er 3er bane A/B/C som er én delt ressurs).\n"
             ."- Gi ALDRI et lag flere økter enn «økter/uke». Ved forslag for én enkelt dag: maks én økt per lag den dagen.\n"
@@ -502,6 +533,13 @@ class TrainingController extends Controller
                 continue;
             }
             $team = $teamByName->get($norm((string) ($b['team'] ?? '')));
+            // Hard sperre: laget kan bare stå på anlegg som har lagets idrett.
+            if ($team && $team->category && is_array($f->allowed_sports) && count($f->allowed_sports)) {
+                $allowedLower = array_map(fn ($s) => mb_strtolower($s), $f->allowed_sports);
+                if (! in_array(mb_strtolower($team->category->name), $allowedLower, true)) {
+                    continue;
+                }
+            }
             TrainingAssignment::create([
                 'company_id' => $company->id,
                 'training_season_id' => $season->id,

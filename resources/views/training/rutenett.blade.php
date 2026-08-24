@@ -86,6 +86,8 @@
   </nav>
   <div class="vbar">
     <button class="btn sm" style="border-color:#7c5cff;color:#7c5cff;font-weight:600" onclick="openAi()">✨ AI-forslag</button>
+    <button class="btn sm danger" onclick="clearPlan('anlegg')">Tøm anlegg</button>
+    <button class="btn sm danger" onclick="clearPlan('alle')">Tøm alt</button>
     <button class="btn sm solid" onclick="saveVersion()">Lagre versjon</button>
     <button class="btn sm" id="undoBtn" onclick="undo()" disabled>↶ Angre</button>
     <span class="vsep"></span>
@@ -233,6 +235,13 @@
     var id=document.getElementById('vsel').value;if(!id)return;
     if(!confirm('Slette denne versjonen?'))return;
     try{var r=await api('DELETE','/treningstider/versjon/'+id);VERSIONS=r.versions;renderVbar();}catch(e){alert(e.message);}
+  }
+  async function clearPlan(scope){
+    var hvor=scope==='anlegg'?('anlegget «'+((FAC.find(function(f){return f.id===curFac;})||{}).name||'')+'»'):'ALLE anlegg';
+    if(!confirm('Fjerne alle FLIK-blokker på '+hvor+'? Låste tider (Spind/Bobcats) beholdes. En «Før tømming»-versjon lagres først, så du kan angre.'))return;
+    showLoading('Tømmer …');
+    try{var r=await api('POST','/treningstider/tom',{scope:scope,facility_id:curFac});ASSIGN=r.assignments;VERSIONS=r.versions;UNDO=[];render();toast('Fjernet '+r.removed+' blokker. Ligger i «Før tømming …» om du vil angre.');}catch(e){toast('Tømming feilet: '+e.message);}
+    finally{hideLoading();}
   }
   function openAi(){
     var facOpts=FAC.map(function(f){return '<option value="'+f.id+'">'+esc(f.name)+'</option>';}).join('');
