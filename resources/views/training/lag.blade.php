@@ -31,8 +31,8 @@
 </style>
 </head>
 <body>
+@include('partials.appbar', ['active' => 'training'])
 <div class="wrap">
-  <a href="/dashboard">← Vivu Planner</a>
   <h1>Treningstider</h1>
   <p class="sub">Lagene som skal fordeles treningstid, importert fra klubbens lagdata.</p>
 

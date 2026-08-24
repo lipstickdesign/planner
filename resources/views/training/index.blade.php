@@ -1,4 +1,3 @@
-@verbatim
 <!DOCTYPE html>
 <html lang="no" data-theme="light">
 <head>
@@ -7,6 +6,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css?family=Ubuntu:300,400,500,700&display=swap" rel="stylesheet">
 <title>Treningstider · Vivu Planner</title>
+@verbatim
 <style>
 :root{
   color-scheme: light;
@@ -110,7 +110,10 @@ footer{margin-top:26px;font-size:12px;color:var(--muted);max-width:80ch}
 @media print{.tgl,.vtabs{display:none}}
 </style>
 </head>
+@endverbatim
 <body>
+@include('partials.appbar', ['active' => 'training'])
+@verbatim
 <div class="wrap">
 <style>
 .sgrid{display:grid;grid-template-columns:60px repeat(5,minmax(120px,1fr));gap:2px;min-width:700px}
@@ -131,7 +134,6 @@ footer{margin-top:26px;font-size:12px;color:var(--muted);max-width:80ch}
 
 <header class="top">
   <div>
-    <a href="/dashboard" style="text-decoration:none;color:var(--flik);font-size:13px;font-weight:600;display:inline-block;margin-bottom:8px">← Vivu Planner</a>
     <div class="demo-tag">Kontroll · IR-tildeling lest inn og sjekket mot reglene</div>
     <h1>Treningstider 2026/2027</h1>
     <p class="sub">Idrettsrådets tildeling, lest inn og kontrollert maskinelt. Skru reglene av og på
