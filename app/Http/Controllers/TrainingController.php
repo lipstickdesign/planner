@@ -29,7 +29,7 @@ class TrainingController extends Controller
     {
         $this->guard();
 
-        return view('training.index');
+        return view('training.kontroll');
     }
 
     /** Lag-oversikt – redigerbar liste over lagene i databasen. */
