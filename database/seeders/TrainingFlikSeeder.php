@@ -68,7 +68,8 @@ class TrainingFlikSeeder extends Seeder
                     'area_indoor' => $t['areal_inne'] ?? null,
                     'area_outdoor' => $t['areal_ute'] ?? null,
                     'sessions_per_week' => $t['okter_per_uke']['okter'] ?? null,
-                    'requires_indoor' => false,
+                    // Fotball: alle lag skal ha én innendørsøkt (blankregel).
+                    'requires_indoor' => mb_strtolower(trim($t['idrett'] ?? '')) === 'fotball',
                 ]
             );
             $count++;

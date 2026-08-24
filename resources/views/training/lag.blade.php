@@ -111,6 +111,9 @@
     var t=id?TEAMS.find(function(x){return x.id===id;}):{};
     if(!t)return;
     var catOpts='<option value="">– idrett –</option>'+CATS.map(function(c){return '<option value="'+c.id+'"'+(t.category_id===c.id?' selected':'')+'>'+esc(c.name)+'</option>';}).join('');
+    var days=['','Mandag','Tirsdag','Onsdag','Torsdag','Fredag','Lørdag','Søndag'];
+    var dayOpts=days.map(function(d){return '<option value="'+d+'">'+(d||'– dag –')+'</option>';}).join('');
+    var wishRows=[1,2,3].map(function(p){return '<div class="two" style="grid-template-columns:22px 1.4fr 1fr;align-items:center;gap:10px;margin-bottom:6px"><div class="muted" style="font-weight:700">'+p+'.</div><select id="w'+p+'_day">'+dayOpts+'</select><input id="w'+p+'_time" placeholder="kl. 17:30"></div>';}).join('');
     document.getElementById('ttModal').innerHTML=
       '<div class="mhead"><h3>'+(id?'Rediger lag':'Nytt lag')+'</h3><button class="x" onclick="closeModal()">&times;</button></div>'+
       '<div class="mbody"><form class="f" onsubmit="ttSave(event,'+(id||'null')+')">'+
@@ -119,6 +122,11 @@
         '<div class="two"><div><label>Antall spillere</label><input id="t_players" type="number" min="0"></div><div><label>Antall trenere</label><input id="t_coaches" type="number" min="0"></div></div>'+
         '<div class="two"><div><label>Økter per uke</label><input id="t_sessions" placeholder="f.eks. 2 eller 2-3"></div><div><label>&nbsp;</label><label style="display:flex;align-items:center;gap:8px;font-weight:400"><input id="t_indoor" type="checkbox" style="width:auto" '+(t.requires_indoor?'checked':'')+'>Krever innendørsøkt</label></div></div>'+
         '<div class="two"><div><label>Areal inne</label><input id="t_ai" placeholder="hel hall / halv hall"></div><div><label>Areal ute</label><input id="t_au" placeholder="hel bane / halv bane"></div></div>'+
+        '<div style="margin-top:18px;border-top:1px solid var(--line);padding-top:14px"><div style="font-weight:700;font-size:13.5px;margin-bottom:8px">Ønsket treningstid (prioritert)</div>'+
+          wishRows+
+          '<label>Begrunnelse (valgfri)</label><input id="w_note" placeholder="f.eks. trenere jobber til 17">'+
+          '<label>Dager/tider trener(e) IKKE kan</label><input id="t_coach" placeholder="f.eks. tirsdager før 18">'+
+        '</div>'+
         '<div class="actions">'+(id?'<button type="button" class="btn danger sm" onclick="ttDelete('+id+')">Slett lag</button>':'<span></span>')+
           '<span style="display:flex;gap:8px"><button type="button" class="btn" onclick="closeModal()">Avbryt</button><button class="btn solid" type="submit">Lagre</button></span></div>'+
       '</form></div>';
@@ -131,6 +139,9 @@
     document.getElementById('t_sessions').value=t.sessions_per_week||'';
     document.getElementById('t_ai').value=t.area_indoor||'';
     document.getElementById('t_au').value=t.area_outdoor||'';
+    document.getElementById('t_coach').value=t.coach_unavailable||'';
+    (t.wishes||[]).forEach(function(w){var d=document.getElementById('w'+w.priority+'_day');var tm=document.getElementById('w'+w.priority+'_time');if(d)d.value=w.weekday||'';if(tm)tm.value=w.time||'';});
+    document.getElementById('w_note').value=(t.wishes&&t.wishes[0]&&t.wishes[0].note)||'';
   }
   async function ttSave(ev,id){
     ev.preventDefault();
@@ -144,7 +155,9 @@
       sessions_per_week:val('t_sessions')||null,
       area_indoor:val('t_ai')||null,
       area_outdoor:val('t_au')||null,
-      requires_indoor:document.getElementById('t_indoor').checked
+      requires_indoor:document.getElementById('t_indoor').checked,
+      coach_unavailable:val('t_coach')||null,
+      wishes:[1,2,3].map(function(p){var d=val('w'+p+'_day');return d?{priority:p,weekday:d,time:val('w'+p+'_time')||null,note:val('w_note')||null}:null;}).filter(Boolean)
     };
     try{
       var card=id?await api('PUT','/treningstider/lag/'+id,body):await api('POST','/treningstider/lag',body);

@@ -35,7 +35,7 @@ class TrainingController extends Controller
         $company = $this->company();
 
         $teams = $company
-            ? TrainingTeam::where('company_id', $company->id)->with('category')->orderBy('name')->get()
+            ? TrainingTeam::where('company_id', $company->id)->with(['category', 'wishes'])->orderBy('name')->get()
                 ->map(fn (TrainingTeam $t) => $this->card($t))->values()
             : collect();
 
@@ -55,16 +55,44 @@ class TrainingController extends Controller
     {
         $this->guard();
         $team = TrainingTeam::create($this->validated($request));
+        $this->syncWishes($team, $request);
 
-        return response()->json($this->card($team->fresh('category')));
+        return response()->json($this->card($team->fresh(['category', 'wishes'])));
     }
 
     public function updateTeam(Request $request, TrainingTeam $team)
     {
         $this->guard();
         $team->update($this->validated($request));
+        $this->syncWishes($team, $request);
 
-        return response()->json($this->card($team->fresh('category')));
+        return response()->json($this->card($team->fresh(['category', 'wishes'])));
+    }
+
+    /** Erstatt lagets ønsker med de innsendte (kun rader med ukedag). */
+    private function syncWishes(TrainingTeam $team, Request $request): void
+    {
+        $request->validate([
+            'wishes' => ['nullable', 'array'],
+            'wishes.*.priority' => ['nullable', 'integer', 'min:1', 'max:3'],
+            'wishes.*.weekday' => ['nullable', 'string', 'max:20'],
+            'wishes.*.time' => ['nullable', 'string', 'max:40'],
+            'wishes.*.note' => ['nullable', 'string', 'max:255'],
+        ]);
+
+        $team->wishes()->delete();
+        foreach ($request->input('wishes', []) as $i => $w) {
+            if (empty($w['weekday'])) {
+                continue;
+            }
+            $team->wishes()->create([
+                'company_id' => $team->company_id,
+                'priority' => $w['priority'] ?? ($i + 1),
+                'weekday' => $w['weekday'],
+                'time' => $w['time'] ?? null,
+                'note' => $w['note'] ?? null,
+            ]);
+        }
     }
 
     public function destroyTeam(TrainingTeam $team)
@@ -88,6 +116,7 @@ class TrainingController extends Controller
             'area_indoor' => ['nullable', 'string', 'max:60'],
             'area_outdoor' => ['nullable', 'string', 'max:60'],
             'requires_indoor' => ['nullable', 'boolean'],
+            'coach_unavailable' => ['nullable', 'string', 'max:255'],
         ]);
     }
 
@@ -107,6 +136,15 @@ class TrainingController extends Controller
             'area_indoor' => $t->area_indoor,
             'area_outdoor' => $t->area_outdoor,
             'requires_indoor' => (bool) $t->requires_indoor,
+            'coach_unavailable' => $t->coach_unavailable,
+            'wishes' => $t->relationLoaded('wishes')
+                ? $t->wishes->map(fn ($w) => [
+                    'priority' => $w->priority,
+                    'weekday' => $w->weekday,
+                    'time' => $w->time,
+                    'note' => $w->note,
+                ])->values()
+                : [],
         ];
     }
 }
