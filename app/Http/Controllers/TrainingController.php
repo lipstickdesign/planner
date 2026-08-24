@@ -302,6 +302,42 @@ class TrainingController extends Controller
         return is_array($j) ? $j : [];
     }
 
+    /** Robust uthenting av blokk-lista fra modellsvar (kodegjerder, ren array, eller {blocks:[...]}). */
+    private function extractBlocks(string $text): array
+    {
+        $t = trim(preg_replace('/```(?:json)?/i', '', $text));
+
+        $j = json_decode($t, true);
+        if (is_array($j)) {
+            if (isset($j['blocks']) && is_array($j['blocks'])) {
+                return $j['blocks'];
+            }
+            if (array_is_list($j)) {
+                return $j;
+            }
+        }
+        // Klipp ut { ... }
+        $s = strpos($t, '{');
+        $e = strrpos($t, '}');
+        if ($s !== false && $e !== false && $e > $s) {
+            $j = json_decode(substr($t, $s, $e - $s + 1), true);
+            if (isset($j['blocks']) && is_array($j['blocks'])) {
+                return $j['blocks'];
+            }
+        }
+        // Klipp ut [ ... ]
+        $s = strpos($t, '[');
+        $e = strrpos($t, ']');
+        if ($s !== false && $e !== false && $e > $s) {
+            $j = json_decode(substr($t, $s, $e - $s + 1), true);
+            if (is_array($j) && array_is_list($j)) {
+                return $j;
+            }
+        }
+
+        return [];
+    }
+
     public function aiPropose(Request $request)
     {
         $this->guard();
@@ -317,7 +353,7 @@ class TrainingController extends Controller
         if (! $key) {
             return response()->json(['error' => 'AI er ikke satt opp (mangler API-nøkkel).'], 400);
         }
-        $model = config('services.anthropic.model_pro') ?: 'claude-opus-4-1';
+        $model = config('services.anthropic.model_pro') ?: 'claude-opus-5';
         $season = $this->season($company);
 
         $facilities = TrainingFacility::where('company_id', $company->id)->get();
@@ -398,9 +434,13 @@ class TrainingController extends Controller
             return response()->json(['error' => 'AI-tjenesten svarte ikke: '.$errBody], 502);
         }
 
-        $blocks = $this->extractJson($resp->json('content.0.text', ''))['blocks'] ?? [];
+        $rawText = $resp->json('content.0.text', '');
+        $blocks = $this->extractBlocks($rawText);
         if (! is_array($blocks) || ! count($blocks)) {
-            return response()->json(['error' => 'AI ga ikke et brukbart forslag. Prøv et smalere scope (én dag eller ett anlegg).'], 422);
+            return response()->json([
+                'error' => 'AI ga ikke et tolkbart forslag (modell: '.$model.'). Modellen svarte: '
+                    .mb_substr(trim($rawText), 0, 500),
+            ], 422);
         }
 
         // Oppslag for validering
