@@ -372,19 +372,30 @@ class TrainingController extends Controller
         $ctx = "ANLEGG:\n".$facLines."\n\nLAG:\n".$teamLines."\n\nLÅSTE TIDER (kan ikke brukes):\n".$lockLines
             .($data['instruction'] ? "\n\nEKSTRA INSTRUKS FRA BRUKER:\n".$data['instruction'] : '');
 
-        $resp = Http::withHeaders([
-            'x-api-key' => $key,
-            'anthropic-version' => '2023-06-01',
-            'content-type' => 'application/json',
-        ])->timeout(180)->post('https://api.anthropic.com/v1/messages', [
-            'model' => $model,
-            'max_tokens' => 8000,
-            'system' => $system,
-            'messages' => [['role' => 'user', 'content' => $ctx]],
-        ]);
+        // Prøv pro-modellen; fall tilbake til arbeidsmodellen om den ikke finnes.
+        $models = array_values(array_unique(array_filter([$model, config('services.anthropic.model')])));
+        $resp = null;
+        $errBody = '';
+        foreach ($models as $m) {
+            $resp = Http::withHeaders([
+                'x-api-key' => $key,
+                'anthropic-version' => '2023-06-01',
+                'content-type' => 'application/json',
+            ])->timeout(180)->post('https://api.anthropic.com/v1/messages', [
+                'model' => $m,
+                'max_tokens' => 8000,
+                'system' => $system,
+                'messages' => [['role' => 'user', 'content' => $ctx]],
+            ]);
+            if ($resp->successful()) {
+                $model = $m;
+                break;
+            }
+            $errBody = 'modell '.$m.' → '.$resp->status().' '.mb_substr($resp->body(), 0, 400);
+        }
 
-        if (! $resp->successful()) {
-            return response()->json(['error' => 'AI-tjenesten svarte ikke ('.$resp->status().').'], 502);
+        if (! $resp || ! $resp->successful()) {
+            return response()->json(['error' => 'AI-tjenesten svarte ikke: '.$errBody], 502);
         }
 
         $blocks = $this->extractJson($resp->json('content.0.text', ''))['blocks'] ?? [];
@@ -456,6 +467,8 @@ class TrainingController extends Controller
             'assignments' => $assignments,
             'versions' => $this->versionList($company, $season),
             'placed' => $n,
+            'model' => $model,
+            'note' => ($model !== $models[0] && $errBody) ? 'Brukte '.$model.' – pro-modellen feilet ('.$errBody.').' : null,
         ]);
     }
 

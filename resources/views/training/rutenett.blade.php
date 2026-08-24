@@ -118,8 +118,8 @@
   function is3er(id){return /^3er bane/.test(facName(id));}
   async function api(method,url,body){
     var r=await fetch(url,{method:method,headers:{'Content-Type':'application/json','Accept':'application/json','X-CSRF-TOKEN':CSRF},body:body?JSON.stringify(body):undefined});
-    if(r.status===422){var j=await r.json();throw new Error(Object.values(j.errors||{}).flat().join('\n'));}
-    if(!r.ok)throw new Error('Feil ('+r.status+').');
+    if(r.status===422){var j=await r.json();throw new Error(j.error||Object.values(j.errors||{}).flat().join('\n'));}
+    if(!r.ok){var m='Feil ('+r.status+').';try{var e=await r.json();if(e&&e.error)m=e.error;}catch(_){}throw new Error(m);}
     return r.status===204?null:r.json();
   }
   var GENERIC=/^(kamper|friidrett|gatefotball|old boys|spind|bobcats|flik)/i;
@@ -241,7 +241,7 @@
     try{
       var r=await api('POST','/treningstider/ai-forslag',body);
       ASSIGN=r.assignments;VERSIONS=r.versions;UNDO=[];closeModal();render();
-      alert('AI la inn '+r.placed+' blokker. Dagens plan er nå AI-forslaget – forrige plan ligger som «Før AI …». Kjør Kontroll for å se om det løser seg.');
+      alert('AI la inn '+r.placed+' blokker (modell: '+(r.model||'?')+'). Dagens plan er nå AI-forslaget – forrige plan ligger som «Før AI …». Kjør Kontroll for å se om det løser seg.'+(r.note?'\n\nMerk: '+r.note:''));
     }catch(e){btn.disabled=false;btn.textContent='Kjør forslag';alert(e.message);}
   }
   function renderPalette(){
