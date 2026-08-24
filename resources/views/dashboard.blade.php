@@ -38,7 +38,7 @@ a{color:var(--flik-blue);text-decoration:none}a:hover{text-decoration:underline}
 .logoutbtn:hover{background:rgba(255,255,255,.3)}
 .tabbar{background:var(--flik-blue-deep)}
 .tabs{display:flex;gap:4px;max-width:1240px;margin:0 auto;padding:0 20px;flex-wrap:wrap}
-.tab{padding:15px 20px;color:rgba(255,255,255,.72);font-size:14px;font-weight:500;cursor:pointer;border:none;background:none;border-bottom:3px solid transparent}
+.tab{padding:15px 20px;color:rgba(255,255,255,.72);font-family:inherit;font-size:14px;font-weight:500;cursor:pointer;border:none;background:none;border-bottom:3px solid transparent;line-height:1.55}
 .tab:hover{color:#fff}.tab.active{color:#fff;border-bottom-color:var(--accent)}
 main.wrap{padding:44px 28px 90px}.view{display:none}.view.active{display:block}
 .ico{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:none;vertical-align:-3px}
