@@ -385,7 +385,7 @@ function approvalPill(e){
 }
 
 /* user chip */
-document.querySelector('.userchip').insertAdjacentHTML('beforeend','<span class="av">'+initials(window.ME.name)+'</span>');
+/* Avatar-initialene rendres nå server-side i partials/topbar.blade.php */
 
 /* DASHBOARD */
 function renderStats(){
