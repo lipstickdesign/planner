@@ -38,6 +38,8 @@ return [
     'anthropic' => [
         'key' => env('ANTHROPIC_API_KEY'),
         'model' => env('AI_MODEL', 'claude-sonnet-4-6'),
+        // Sterkere modell for tung planlegging (AI-forslag treningstider)
+        'model_pro' => env('AI_MODEL_PRO', 'claude-opus-4-1'),
     ],
 
 ];

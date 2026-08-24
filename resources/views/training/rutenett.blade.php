@@ -78,6 +78,7 @@
     <a href="/treningstider/rutenett" class="active">Rutenett</a>
   </nav>
   <div class="vbar">
+    <button class="btn sm" style="border-color:#7c5cff;color:#7c5cff;font-weight:600" onclick="openAi()">✨ AI-forslag</button>
     <button class="btn sm solid" onclick="saveVersion()">Lagre versjon</button>
     <button class="btn sm" id="undoBtn" onclick="undo()" disabled>↶ Angre</button>
     <span class="vsep"></span>
@@ -217,6 +218,31 @@
     var id=document.getElementById('vsel').value;if(!id)return;
     if(!confirm('Slette denne versjonen?'))return;
     try{var r=await api('DELETE','/treningstider/versjon/'+id);VERSIONS=r.versions;renderVbar();}catch(e){alert(e.message);}
+  }
+  function openAi(){
+    var facOpts=FAC.map(function(f){return '<option value="'+f.id+'">'+esc(f.name)+'</option>';}).join('');
+    document.getElementById('modal').innerHTML=
+      '<div class="mhead"><h3>✨ AI-forslag</h3><button class="x" onclick="closeModal()">&times;</button></div>'+
+      '<div class="mbody">'+
+        '<label>Omfang</label>'+
+        '<select id="ai_scope" onchange="aiScope()"><option value="alle">Hele planen (mandag–fredag)</option><option value="dag">Én dag</option><option value="anlegg">Ett anlegg</option></select>'+
+        '<div id="ai_day_wrap" style="display:none"><label>Dag</label><select id="ai_day">'+opt(DAYS,'Mandag')+'</select></div>'+
+        '<div id="ai_fac_wrap" style="display:none"><label>Anlegg</label><select id="ai_fac">'+facOpts+'</select></div>'+
+        '<label>Ekstra instruks (valgfritt)</label><input type="text" id="ai_instr" placeholder="F.eks. «la de yngste slutte før 19:00»">'+
+        '<p class="hint" style="margin-top:10px">Før AI kjører lagres dagens plan automatisk som versjon «Før AI …», så du kan gå tilbake. Låste tider (Spind/Bobcats) røres ikke.</p>'+
+      '</div>'+
+      '<div class="mfoot"><div></div><button class="btn solid" id="ai_run" onclick="runAi()">Kjør forslag</button></div>';
+    document.getElementById('ov').classList.add('open');
+  }
+  function aiScope(){var s=document.getElementById('ai_scope').value;document.getElementById('ai_day_wrap').style.display=s==='dag'?'block':'none';document.getElementById('ai_fac_wrap').style.display=s==='anlegg'?'block':'none';}
+  async function runAi(){
+    var body={scope:document.getElementById('ai_scope').value,day:document.getElementById('ai_day').value,facility_id:+document.getElementById('ai_fac').value,instruction:document.getElementById('ai_instr').value.trim()};
+    var btn=document.getElementById('ai_run');btn.disabled=true;btn.textContent='Jobber … (kan ta et halvt minutt)';
+    try{
+      var r=await api('POST','/treningstider/ai-forslag',body);
+      ASSIGN=r.assignments;VERSIONS=r.versions;UNDO=[];closeModal();render();
+      alert('AI la inn '+r.placed+' blokker. Dagens plan er nå AI-forslaget – forrige plan ligger som «Før AI …». Kjør Kontroll for å se om det løser seg.');
+    }catch(e){btn.disabled=false;btn.textContent='Kjør forslag';alert(e.message);}
   }
   function renderPalette(){
     var host=document.getElementById('palette');if(!host)return;

@@ -11,6 +11,7 @@ use App\Models\TrainingPlanVersion;
 use App\Models\TrainingSeason;
 use App\Models\TrainingTeam;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Http;
 
 class TrainingController extends Controller
 {
@@ -285,6 +286,177 @@ class TrainingController extends Controller
         $version->delete();
 
         return response()->json(['versions' => $this->versionList($company, $this->season($company))]);
+    }
+
+    /* ---------- AI-forslag (steg 4) ---------- */
+
+    private function extractJson(string $text): array
+    {
+        $start = strpos($text, '{');
+        $end = strrpos($text, '}');
+        if ($start === false || $end === false || $end < $start) {
+            return [];
+        }
+        $j = json_decode(substr($text, $start, $end - $start + 1), true);
+
+        return is_array($j) ? $j : [];
+    }
+
+    public function aiPropose(Request $request)
+    {
+        $this->guard();
+        $company = $this->company();
+        $data = $request->validate([
+            'scope' => ['required', 'in:alle,dag,anlegg'],
+            'day' => ['nullable', 'string', 'max:20'],
+            'facility_id' => ['nullable', 'exists:training_facilities,id'],
+            'instruction' => ['nullable', 'string', 'max:500'],
+        ]);
+
+        $key = config('services.anthropic.key');
+        if (! $key) {
+            return response()->json(['error' => 'AI er ikke satt opp (mangler API-nøkkel).'], 400);
+        }
+        $model = config('services.anthropic.model_pro') ?: 'claude-opus-4-1';
+        $season = $this->season($company);
+
+        $facilities = TrainingFacility::where('company_id', $company->id)->get();
+        $teams = TrainingTeam::where('company_id', $company->id)->with(['category', 'wishes'])->get();
+        $assign = TrainingAssignment::where('company_id', $company->id)
+            ->where('training_season_id', $season->id)->get();
+
+        // Kontekst til modellen
+        $facLines = $facilities->map(fn ($f) => '- '.$f->name.' (idretter: '
+            .(is_array($f->allowed_sports) ? implode(', ', $f->allowed_sports) : '–')
+            .', soner: '.($f->zones ?? 1).', status: '.($f->status ?? 'aktiv').')')->implode("\n");
+
+        $teamLines = $teams->map(function (TrainingTeam $t) {
+            $w = $t->relationLoaded('wishes') ? $t->wishes->map(fn ($x) => ($x->weekday ?? '')
+                .' '.($x->time ?? ''))->filter()->implode('; ') : '';
+
+            return '- '.$t->name.' ('.($t->category?->name ?? 'idrett?').'): '
+                .'økter/uke='.($t->sessions_per_week ?? '?')
+                .', innekrav='.($t->requires_indoor ? 'ja' : 'nei')
+                .($t->players ? ', spillere='.$t->players : '')
+                .($w ? ', ønsker: '.$w : '')
+                .($t->coach_unavailable ? ', trener utilgj.: '.$t->coach_unavailable : '');
+        })->implode("\n");
+
+        $lockLines = $assign->where('locked', true)->map(fn ($a) => '- '
+            .$facilities->firstWhere('id', $a->training_facility_id)?->name.' · '.$a->weekday.' '
+            .substr((string) $a->block_start, 0, 5).'–'.substr((string) $a->block_end, 0, 5)
+            .' ('.$a->org.')')->implode("\n") ?: '(ingen)';
+
+        $scopeText = match ($data['scope']) {
+            'dag' => 'KUN for '.($data['day'] ?? '').'. Ikke foreslå noe for andre dager.',
+            'anlegg' => 'KUN for anlegget «'.($facilities->firstWhere('id', $data['facility_id'])?->name).'». Ikke foreslå noe for andre anlegg.',
+            default => 'for hele uken (mandag–fredag).',
+        };
+
+        $system = 'Du er en erfaren fotball-koordinator som fordeler treningstider for en idrettsklubb. '
+            .'Du får anlegg, lag (med behov og ønsker), og låste tider som IKKE kan brukes. '
+            .'Lag et forslag til fordeling '.$scopeText.' '
+            ."\n\nREGLER:\n"
+            ."- Hvert lag skal ha så mange økter per uke som angitt (økter/uke).\n"
+            ."- Fotballag med innekrav=ja skal ha minst én økt i «Alcoa fotball hall».\n"
+            ."- Yngste lag trener tidligst (fra 16:00), eldste sist (mot 22:00).\n"
+            ."- Unngå fredager når det er mulig – mange lag ønsker ikke å trene fredag.\n"
+            ."- Samme lag kan ALDRI være på to anlegg samtidig – MEN 3er bane A, B og C er én delt ressurs, så samme lag kan stå på alle tre samtidig.\n"
+            ."- Bruk aldri tider som er låst hos annen klubb (listen under).\n"
+            ."- Bruk kun anlegg som tillater lagets idrett.\n"
+            ."- Tider er mellom 16:00 og 22:00 i 30-minutters steg. Respekter lagenes ønsker og trenernes utilgjengelighet der det går.\n"
+            ."- Ta hensyn til antall soner på anlegget (flere lag kan dele samtidig opp til antall soner).\n\n"
+            .'Svar KUN med JSON på formen {"blocks":[{"facility":"<anleggsnavn>","weekday":"Mandag","start":"16:00","end":"17:30","team":"<lagnavn>"}]}. '
+            .'Bruk eksakte anleggsnavn og lagnavn fra listene. Ingen forklaring utenfor JSON.';
+
+        $ctx = "ANLEGG:\n".$facLines."\n\nLAG:\n".$teamLines."\n\nLÅSTE TIDER (kan ikke brukes):\n".$lockLines
+            .($data['instruction'] ? "\n\nEKSTRA INSTRUKS FRA BRUKER:\n".$data['instruction'] : '');
+
+        $resp = Http::withHeaders([
+            'x-api-key' => $key,
+            'anthropic-version' => '2023-06-01',
+            'content-type' => 'application/json',
+        ])->timeout(180)->post('https://api.anthropic.com/v1/messages', [
+            'model' => $model,
+            'max_tokens' => 8000,
+            'system' => $system,
+            'messages' => [['role' => 'user', 'content' => $ctx]],
+        ]);
+
+        if (! $resp->successful()) {
+            return response()->json(['error' => 'AI-tjenesten svarte ikke ('.$resp->status().').'], 502);
+        }
+
+        $blocks = $this->extractJson($resp->json('content.0.text', ''))['blocks'] ?? [];
+        if (! is_array($blocks) || ! count($blocks)) {
+            return response()->json(['error' => 'AI ga ikke et brukbart forslag. Prøv et smalere scope (én dag eller ett anlegg).'], 422);
+        }
+
+        // Oppslag for validering
+        $norm = fn (string $s) => preg_replace('/\s+/', '', mb_strtolower($s));
+        $facByName = $facilities->keyBy(fn ($f) => $norm($f->name));
+        $teamByName = $teams->keyBy(fn ($t) => $norm($t->name));
+        $days = ['Mandag', 'Tirsdag', 'Onsdag', 'Torsdag', 'Fredag'];
+        $timeOk = fn ($t) => (bool) preg_match('/^([01]?\d|2[0-2]):[0-5]\d$/', (string) $t);
+
+        // Trygghet: auto-versjon FØR vi rører planen
+        $this->makeVersion($company, $season, 'Før AI '.now()->format('d.m H:i'), true);
+
+        // Slett gjeldende IKKE-låste FLIK-blokker i scope
+        $del = TrainingAssignment::where('company_id', $company->id)
+            ->where('training_season_id', $season->id)->where('locked', false);
+        if ($data['scope'] === 'dag') {
+            $del->where('weekday', $data['day']);
+        } elseif ($data['scope'] === 'anlegg') {
+            $del->where('training_facility_id', $data['facility_id']);
+        }
+        $del->delete();
+
+        $n = 0;
+        foreach ($blocks as $b) {
+            $f = $facByName->get($norm((string) ($b['facility'] ?? '')));
+            $wd = $b['weekday'] ?? null;
+            $st = $b['start'] ?? null;
+            $en = $b['end'] ?? null;
+            if (! $f || ! in_array($wd, $days, true) || ! $timeOk($st) || ! $timeOk($en) || $st >= $en) {
+                continue;
+            }
+            // hold oss innenfor scope
+            if ($data['scope'] === 'dag' && $wd !== $data['day']) {
+                continue;
+            }
+            if ($data['scope'] === 'anlegg' && $f->id !== (int) $data['facility_id']) {
+                continue;
+            }
+            $team = $teamByName->get($norm((string) ($b['team'] ?? '')));
+            TrainingAssignment::create([
+                'company_id' => $company->id,
+                'training_season_id' => $season->id,
+                'training_facility_id' => $f->id,
+                'training_team_id' => $team?->id,
+                'label' => $b['team'] ?? null,
+                'org' => 'FLIK',
+                'locked' => false,
+                'weekday' => $wd,
+                'block_start' => $st,
+                'block_end' => $en,
+                'manual_override' => false,
+            ]);
+            $n++;
+        }
+
+        // Lagre forslaget som egen navngitt versjon
+        $this->makeVersion($company, $season, 'AI-forslag '.now()->format('d.m H:i'));
+
+        $assignments = TrainingAssignment::where('company_id', $company->id)
+            ->where('training_season_id', $season->id)->with('team.category')
+            ->get()->map(fn (TrainingAssignment $a) => $this->assignmentCard($a))->values();
+
+        return response()->json([
+            'assignments' => $assignments,
+            'versions' => $this->versionList($company, $season),
+            'placed' => $n,
+        ]);
     }
 
     private function validatedAssignment(Request $request): array
