@@ -7,13 +7,13 @@
 <link href="https://fonts.googleapis.com/css?family=Ubuntu:300,400,500,700&display=swap" rel="stylesheet">
 <title>Treningstider · Rutenett</title>
 <style>
-  :root{--bg:#f3f5fb;--card:#fff;--ink:#1a1f33;--ink-soft:#5b6b86;--line:#e6eaf2;--flik:#2f6fd6;--grey:#8795a3;--accent:#fb471f;--radius:16px}
+  :root{--bg:#f3f5fb;--card:#fff;--ink:#1a1f33;--ink-soft:#5b6b86;--line:#e6eaf2;--flik:#2f6fd6;--grey:#8795a3;--accent:#fb471f;--spind:#fb471f;--bobcats:#1a9aa0}
   *{box-sizing:border-box}
   body{margin:0;background:var(--bg);color:var(--ink);font-family:'Ubuntu',system-ui,sans-serif;font-size:14px;line-height:1.5}
-  .wrap{max-width:1120px;margin:0 auto;padding:24px 20px 70px}
+  .wrap{max-width:1200px;margin:0 auto;padding:24px 20px 70px}
   a{color:var(--flik);text-decoration:none}a:hover{text-decoration:underline}
   h1{font-size:23px;font-weight:700;margin:6px 0 2px}
-  .sub{color:var(--ink-soft);font-size:13px;margin:0 0 16px}
+  .sub{color:var(--ink-soft);font-size:13px;margin:0 0 16px;max-width:80ch}
   .subnav{display:flex;gap:6px;margin:14px 0 18px;flex-wrap:wrap}
   .subnav a{padding:7px 14px;border-radius:9px;border:1px solid var(--line);background:var(--card);color:var(--ink-soft);font-weight:500}
   .subnav a.active{border-color:var(--flik);color:var(--flik);background:#eef4fd}
@@ -22,46 +22,42 @@
   .ftab.active{border-color:var(--flik);color:#fff;background:var(--flik)}
   .ftab .k{font-size:11px;opacity:.7;margin-left:5px}
   .layout{display:flex;gap:16px;align-items:flex-start}
-  .gridwrap{flex:1;min-width:0}
-  .palette{width:232px;flex:none;position:sticky;top:14px;background:#fff;border:1px solid var(--line);border-radius:12px;padding:12px 12px 14px;max-height:80vh;overflow:auto}
+  .gridwrap{flex:1;min-width:0;overflow-x:auto}
+  .palette{width:210px;flex:none;position:sticky;top:14px;background:#fff;border:1px solid var(--line);border-radius:12px;padding:12px;max-height:80vh;overflow:auto}
   .palette h4{margin:0 0 4px;font-size:12px;text-transform:uppercase;letter-spacing:.03em;color:var(--grey)}
   .palette .hint{font-size:11.5px;color:var(--grey);margin:0 0 10px}
-  .pg{margin-bottom:12px}
-  .pgh{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.02em;color:var(--ink-soft);margin:0 0 5px}
+  .pg{margin-bottom:12px}.pgh{font-size:11px;font-weight:700;text-transform:uppercase;color:var(--ink-soft);margin:0 0 5px}
   .pchip{display:flex;align-items:center;gap:6px;font-size:12.5px;font-weight:600;color:#fff;border-radius:7px;padding:5px 9px;margin-bottom:5px;cursor:grab;user-select:none}
-  .pchip:active{cursor:grabbing}
-  .pchip .ct{margin-left:auto;background:rgba(255,255,255,.28);border-radius:5px;padding:0 6px;font-size:11px;font-variant-numeric:tabular-nums}
-  .cell.drop{border-color:var(--flik);background:#eef4fd;box-shadow:inset 0 0 0 1px var(--flik)}
-  .grid{width:100%;border-collapse:separate;border-spacing:4px;table-layout:fixed}
-  .grid th{font-size:12px;text-transform:uppercase;letter-spacing:.03em;color:var(--grey);font-weight:600;padding:4px}
-  .grid td.tl{font-size:11.5px;color:var(--grey);font-variant-numeric:tabular-nums;width:64px;text-align:right;padding-right:8px;vertical-align:top}
-  .cell{background:#fff;border:1px solid var(--line);border-radius:9px;min-height:66px;padding:6px;cursor:pointer;vertical-align:top}
-  .cell:hover{border-color:var(--flik)}
-  .cell.locked{background:repeating-linear-gradient(135deg,#f3f4f7 0 6px,#e9ebf1 6px 8px);border-color:#d7dbe4}
-  .cell .lockowner{font-size:12px;font-weight:700;color:var(--ink-soft)}
-  .chip{display:inline-block;font-size:11.5px;font-weight:600;color:#fff;border-radius:6px;padding:2px 7px;margin:2px 3px 0 0}
-  .chip.conf{outline:2px solid var(--accent);outline-offset:1px}
-  .cell .empty{color:#c4ccd8;font-size:12px}
-  .legend{font-size:12px;color:var(--ink-soft);margin:10px 0 0}
-  .overlay{position:fixed;inset:0;background:rgba(20,30,55,.42);display:none;align-items:flex-start;justify-content:center;padding:50px 16px;z-index:100;overflow:auto}
+  .pchip .ct{margin-left:auto;background:rgba(255,255,255,.28);border-radius:5px;padding:0 6px;font-size:11px}
+  .sg{display:grid;grid-template-columns:54px repeat(5,minmax(150px,1fr));gap:2px;min-width:820px}
+  .sg .hd{font-size:11.5px;text-transform:uppercase;letter-spacing:.03em;color:var(--grey);font-weight:600;padding:0 0 6px 2px;border-bottom:1px solid var(--line);margin-bottom:2px}
+  .axis{position:relative}
+  .axis .tl{position:absolute;left:0;right:6px;text-align:right;font-size:11px;color:var(--grey);font-variant-numeric:tabular-nums}
+  .lane{position:relative;border-radius:6px;background:linear-gradient(180deg,#fbfcfe,#fbfcfe);border:1px solid var(--line);cursor:copy}
+  .lane .row{position:absolute;left:0;right:0;border-top:1px dashed #eef1f6}
+  .blk{position:absolute;border-radius:6px;padding:3px 6px;color:#fff;overflow:hidden;cursor:pointer;border-left:3px solid rgba(0,0,0,.18);box-shadow:0 1px 2px rgba(20,40,80,.12)}
+  .blk .lab{font-weight:700;font-size:11.5px;line-height:1.15;white-space:nowrap;text-overflow:ellipsis;overflow:hidden}
+  .blk .tm{font-size:10px;opacity:.85}
+  .blk.locked{background-image:repeating-linear-gradient(135deg,rgba(255,255,255,.22) 0 5px,transparent 5px 10px)}
+  .blk.conf{outline:2px solid #ffd21f;outline-offset:1px}
+  .blk .lk{position:absolute;top:2px;right:3px;font-size:9px;opacity:.9}
+  .legend{font-size:12px;color:var(--ink-soft);margin:12px 0 0;display:flex;flex-wrap:wrap;gap:14px}
+  .legend span{display:inline-flex;align-items:center;gap:6px}.sw{width:11px;height:11px;border-radius:3px;display:inline-block}
+  .overlay{position:fixed;inset:0;background:rgba(20,30,55,.42);display:none;align-items:flex-start;justify-content:center;padding:44px 16px;z-index:100;overflow:auto}
   .overlay.open{display:flex}
-  .modal{background:#fff;border-radius:16px;max-width:460px;width:100%;box-shadow:0 24px 70px rgba(20,40,80,.28)}
-  .mhead{padding:16px 20px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center}
-  .mhead h3{margin:0;font-size:15px;font-weight:700}
-  .mhead .x{background:none;border:none;font-size:22px;color:var(--grey);cursor:pointer;line-height:1}
+  .modal{background:#fff;border-radius:16px;max-width:440px;width:100%;box-shadow:0 24px 70px rgba(20,40,80,.28)}
+  .mhead{padding:15px 20px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center}
+  .mhead h3{margin:0;font-size:15px;font-weight:700}.mhead .x{background:none;border:none;font-size:22px;color:var(--grey);cursor:pointer;line-height:1}
   .mbody{padding:16px 20px}
-  .mbody label{display:block;font-size:12.5px;font-weight:600;color:var(--ink-soft);margin:12px 0 4px}
-  select,.mbody input{width:100%;font-family:inherit;font-size:14px;padding:9px 11px;border:1px solid var(--line);border-radius:9px;background:#fbfcfe;color:var(--ink)}
-  .row{display:flex;gap:8px}
-  .row select{flex:1}
-  .btn{font-family:inherit;font-size:13px;font-weight:500;padding:9px 14px;border-radius:9px;border:1px solid var(--line);background:#fff;color:var(--flik);cursor:pointer}
+  .mbody label{display:block;font-size:12.5px;font-weight:600;color:var(--ink-soft);margin:11px 0 4px}
+  select,.mbody input[type=text]{width:100%;font-family:inherit;font-size:14px;padding:9px 11px;border:1px solid var(--line);border-radius:9px;background:#fbfcfe;color:var(--ink)}
+  .row2{display:flex;gap:8px}.row2>*{flex:1}
+  .ck{display:flex;align-items:center;gap:8px;margin-top:12px;font-size:13px;color:var(--ink)}
+  .ck input{width:16px;height:16px;accent-color:var(--flik)}
+  .mfoot{display:flex;gap:8px;justify-content:space-between;padding:14px 20px;border-top:1px solid var(--line)}
+  .btn{font-family:inherit;font-size:13px;font-weight:500;padding:9px 15px;border-radius:9px;border:1px solid var(--line);background:#fff;color:var(--flik);cursor:pointer}
   .btn.solid{background:var(--flik);color:#fff;border-color:var(--flik)}
-  .btn.sm{padding:7px 11px;font-size:12.5px}
-  .assigned{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}
-  .assigned .a{display:flex;align-items:center;gap:6px;background:#f5f7fb;border:1px solid var(--line);border-radius:8px;padding:4px 6px 4px 9px;font-size:12.5px}
-  .assigned .a b{width:9px;height:9px;border-radius:3px;display:inline-block}
-  .assigned .a button{background:none;border:none;color:#b23535;cursor:pointer;font-size:15px;line-height:1}
-  .muted{color:var(--grey)}
+  .btn.danger{color:#b23535;border-color:#f0d2d2}
 </style>
 </head>
 <body>
@@ -69,7 +65,7 @@
 @include('partials.topbar-js')
 <div class="wrap">
   <h1>Treningstider</h1>
-  <p class="sub">Rutenett per anlegg. Klikk en rute for å legge til lag eller markere den som låst (Spind/Bobcats).</p>
+  <p class="sub">Tidsnøyaktig rutenett per anlegg – dette er fasiten Kontroll sjekkes mot. Dra et lag fra paletten inn i en dag, eller klikk i rutenettet for å legge til. Klikk en blokk for å endre tid, lag eller låsing.</p>
   <nav class="subnav">
     <a href="/treningstider">Kontroll</a>
     <a href="/treningstider/lag">Lag</a>
@@ -78,120 +74,174 @@
   </nav>
   <div class="ftabs" id="ftabs"></div>
   <div class="layout">
-    <div id="gridHost" class="gridwrap"></div>
-    <aside class="palette"><h4>Lag</h4><p class="hint">Dra et lag inn i en rute. Tallet viser hvor mange ganger laget er satt opp.</p><div id="palette"></div></aside>
+    <div class="gridwrap"><div class="sg" id="sg"></div></div>
+    <aside class="palette"><h4>Lag</h4><p class="hint">Dra inn i en dag. Tallet = antall plasseringer.</p><div id="palette"></div></aside>
   </div>
-  <p class="legend">Skravert = låst hos annen klubb. Oransje kant på et lag = samme lag er satt opp et annet sted samtidig.</p>
+  <div class="legend">
+    <span><i class="sw" style="background:var(--flik)"></i>FLIK</span>
+    <span><i class="sw" style="background:var(--spind)"></i>Spind (låst)</span>
+    <span><i class="sw" style="background:var(--bobcats)"></i>Bobcats (låst)</span>
+    <span><i class="sw" style="background:#fff;outline:2px solid #ffd21f"></i>Gul kant = samme lag to steder samtidig</span>
+  </div>
 </div>
 
-<div class="overlay" id="gOverlay"><div class="modal" id="gModal"></div></div>
+<div class="overlay" id="ov"><div class="modal" id="modal"></div></div>
 
 <script>
   window.TG_FAC=@json($facilities); window.TG_TEAMS=@json($teams);
-  window.TG_ASSIGN=@json($assignments); window.TG_LOCKS=@json($locks); window.TG_CSRF='{{ csrf_token() }}';
+  window.TG_ASSIGN=@json($assignments); window.TG_CSRF='{{ csrf_token() }}';
 </script>
 <script>
-  var FAC=window.TG_FAC||[], TEAMS=window.TG_TEAMS||[], ASSIGN=window.TG_ASSIGN||[], LOCKS=window.TG_LOCKS||[], CSRF=window.TG_CSRF;
+  var FAC=window.TG_FAC||[], TEAMS=window.TG_TEAMS||[], ASSIGN=window.TG_ASSIGN||[], CSRF=window.TG_CSRF;
   var DAYS=['Mandag','Tirsdag','Onsdag','Torsdag','Fredag'];
-  var BANDS=[['16:00','17:30'],['17:30','19:00'],['19:00','20:30'],['20:30','22:00']];
-  var curFac=FAC.length?FAC[0].id:null, cur=null;
+  var TIMES=['16:00','16:30','17:00','17:30','18:00','18:30','19:00','19:30','20:00','20:30','21:00','21:30'];
+  var ENDS=TIMES.concat(['22:00']);
+  var SLOTH=34, curFac=FAC.length?FAC[0].id:null, editing=null, dragTeamId=null;
   function esc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');}
+  function mins(t){var p=t.split(':');return +p[0]*60+ +p[1];}
+  function facName(id){var f=FAC.find(function(x){return x.id===id;});return f?f.name:'';}
+  function is3er(id){return /^3er bane/.test(facName(id));}
   async function api(method,url,body){
     var r=await fetch(url,{method:method,headers:{'Content-Type':'application/json','Accept':'application/json','X-CSRF-TOKEN':CSRF},body:body?JSON.stringify(body):undefined});
-    if(r.status===422){var j=await r.json();throw new Error(Object.values(j.errors||{}).flat().join('\n')||'Ugyldige data');}
-    if(!r.ok)throw new Error('Noe gikk galt ('+r.status+').');
+    if(r.status===422){var j=await r.json();throw new Error(Object.values(j.errors||{}).flat().join('\n'));}
+    if(!r.ok)throw new Error('Feil ('+r.status+').');
     return r.status===204?null:r.json();
   }
+  var GENERIC=/^(kamper|friidrett|gatefotball|old boys|spind|bobcats|flik)/i;
+  function ident(a){return a.team_id?('t'+a.team_id):('l'+String(a.label||'').trim().toLowerCase());}
   function conflicts(){
-    // lag som er på to anlegg samme dag+bånd
-    var map={}, conf={};
-    ASSIGN.forEach(function(a){var k=a.team_id+'|'+a.weekday+'|'+a.block_start;(map[k]=map[k]||[]).push(a);});
-    Object.keys(map).forEach(function(k){var arr=map[k];var fac={};arr.forEach(function(a){fac[a.facility_id]=1;});if(Object.keys(fac).length>1)arr.forEach(function(a){conf[a.id]=1;});});
+    var conf={};
+    for(var i=0;i<ASSIGN.length;i++)for(var j=i+1;j<ASSIGN.length;j++){
+      var a=ASSIGN[i],b=ASSIGN[j];
+      if(a.weekday!==b.weekday||a.facility_id===b.facility_id)continue;
+      if(!a.team_id&&GENERIC.test(a.label||''))continue;
+      if(ident(a)!==ident(b))continue;
+      if(!(mins(a.block_start)<mins(b.block_end)&&mins(b.block_start)<mins(a.block_end)))continue;
+      if(is3er(a.facility_id)&&is3er(b.facility_id))continue;
+      conf[a.id]=1;conf[b.id]=1;
+    }
     return conf;
+  }
+  function clusters(bs){
+    bs=bs.slice().sort(function(a,b){return mins(a.block_start)-mins(b.block_start);});
+    var res=[],cur=[],end=-1;
+    bs.forEach(function(b){
+      if(cur.length&&mins(b.block_start)>=end){res.push(cur);cur=[];end=-1;}
+      cur.push(b);end=Math.max(end,mins(b.block_end));
+    });
+    if(cur.length)res.push(cur);
+    return res;
+  }
+  function layout(bs){ // returnerer [{b,lane,nl}]
+    var out=[];
+    clusters(bs).forEach(function(cl){
+      var lanes=[];
+      cl.forEach(function(b){
+        var li=0;for(;li<lanes.length;li++){if(mins(lanes[li])<=mins(b.block_start))break;}
+        lanes[li]=b.block_end;b._lane=li;
+      });
+      var nl=lanes.length;
+      cl.forEach(function(b){out.push({b:b,lane:b._lane,nl:nl});});
+    });
+    return out;
   }
   function render(){
     document.getElementById('ftabs').innerHTML=FAC.map(function(f){
       return '<button class="ftab'+(f.id===curFac?' active':'')+'" onclick="selFac('+f.id+')">'+esc(f.name)+(f.status==='kommende'?'<span class="k">kommende</span>':'')+'</button>';
     }).join('');
-    var conf=conflicts();
-    var html='<table class="grid"><thead><tr><th></th>'+DAYS.map(function(d){return '<th>'+d+'</th>';}).join('')+'</tr></thead><tbody>';
-    BANDS.forEach(function(b){
-      html+='<tr><td class="tl">'+b[0]+'<br>–<br>'+b[1]+'</td>';
-      DAYS.forEach(function(d){
-        var lock=LOCKS.find(function(l){return l.facility_id===curFac&&l.weekday===d&&l.block_start===b[0];});
-        var as=ASSIGN.filter(function(a){return a.facility_id===curFac&&a.weekday===d&&a.block_start===b[0];});
-        var inner;
-        if(lock){inner='<div class="lockowner">🔒 '+esc(lock.owner)+'</div>';}
-        else if(as.length){inner=as.map(function(a){return '<span class="chip'+(conf[a.id]?' conf':'')+'" style="background:'+(a.color||'#8795a3')+'">'+esc(a.team_name)+'</span>';}).join('');}
-        else{inner='<span class="empty">+</span>';}
-        var bi=BANDS.indexOf(b);
-        var drop=lock?'':' ondragover="allowDrop(event,this)" ondragleave="this.classList.remove(\'drop\')" ondrop="dropTeam(event,this,\''+d+'\','+bi+')"';
-        html+='<td class="cell'+(lock?' locked':'')+'" onclick="openCell(\''+d+'\','+bi+')"'+drop+'>'+inner+'</td>';
+    var conf=conflicts(), H=TIMES.length*SLOTH;
+    var html='<div class="hd"></div>'+DAYS.map(function(d){return '<div class="hd">'+d+'</div>';}).join('');
+    // tidsakse
+    html+='<div class="axis" style="height:'+H+'px">'+TIMES.map(function(t,i){return '<div class="tl" style="top:'+(i*SLOTH-6)+'px">'+t+'</div>';}).join('')+'</div>';
+    DAYS.forEach(function(d){
+      html+='<div class="lane" data-day="'+d+'" style="height:'+H+'px" onclick="laneClick(event,\''+d+'\')">';
+      for(var i=1;i<TIMES.length;i++)html+='<div class="row" style="top:'+(i*SLOTH)+'px"></div>';
+      var bs=ASSIGN.filter(function(a){return a.facility_id===curFac&&a.weekday===d;});
+      layout(bs).forEach(function(o){
+        var b=o.b, top=(mins(b.block_start)-mins('16:00'))/30*SLOTH;
+        var h=(mins(b.block_end)-mins(b.block_start))/30*SLOTH-2;
+        var w=100/o.nl, left=o.lane*w;
+        html+='<div class="blk'+(b.locked?' locked':'')+(conf[b.id]?' conf':'')+'" style="top:'+top+'px;height:'+Math.max(h,16)+'px;left:calc('+left+'% + 1px);width:calc('+w+'% - 2px);background:'+(b.color||'#2f6fd6')+'" onclick="editBlk(event,'+b.id+')">'+
+          (b.locked?'<span class="lk">🔒</span>':'')+
+          '<div class="lab">'+esc(b.label||'')+'</div>'+
+          '<div class="tm">'+b.block_start+'–'+b.block_end+'</div></div>';
       });
-      html+='</tr>';
+      html+='</div>';
     });
-    html+='</tbody></table>';
-    document.getElementById('gridHost').innerHTML=html;
+    document.getElementById('sg').innerHTML=html;
     renderPalette();
   }
   function renderPalette(){
     var host=document.getElementById('palette');if(!host)return;
-    var fac=FAC.find(function(f){return f.id===curFac;})||{};
-    var allowed=(fac.allowed_sports||[]).map(function(s){return String(s).toLowerCase();});
-    var list=TEAMS.filter(function(t){return !allowed.length || (t.sport && allowed.indexOf(String(t.sport).toLowerCase())>-1);});
-    if(!list.length){host.innerHTML='<p class="hint">Ingen lag knyttet til idrettene på dette anlegget.</p>';return;}
-    var groups={};list.forEach(function(t){(groups[t.sport||'Uten idrett']=groups[t.sport||'Uten idrett']||[]).push(t);});
-    host.innerHTML=Object.keys(groups).sort().map(function(g){
-      return '<div class="pg"><div class="pgh">'+esc(g)+'</div>'+groups[g].map(function(t){
+    var f=FAC.find(function(x){return x.id===curFac;})||{};
+    var allowed=(f.allowed_sports||[]).map(function(s){return String(s).toLowerCase();});
+    var list=TEAMS.filter(function(t){return !allowed.length||(t.sport&&allowed.indexOf(String(t.sport).toLowerCase())>-1);});
+    if(!list.length){host.innerHTML='<p class="hint">Ingen lag på anleggets idretter.</p>';return;}
+    var g={};list.forEach(function(t){(g[t.sport||'—']=g[t.sport||'—']||[]).push(t);});
+    host.innerHTML=Object.keys(g).sort().map(function(k){
+      return '<div class="pg"><div class="pgh">'+esc(k)+'</div>'+g[k].map(function(t){
         var n=ASSIGN.filter(function(a){return a.team_id===t.id;}).length;
-        return '<div class="pchip" draggable="true" ondragstart="dragTeam(event,'+t.id+')" style="background:'+(t.color||'#8795a3')+'">'+esc(t.name)+(n?'<span class="ct">'+n+'</span>':'')+'</div>';
+        return '<div class="pchip" draggable="true" ondragstart="dragStart(event,'+t.id+')" style="background:'+(t.color||'#8795a3')+'">'+esc(t.name)+(n?'<span class="ct">'+n+'</span>':'')+'</div>';
       }).join('')+'</div>';
     }).join('');
   }
-  function dragTeam(ev,id){ev.dataTransfer.setData('text/plain',String(id));ev.dataTransfer.effectAllowed='copy';}
-  function allowDrop(ev,el){ev.preventDefault();ev.dataTransfer.dropEffect='copy';el.classList.add('drop');}
-  function dropTeam(ev,el,day,bi){ev.preventDefault();el.classList.remove('drop');var tid=+ev.dataTransfer.getData('text/plain');if(tid)placeTeam(tid,day,bi);}
-  async function placeTeam(tid,day,bi){
-    var b=BANDS[bi];
-    var dup=ASSIGN.some(function(a){return a.facility_id===curFac&&a.weekday===day&&a.block_start===b[0]&&a.team_id===tid;});
-    if(dup)return;
-    try{var a=await api('POST','/treningstider/tildeling',{facility_id:curFac,team_id:tid,weekday:day,block_start:b[0],block_end:b[1]});ASSIGN.push(a);render();}catch(e){alert(e.message);}
-  }
   function selFac(id){curFac=id;render();}
-  function closeModal(){document.getElementById('gOverlay').classList.remove('open');}
-  function openCell(day,bi){
-    var b=BANDS[bi];cur={day:day,bi:bi,start:b[0],end:b[1]};
-    var lock=LOCKS.find(function(l){return l.facility_id===curFac&&l.weekday===day&&l.block_start===b[0];});
-    var as=ASSIGN.filter(function(a){return a.facility_id===curFac&&a.weekday===day&&a.block_start===b[0];});
-    var facName=(FAC.find(function(f){return f.id===curFac;})||{}).name||'';
-    var body;
-    if(lock){
-      body='<p class="muted">Denne ruta er låst hos <b>'+esc(lock.owner)+'</b>.</p>'+
-        '<button class="btn solid" onclick="unlock('+lock.id+')">Lås opp</button>';
-    }else{
-      var teamOpts='<option value="">– velg lag –</option>'+TEAMS.map(function(t){return '<option value="'+t.id+'">'+esc(t.name)+(t.sport?' ('+esc(t.sport)+')':'')+'</option>';}).join('');
-      body=(as.length?'<label>Lag i denne ruta</label><div class="assigned">'+as.map(function(a){return '<span class="a"><b style="background:'+(a.color||'#8795a3')+'"></b>'+esc(a.team_name)+'<button onclick="rmTeam('+a.id+')" title="Fjern">&times;</button></span>';}).join('')+'</div>':'')+
-        '<label>Legg til lag</label><div class="row"><select id="g_team">'+teamOpts+'</select><button class="btn solid sm" onclick="addTeam()">Legg til</button></div>'+
-        '<label>Marker som låst hos annen klubb</label><div class="row"><select id="g_owner"><option>Spind</option><option>Bobcats</option><option>Annet</option></select><button class="btn sm" onclick="lockCell()">Lås</button></div>';
-    }
-    document.getElementById('gModal').innerHTML=
-      '<div class="mhead"><h3>'+esc(facName)+' · '+day+' '+b[0]+'–'+b[1]+'</h3><button class="x" onclick="closeModal()">&times;</button></div>'+
-      '<div class="mbody">'+body+'</div>';
-    document.getElementById('gOverlay').classList.add('open');
+  function dragStart(ev,id){dragTeamId=id;ev.dataTransfer.setData('text/plain',String(id));ev.dataTransfer.effectAllowed='copy';}
+  function slotFromY(el,clientY){var r=el.getBoundingClientRect();var i=Math.floor((clientY-r.top)/SLOTH);return Math.max(0,Math.min(TIMES.length-1,i));}
+  // drag-drop på lane
+  document.addEventListener('dragover',function(e){if(e.target.closest&&e.target.closest('.lane')){e.preventDefault();}});
+  document.addEventListener('drop',function(e){
+    var lane=e.target.closest&&e.target.closest('.lane');if(!lane)return;e.preventDefault();
+    var id=+(e.dataTransfer.getData('text/plain')||dragTeamId);if(!id)return;
+    var t=TEAMS.find(function(x){return x.id===id;});var si=slotFromY(lane,e.clientY);
+    openModal(null,{facility_id:curFac,weekday:lane.dataset.day,team_id:id,label:t?t.name:'',org:'FLIK',locked:false,block_start:TIMES[si],block_end:ENDS[Math.min(si+3,ENDS.length-1)]});
+  });
+  function laneClick(ev,day){
+    if(ev.target.closest('.blk'))return;
+    var lane=ev.currentTarget;var si=slotFromY(lane,ev.clientY);
+    openModal(null,{facility_id:curFac,weekday:day,team_id:null,label:'',org:'FLIK',locked:false,block_start:TIMES[si],block_end:ENDS[Math.min(si+3,ENDS.length-1)]});
   }
-  async function addTeam(){
-    var tid=+document.getElementById('g_team').value;if(!tid)return;
-    await placeTeam(tid,cur.day,cur.bi);openCell(cur.day,cur.bi);
+  function editBlk(ev,id){ev.stopPropagation();var a=ASSIGN.find(function(x){return x.id===id;});if(a)openModal(a,a);}
+  function opt(list,sel){return list.map(function(v){return '<option'+(v===sel?' selected':'')+'>'+v+'</option>';}).join('');}
+  function openModal(existing,d){
+    editing=existing;
+    var teamOpts='<option value="">— fri tekst —</option>'+TEAMS.map(function(t){return '<option value="'+t.id+'"'+(d.team_id===t.id?' selected':'')+'>'+esc(t.name)+(t.sport?' ('+esc(t.sport)+')':'')+'</option>';}).join('');
+    document.getElementById('modal').innerHTML=
+      '<div class="mhead"><h3>'+(existing?'Endre blokk':'Ny blokk')+' · '+esc(facName(d.facility_id))+'</h3><button class="x" onclick="closeModal()">&times;</button></div>'+
+      '<div class="mbody">'+
+        '<label>Lag</label><select id="m_team" onchange="onTeam()">'+teamOpts+'</select>'+
+        '<label>Etikett (vises i ruta)</label><input type="text" id="m_label" value="'+esc(d.label||'')+'" placeholder="F.eks. G14, Kamper, Friidrett">'+
+        '<div class="row2"><div><label>Dag</label><select id="m_day">'+opt(DAYS,d.weekday)+'</select></div>'+
+        '<div><label>Eier</label><select id="m_org" onchange="onOrg()">'+opt(['FLIK','Spind','Bobcats'],d.org||'FLIK')+'</select></div></div>'+
+        '<div class="row2"><div><label>Fra</label><select id="m_start">'+opt(TIMES,d.block_start)+'</select></div>'+
+        '<div><label>Til</label><select id="m_end">'+opt(ENDS,d.block_end)+'</select></div></div>'+
+        '<label class="ck"><input type="checkbox" id="m_lock"'+(d.locked?' checked':'')+'> Låst (annen klubb – kan ikke røres av FLIK)</label>'+
+      '</div>'+
+      '<div class="mfoot"><div>'+(existing?'<button class="btn danger" onclick="delBlk()">Slett</button>':'')+'</div>'+
+        '<button class="btn solid" onclick="saveBlk()">Lagre</button></div>';
+    document.getElementById('ov').classList.add('open');
   }
-  async function rmTeam(id){
-    try{await api('DELETE','/treningstider/tildeling/'+id);ASSIGN=ASSIGN.filter(function(x){return x.id!==id;});render();openCell(cur.day,cur.bi);}catch(e){alert(e.message);}
+  function onTeam(){var s=document.getElementById('m_team');var t=TEAMS.find(function(x){return x.id===+s.value;});if(t)document.getElementById('m_label').value=t.name;}
+  function onOrg(){document.getElementById('m_lock').checked=document.getElementById('m_org').value!=='FLIK';}
+  function closeModal(){document.getElementById('ov').classList.remove('open');editing=null;}
+  function payload(){
+    var tid=document.getElementById('m_team').value;
+    return {facility_id:curFac,team_id:tid?+tid:null,label:document.getElementById('m_label').value.trim()||null,
+      org:document.getElementById('m_org').value,locked:document.getElementById('m_lock').checked,
+      weekday:document.getElementById('m_day').value,block_start:document.getElementById('m_start').value,block_end:document.getElementById('m_end').value};
   }
-  async function lockCell(){
-    var owner=document.getElementById('g_owner').value;
-    try{var l=await api('POST','/treningstider/las',{facility_id:curFac,weekday:cur.day,block_start:cur.start,block_end:cur.end,owner:owner});LOCKS.push(l);closeModal();render();}catch(e){alert(e.message);}
+  async function saveBlk(){
+    var p=payload();
+    if(mins(p.block_end)<=mins(p.block_start)){alert('«Til» må være etter «Fra».');return;}
+    try{
+      if(editing){var u=await api('PUT','/treningstider/tildeling/'+editing.id,p);var i=ASSIGN.findIndex(function(x){return x.id===editing.id;});ASSIGN[i]=u;}
+      else{var a=await api('POST','/treningstider/tildeling',p);ASSIGN.push(a);}
+      closeModal();render();
+    }catch(e){alert(e.message);}
   }
-  async function unlock(id){
-    try{await api('DELETE','/treningstider/las/'+id);LOCKS=LOCKS.filter(function(x){return x.id!==id;});closeModal();render();}catch(e){alert(e.message);}
+  async function delBlk(){
+    if(!editing)return;
+    try{await api('DELETE','/treningstider/tildeling/'+editing.id);ASSIGN=ASSIGN.filter(function(x){return x.id!==editing.id;});closeModal();render();}catch(e){alert(e.message);}
   }
   render();
 </script>

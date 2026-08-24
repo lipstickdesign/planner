@@ -123,9 +123,8 @@ Route::middleware('auth')->group(function () {
     Route::delete('/treningstider/anlegg/{facility}', [TrainingController::class, 'destroyFacility']);
     Route::get('/treningstider/rutenett', [TrainingController::class, 'grid'])->name('training.grid');
     Route::post('/treningstider/tildeling', [TrainingController::class, 'storeAssignment']);
+    Route::put('/treningstider/tildeling/{assignment}', [TrainingController::class, 'updateAssignment']);
     Route::delete('/treningstider/tildeling/{assignment}', [TrainingController::class, 'destroyAssignment']);
-    Route::post('/treningstider/las', [TrainingController::class, 'storeLock']);
-    Route::delete('/treningstider/las/{availability}', [TrainingController::class, 'destroyLock']);
 
     // Personlig dashboard-oppsett (alle innloggede kan styre sitt eget)
     Route::post('/dashboard-layout', [DashboardLayoutController::class, 'save']);

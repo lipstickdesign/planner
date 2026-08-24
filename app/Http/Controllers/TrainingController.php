@@ -134,6 +134,36 @@ class TrainingController extends Controller
         );
     }
 
+    /** Farge for en blokk: lagets idrettsfarge, ellers etter eier. */
+    private function blockColor(TrainingAssignment $a): string
+    {
+        if ($a->team?->category?->color) {
+            return $a->team->category->color;
+        }
+
+        return match ($a->org) {
+            'Spind' => '#fb471f',
+            'Bobcats' => '#1a9aa0',
+            default => '#2f6fd6',
+        };
+    }
+
+    private function assignmentCard(TrainingAssignment $a): array
+    {
+        return [
+            'id' => $a->id,
+            'facility_id' => $a->training_facility_id,
+            'weekday' => $a->weekday,
+            'block_start' => substr((string) $a->block_start, 0, 5),
+            'block_end' => substr((string) $a->block_end, 0, 5),
+            'team_id' => $a->training_team_id,
+            'label' => $a->label ?? $a->team?->name,
+            'org' => $a->org ?? 'FLIK',
+            'locked' => (bool) $a->locked,
+            'color' => $this->blockColor($a),
+        ];
+    }
+
     public function grid()
     {
         $this->guard();
@@ -154,105 +184,73 @@ class TrainingController extends Controller
 
         $assignments = TrainingAssignment::where('company_id', $company->id)
             ->where('training_season_id', $season->id)->with('team.category')
-            ->get()->map(fn (TrainingAssignment $a) => [
-                'id' => $a->id,
-                'facility_id' => $a->training_facility_id,
-                'weekday' => $a->weekday,
-                'block_start' => substr((string) $a->block_start, 0, 5),
-                'block_end' => substr((string) $a->block_end, 0, 5),
-                'team_id' => $a->training_team_id,
-                'team_name' => $a->team?->name,
-                'color' => $a->team?->category?->color,
-            ])->values();
+            ->get()->map(fn (TrainingAssignment $a) => $this->assignmentCard($a))->values();
 
-        $locks = TrainingAvailability::where('company_id', $company->id)
-            ->where('training_season_id', $season->id)->where('status', 'laast')
-            ->get()->map(fn (TrainingAvailability $l) => [
-                'id' => $l->id,
-                'facility_id' => $l->training_facility_id,
-                'weekday' => $l->weekday,
-                'block_start' => substr((string) $l->from_time, 0, 5),
-                'block_end' => substr((string) $l->to_time, 0, 5),
-                'owner' => $l->owner,
-            ])->values();
+        return view('training.rutenett', compact('facilities', 'teams', 'assignments', 'company'));
+    }
 
-        return view('training.rutenett', compact('facilities', 'teams', 'assignments', 'locks', 'company'));
+    private function validatedAssignment(Request $request): array
+    {
+        return $request->validate([
+            'facility_id' => ['required', 'exists:training_facilities,id'],
+            'team_id' => ['nullable', 'exists:training_teams,id'],
+            'label' => ['nullable', 'string', 'max:120'],
+            'org' => ['nullable', 'string', 'max:40'],
+            'locked' => ['nullable', 'boolean'],
+            'weekday' => ['required', 'string', 'max:20'],
+            'block_start' => ['required', 'string', 'max:5'],
+            'block_end' => ['required', 'string', 'max:5'],
+        ]);
     }
 
     public function storeAssignment(Request $request)
     {
         $this->guard();
         $company = $this->company();
-        $data = $request->validate([
-            'facility_id' => ['required', 'exists:training_facilities,id'],
-            'team_id' => ['required', 'exists:training_teams,id'],
-            'weekday' => ['required', 'string', 'max:20'],
-            'block_start' => ['required', 'string', 'max:5'],
-            'block_end' => ['required', 'string', 'max:5'],
-        ]);
+        $data = $this->validatedAssignment($request);
         $season = $this->season($company);
 
         $a = TrainingAssignment::create([
             'company_id' => $company->id,
             'training_season_id' => $season->id,
             'training_facility_id' => $data['facility_id'],
-            'training_team_id' => $data['team_id'],
+            'training_team_id' => $data['team_id'] ?? null,
+            'label' => $data['label'] ?? null,
+            'org' => $data['org'] ?? 'FLIK',
+            'locked' => $request->boolean('locked'),
             'weekday' => $data['weekday'],
             'block_start' => $data['block_start'],
             'block_end' => $data['block_end'],
+            'manual_override' => true,
         ]);
-        $a->load('team.category');
 
-        return response()->json([
-            'id' => $a->id, 'facility_id' => $a->training_facility_id, 'weekday' => $a->weekday,
-            'block_start' => $data['block_start'], 'block_end' => $data['block_end'],
-            'team_id' => $a->training_team_id, 'team_name' => $a->team?->name,
-            'color' => $a->team?->category?->color,
+        return response()->json($this->assignmentCard($a->load('team.category')));
+    }
+
+    public function updateAssignment(Request $request, TrainingAssignment $assignment)
+    {
+        $this->guard();
+        $data = $this->validatedAssignment($request);
+
+        $assignment->update([
+            'training_facility_id' => $data['facility_id'],
+            'training_team_id' => $data['team_id'] ?? null,
+            'label' => $data['label'] ?? null,
+            'org' => $data['org'] ?? 'FLIK',
+            'locked' => $request->boolean('locked'),
+            'weekday' => $data['weekday'],
+            'block_start' => $data['block_start'],
+            'block_end' => $data['block_end'],
+            'manual_override' => true,
         ]);
+
+        return response()->json($this->assignmentCard($assignment->fresh('team.category')));
     }
 
     public function destroyAssignment(TrainingAssignment $assignment)
     {
         $this->guard();
         $assignment->delete();
-
-        return response()->json(['ok' => true]);
-    }
-
-    public function storeLock(Request $request)
-    {
-        $this->guard();
-        $company = $this->company();
-        $data = $request->validate([
-            'facility_id' => ['required', 'exists:training_facilities,id'],
-            'weekday' => ['required', 'string', 'max:20'],
-            'block_start' => ['required', 'string', 'max:5'],
-            'block_end' => ['required', 'string', 'max:5'],
-            'owner' => ['required', 'string', 'max:40'],
-        ]);
-        $season = $this->season($company);
-
-        $l = TrainingAvailability::create([
-            'company_id' => $company->id,
-            'training_season_id' => $season->id,
-            'training_facility_id' => $data['facility_id'],
-            'weekday' => $data['weekday'],
-            'from_time' => $data['block_start'],
-            'to_time' => $data['block_end'],
-            'owner' => $data['owner'],
-            'status' => 'laast',
-        ]);
-
-        return response()->json([
-            'id' => $l->id, 'facility_id' => $l->training_facility_id, 'weekday' => $l->weekday,
-            'block_start' => $data['block_start'], 'block_end' => $data['block_end'], 'owner' => $l->owner,
-        ]);
-    }
-
-    public function destroyLock(TrainingAvailability $availability)
-    {
-        $this->guard();
-        $availability->delete();
 
         return response()->json(['ok' => true]);
     }

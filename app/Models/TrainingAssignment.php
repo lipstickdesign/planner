@@ -12,11 +12,11 @@ class TrainingAssignment extends Model
 
     protected $fillable = [
         'company_id', 'training_season_id', 'training_team_id', 'training_facility_id',
-        'zone', 'weekday', 'block_start', 'block_end', 'actual_start', 'actual_end',
-        'reason', 'manual_override', 'version', 'changed_by',
+        'label', 'org', 'locked', 'zone', 'weekday', 'block_start', 'block_end',
+        'actual_start', 'actual_end', 'reason', 'manual_override', 'version', 'changed_by',
     ];
 
-    protected $casts = ['manual_override' => 'boolean'];
+    protected $casts = ['manual_override' => 'boolean', 'locked' => 'boolean'];
 
     public function season(): BelongsTo
     {
