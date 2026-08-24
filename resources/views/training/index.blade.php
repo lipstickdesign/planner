@@ -4,16 +4,18 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>FLIK – Treningstider 2026/2027 · kontrolloversikt</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css?family=Ubuntu:300,400,500,700&display=swap" rel="stylesheet">
+<title>Treningstider · Vivu Planner</title>
 <style>
 :root{
   color-scheme: light;
-  --plane:#f9f9f7; --surface:#fcfcfb;
-  --ink:#0b0b0b; --ink2:#52514e; --muted:#898781;
-  --grid:#e1e0d9; --axis:#c3c2b7; --ring:rgba(11,11,11,0.10);
-  --flik:#2a78d6; --spind:#eb6834; --bobcats:#1baf7a;
-  --good:#0ca30c; --warning:#fab219; --serious:#ec835a; --critical:#d03b3b;
-  --seq1:#cde2fb; --seq4:#3987e5; --seq6:#184f95;
+  --plane:#f3f5fb; --surface:#ffffff;
+  --ink:#1a1f33; --ink2:#5b6b86; --muted:#8795a3;
+  --grid:#e6eaf2; --axis:#cddcf0; --ring:rgba(20,40,80,0.10);
+  --flik:#2f6fd6; --spind:#fb471f; --bobcats:#1a9aa0;
+  --good:#2e9e5b; --warning:#e8a200; --serious:#ec835a; --critical:#d64545;
+  --seq1:#dbe7f5; --seq4:#2f6fd6; --seq6:#1c3155;
 }
 html[data-theme="dark"]{
   color-scheme: dark;
@@ -25,7 +27,7 @@ html[data-theme="dark"]{
 }
 *{box-sizing:border-box}
 body{margin:0;background:var(--plane);color:var(--ink);
-  font-family:system-ui,-apple-system,"Segoe UI",sans-serif;font-size:14px;line-height:1.5;
+  font-family:'Ubuntu',system-ui,-apple-system,sans-serif;font-size:14px;line-height:1.55;
   -webkit-font-smoothing:antialiased}
 .wrap{max-width:1180px;margin:0 auto;padding:28px 20px 72px}
 header.top{display:flex;flex-wrap:wrap;gap:16px;align-items:flex-start;justify-content:space-between;margin-bottom:6px}

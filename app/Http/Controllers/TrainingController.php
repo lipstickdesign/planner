@@ -11,6 +11,9 @@ class TrainingController extends Controller
      */
     public function index()
     {
+        // Skjult for alle andre enn superadmin mens modulen bygges.
+        abort_unless((bool) auth()->user()?->is_platform_admin, 403);
+
         return view('training.index');
     }
 }
