@@ -434,7 +434,9 @@ class TrainingController extends Controller
             return response()->json(['error' => 'AI-tjenesten svarte ikke: '.$errBody], 502);
         }
 
-        $rawText = $resp->json('content.0.text', '');
+        // Opus kan legge et «thinking»-blokk først – hent teksten fra ALLE text-blokker.
+        $rawText = collect($resp->json('content', []))
+            ->where('type', 'text')->pluck('text')->implode('');
         $blocks = $this->extractBlocks($rawText);
         if (! is_array($blocks) || ! count($blocks)) {
             return response()->json([
