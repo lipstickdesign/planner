@@ -62,6 +62,7 @@
     <a href="/treningstider">Kontroll</a>
     <a href="/treningstider/lag">Lag</a>
     <a href="/treningstider/anlegg" class="active">Anlegg</a>
+    <a href="/treningstider/rutenett">Rutenett</a>
   </nav>
   <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
     <span class="sub" id="tfCount"></span>
