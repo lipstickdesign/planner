@@ -274,11 +274,14 @@
     }catch(e){toast('AI feilet: '+e.message);}
     finally{hideLoading();}
   }
+  function teamsForFacility(fid){
+    var f=FAC.find(function(x){return x.id===fid;})||{};
+    var allowed=(f.allowed_sports||[]).map(function(s){return String(s).toLowerCase();});
+    return TEAMS.filter(function(t){return !allowed.length||(t.sport&&allowed.indexOf(String(t.sport).toLowerCase())>-1);});
+  }
   function renderPalette(){
     var host=document.getElementById('palette');if(!host)return;
-    var f=FAC.find(function(x){return x.id===curFac;})||{};
-    var allowed=(f.allowed_sports||[]).map(function(s){return String(s).toLowerCase();});
-    var list=TEAMS.filter(function(t){return !allowed.length||(t.sport&&allowed.indexOf(String(t.sport).toLowerCase())>-1);});
+    var list=teamsForFacility(curFac);
     if(!list.length){host.innerHTML='<p class="hint">Ingen lag på anleggets idretter.</p>';return;}
     var g={};list.forEach(function(t){(g[t.sport||'—']=g[t.sport||'—']||[]).push(t);});
     host.innerHTML=Object.keys(g).sort().map(function(k){
@@ -308,7 +311,9 @@
   function opt(list,sel){return list.map(function(v){return '<option'+(v===sel?' selected':'')+'>'+v+'</option>';}).join('');}
   function openModal(existing,d){
     editing=existing;
-    var teamOpts='<option value="">— fri tekst —</option>'+TEAMS.map(function(t){return '<option value="'+t.id+'"'+(d.team_id===t.id?' selected':'')+'>'+esc(t.name)+(t.sport?' ('+esc(t.sport)+')':'')+'</option>';}).join('');
+    var tlist=teamsForFacility(d.facility_id);
+    if(d.team_id&&!tlist.some(function(t){return t.id===d.team_id;})){var extra=TEAMS.find(function(t){return t.id===d.team_id;});if(extra)tlist=[extra].concat(tlist);}
+    var teamOpts='<option value="">— fri tekst —</option>'+tlist.map(function(t){return '<option value="'+t.id+'"'+(d.team_id===t.id?' selected':'')+'>'+esc(t.name)+(t.sport?' ('+esc(t.sport)+')':'')+'</option>';}).join('');
     document.getElementById('modal').innerHTML=
       '<div class="mhead"><h3>'+(existing?'Endre blokk':'Ny blokk')+' · '+esc(facName(d.facility_id))+'</h3><button class="x" onclick="closeModal()">&times;</button></div>'+
       '<div class="mbody">'+
