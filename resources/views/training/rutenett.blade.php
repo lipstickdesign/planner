@@ -6,6 +6,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css?family=Ubuntu:300,400,500,700&display=swap" rel="stylesheet">
 <title>Treningstider · Rutenett</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
   :root{--bg:#f3f5fb;--card:#fff;--ink:#1a1f33;--ink-soft:#5b6b86;--line:#e6eaf2;--flik:#2f6fd6;--grey:#8795a3;--accent:#fb471f;--spind:#fb471f;--bobcats:#1a9aa0}
   *{box-sizing:border-box}
@@ -34,6 +35,15 @@
   .pg{margin-bottom:12px}.pgh{font-size:11px;font-weight:700;text-transform:uppercase;color:var(--ink-soft);margin:0 0 5px}
   .pchip{display:flex;align-items:center;gap:6px;font-size:12.5px;font-weight:600;color:#fff;border-radius:7px;padding:5px 9px;margin-bottom:5px;cursor:grab;user-select:none}
   .pchip .ct{margin-left:auto;background:rgba(255,255,255,.28);border-radius:5px;padding:0 6px;font-size:11px}
+  .rightcol{width:256px;flex:none;display:flex;flex-direction:column;gap:12px;position:sticky;top:14px}
+  .rightcol .palette{position:static;width:auto;max-height:none;top:auto}
+  .confbox{max-height:48vh;overflow:auto}
+  .confbox h4 .ok{color:#2e9e5b}
+  .confitem{border-top:1px solid var(--line);padding:7px 0}
+  .confitem:first-child{border-top:none}
+  .confitem .ct{font-weight:700;font-size:12.5px;color:#b23535}
+  .confitem .cd{font-size:11.5px;color:var(--ink-soft);margin-top:1px}
+  .confnone{font-size:12.5px;color:#2e9e5b;font-weight:600}
   .sg{display:grid;grid-template-columns:54px repeat(5,minmax(150px,1fr));gap:2px;min-width:820px}
   .sg .hd{font-size:11.5px;text-transform:uppercase;letter-spacing:.03em;color:var(--grey);font-weight:600;padding:0 0 6px 2px;border-bottom:1px solid var(--line);margin-bottom:2px}
   .axis{position:relative}
@@ -86,6 +96,8 @@
   </nav>
   <div class="vbar">
     <button class="btn sm" style="border-color:#7c5cff;color:#7c5cff;font-weight:600" onclick="openAi()">✨ AI-forslag</button>
+    <button class="btn sm" onclick="document.getElementById('xlsxFile').click()">⬆ Importer Excel</button>
+    <input type="file" id="xlsxFile" accept=".xlsx,.xls" style="display:none" onchange="onXlsx(event)">
     <button class="btn sm danger" onclick="clearPlan('anlegg')">Tøm anlegg</button>
     <button class="btn sm danger" onclick="clearPlan('alle')">Tøm alt</button>
     <button class="btn sm solid" onclick="saveVersion()">Lagre versjon</button>
@@ -98,7 +110,10 @@
   <div class="ftabs" id="ftabs"></div>
   <div class="layout">
     <div class="gridwrap"><div class="sg" id="sg"></div></div>
-    <aside class="palette"><h4>Lag</h4><p class="hint">Dra inn i en dag. Tallet = antall plasseringer.</p><div id="palette"></div></aside>
+    <div class="rightcol">
+      <aside class="palette"><h4>Lag</h4><p class="hint">Dra inn i en dag. Tallet = antall plasseringer.</p><div id="palette"></div></aside>
+      <aside class="palette confbox"><h4>Konflikter (<span id="confN">0</span>)</h4><div id="conflicts"></div></aside>
+    </div>
   </div>
   <div class="legend">
     <span><i class="sw" style="background:var(--flik)"></i>FLIK</span>
@@ -156,6 +171,31 @@
     }
     return conf;
   }
+  function shortFac(id){return facName(id).replace('Alcoa ','').replace(' ungdomsskole',' u.skole').replace('fotball hall','fotballhallen');}
+  function conflictList(){
+    var out=[], ncMap={};
+    TEAMS.forEach(function(t){if(t.no_collide&&t.no_collide.length)ncMap[t.id]=t.no_collide;});
+    function linked(x,y){return (ncMap[x]&&ncMap[x].indexOf(y)>-1)||(ncMap[y]&&ncMap[y].indexOf(x)>-1);}
+    for(var i=0;i<ASSIGN.length;i++)for(var j=i+1;j<ASSIGN.length;j++){
+      var a=ASSIGN[i],b=ASSIGN[j];
+      if(a.weekday!==b.weekday)continue;
+      if(!(mins(a.block_start)<mins(b.block_end)&&mins(b.block_start)<mins(a.block_end)))continue;
+      if(a.facility_id!==b.facility_id && ident(a)===ident(b) && !(!a.team_id&&GENERIC.test(a.label||'')) && !(is3er(a.facility_id)||is3er(b.facility_id))){
+        out.push({t:(a.label||'Lag'),d:a.weekday,tm:a.block_start+'–'+a.block_end,det:'to steder: '+shortFac(a.facility_id)+' + '+shortFac(b.facility_id)});
+      }
+      if(a.team_id&&b.team_id&&a.team_id!==b.team_id&&linked(a.team_id,b.team_id)){
+        out.push({t:(a.label||'')+' / '+(b.label||''),d:a.weekday,tm:a.block_start+'–'+a.block_end,det:'samme barn: '+shortFac(a.facility_id)+' + '+shortFac(b.facility_id)});
+      }
+    }
+    return out;
+  }
+  function renderConflicts(){
+    var host=document.getElementById('conflicts');if(!host)return;
+    var list=conflictList();
+    var n=document.getElementById('confN');if(n)n.textContent=list.length;
+    if(!list.length){host.innerHTML='<div class="confnone">Ingen konflikter 🎉</div>';return;}
+    host.innerHTML=list.slice(0,80).map(function(c){return '<div class="confitem"><div class="ct">'+esc(c.t)+'</div><div class="cd">'+esc(c.d)+' '+esc(c.tm)+' · '+esc(c.det)+'</div></div>';}).join('')+(list.length>80?'<p class="hint">+ '+(list.length-80)+' flere</p>':'');
+  }
   function clusters(bs){
     bs=bs.slice().sort(function(a,b){return mins(a.block_start)-mins(b.block_start);});
     var res=[],cur=[],end=-1;
@@ -205,6 +245,7 @@
     document.getElementById('sg').innerHTML=html;
     renderPalette();
     renderVbar();
+    renderConflicts();
   }
   function cardToPayload(c){return {facility_id:c.facility_id,team_id:c.team_id||null,label:c.label||null,org:c.org||'FLIK',locked:!!c.locked,weekday:c.weekday,block_start:c.block_start,block_end:c.block_end};}
   function updateUndoBtn(){var b=document.getElementById('undoBtn');if(b)b.disabled=!UNDO.length;}
@@ -350,6 +391,100 @@
   async function delBlk(){
     if(!editing)return;
     try{var restore=cardToPayload(editing);await api('DELETE','/treningstider/tildeling/'+editing.id);ASSIGN=ASSIGN.filter(function(x){return x.id!==editing.id;});pushUndo({op:'post',payload:restore});closeModal();render();}catch(e){alert(e.message);}
+  }
+  // ---- Excel-import ----
+  function parseWorkbook(wb){
+    var DAYS=['mandag','tirsdag','onsdag','torsdag','fredag','lørdag','søndag'];
+    var CAP={mandag:'Mandag',tirsdag:'Tirsdag',onsdag:'Onsdag',torsdag:'Torsdag',fredag:'Fredag','lørdag':'Lørdag','søndag':'Søndag'};
+    function dayOf(v){v=String(v||'').toLowerCase();for(var i=0;i<DAYS.length;i++)if(v.indexOf(DAYS[i])>-1)return CAP[DAYS[i]];return null;}
+    function timeOf(v){var m=String(v||'').match(/^(\d{1,2})[.:](\d{2})/);return m?(('0'+m[1]).slice(-2)+':'+m[2]):null;}
+    function addMin(t,n){var p=t.split(':');var x=(+p[0])*60+(+p[1])+n;return ('0'+Math.floor(x/60)).slice(-2)+':'+('0'+(x%60)).slice(-2);}
+    var EXT=/karate|tennis|\bvia\b|kampsport/i;
+    var blocks=[];
+    wb.SheetNames.forEach(function(sn){
+      var ws=wb.Sheets[sn];if(!ws)return;
+      var A=XLSX.utils.sheet_to_json(ws,{header:1,raw:false,defval:''});if(!A.length)return;
+      var drow=-1,best=0;
+      A.forEach(function(r,i){var c=(r||[]).filter(function(x){return dayOf(x);}).length;if(c>best){best=c;drow=i;}});
+      if(drow<0||best<1)return;
+      var dayCols={};(A[drow]||[]).forEach(function(v,c){var d=dayOf(v);if(d)dayCols[c]=d;});
+      var cols=Object.keys(dayCols).map(Number).sort(function(a,b){return a-b;});
+      var clusters=[],cur=[];
+      cols.forEach(function(c){if(cur.length&&c-cur[cur.length-1]>2){clusters.push(cur);cur=[];}cur.push(c);});
+      if(cur.length)clusters.push(cur);
+      clusters.forEach(function(cl,gi){
+        var firstCol=cl[0];
+        function colHasTimes(c){var n=0;for(var i=drow+1;i<A.length;i++){if(A[i]&&timeOf(A[i][c]))n++;}return n;}
+        var tCols=[];for(var c=firstCol-1;c>=0&&c>=firstCol-4;c--){if(colHasTimes(c)>=2)tCols.unshift(c);}
+        var fromC,toC=null;
+        if(tCols.length>=2){fromC=tCols[tCols.length-2];toC=tCols[tCols.length-1];}
+        else if(tCols.length===1){fromC=tCols[0];}else return;
+        var venue=sn.trim(),lo=Math.max(0,firstCol-3),hi=cl[cl.length-1];
+        for(var i=drow-1;i>=0&&i>=drow-4;i--){for(var c=lo;c<=hi;c++){var v=String((A[i]||[])[c]||'').trim();if(v&&v.length>2&&!dayOf(v)&&!/^\d/.test(v)&&!/2026|2027|sesong|^kl$|^tid$/i.test(v)){venue=v;break;}}if(venue!==sn.trim())break;}
+        if(clusters.length>1&&venue===sn.trim())venue=sn.trim()+' '+(gi+1);
+        var slots=[];
+        for(var i=drow+1;i<A.length;i++){
+          var fr=timeOf((A[i]||[])[fromC]);if(!fr)continue;
+          var to=toC!=null?timeOf((A[i]||[])[toC]):null;if(!to)to=addMin(fr,30);
+          cl.forEach(function(c){
+            var txt=String((A[i]||[])[c]||'').trim();if(!txt)return;
+            var org='FLIK';if(/bobcat/i.test(txt))org='Bobcats';else if(/spind/i.test(txt))org='Spind';else if(EXT.test(txt))org='Annet';
+            slots.push({venue:venue,day:dayCols[c],from:fr,to:to,label:txt,col:c,org:org});
+          });
+        }
+        var byKey={};slots.forEach(function(s){var k=s.venue+'|'+s.day+'|'+s.col+'|'+s.label;(byKey[k]=byKey[k]||[]).push(s);});
+        Object.keys(byKey).forEach(function(k){
+          var arr=byKey[k].sort(function(a,b){return a.from<b.from?-1:1;});
+          var st=arr[0].from,en=arr[0].to;
+          for(var x=1;x<arr.length;x++){if(arr[x].from===en){en=arr[x].to;}else{blocks.push({facility:arr[0].venue,weekday:arr[0].day,start:st,end:en,label:arr[0].label,org:arr[0].org});st=arr[x].from;en=arr[x].to;}}
+          blocks.push({facility:arr[0].venue,weekday:arr[0].day,start:st,end:en,label:arr[0].label,org:arr[0].org});
+        });
+      });
+    });
+    return blocks;
+  }
+  function onXlsx(ev){
+    var file=ev.target.files[0];if(!file)return;
+    if(typeof XLSX==='undefined'){toast('Excel-leseren er ikke lastet ennå – prøv igjen om et øyeblikk.');return;}
+    showLoading('Leser Excel …');
+    var rd=new FileReader();
+    rd.onload=function(e){
+      try{
+        var wb=XLSX.read(new Uint8Array(e.target.result),{type:'array'});
+        var blocks=parseWorkbook(wb);hideLoading();ev.target.value='';
+        if(!blocks.length){toast('Fant ingen treningstider i fila. Arket må ha ukedager i en rad og klokkeslett i en kolonne.');return;}
+        openImportPreview(blocks);
+      }catch(err){hideLoading();toast('Klarte ikke lese fila: '+err.message);}
+    };
+    rd.readAsArrayBuffer(file);
+  }
+  function openImportPreview(blocks){
+    window.__imp=blocks;
+    var byV={};blocks.forEach(function(b){byV[b.facility]=(byV[b.facility]||0)+1;});
+    var rows=Object.keys(byV).sort().map(function(v){return '<tr><td style="padding:5px 10px;border-top:1px solid var(--line)">'+esc(v)+'</td><td style="padding:5px 10px;border-top:1px solid var(--line);text-align:right">'+byV[v]+'</td></tr>';}).join('');
+    document.getElementById('modal').innerHTML=
+      '<div class="mhead"><h3>Importer fra Excel</h3><button class="x" onclick="closeModal()">&times;</button></div>'+
+      '<div class="mbody">'+
+        '<p class="hint">Fant <b>'+blocks.length+' blokker</b> på disse anleggene. Sjekk at det ser riktig ut før innlegging.</p>'+
+        '<div style="max-height:200px;overflow:auto;border:1px solid var(--line);border-radius:9px;margin:8px 0"><table style="width:100%;font-size:13px;border-collapse:collapse"><tbody>'+rows+'</tbody></table></div>'+
+        '<label>Legg inn som</label><select id="imp_locked"><option value="1">Fast / låst – kan ikke flyttes (f.eks. en annen idretts tider)</option><option value="0">Redigerbar</option></select>'+
+        '<label>Hvis anlegget har tider fra før</label><select id="imp_mode"><option value="add">Legg til (behold eksisterende)</option><option value="replace">Erstatt (tøm anlegget først)</option></select>'+
+        '<p class="hint" style="margin-top:10px">En «Før import»-versjon lagres automatisk, så du kan angre.</p>'+
+      '</div>'+
+      '<div class="mfoot"><button class="btn" onclick="closeModal()">Avbryt</button><button class="btn solid" onclick="doImport()">Importer '+blocks.length+' blokker</button></div>';
+    document.getElementById('ov').classList.add('open');
+  }
+  async function doImport(){
+    var body={blocks:window.__imp,locked:document.getElementById('imp_locked').value==='1',mode:document.getElementById('imp_mode').value};
+    closeModal();showLoading('Importerer …');
+    try{
+      var r=await api('POST','/treningstider/import',body);
+      ASSIGN=r.assignments;VERSIONS=r.versions;if(r.facilities)FAC=r.facilities;UNDO=[];
+      if(FAC.length&&!FAC.some(function(f){return f.id===curFac;}))curFac=FAC[0].id;
+      render();
+      toast('Importerte '+r.imported+' blokker. Konflikter vises i panelet til høyre. Forrige plan ligger som «Før import …».');
+    }catch(e){toast('Import feilet: '+e.message);}
+    finally{hideLoading();}
   }
   render();
 </script>

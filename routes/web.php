@@ -130,6 +130,7 @@ Route::middleware('auth')->group(function () {
     Route::delete('/treningstider/versjon/{version}', [TrainingController::class, 'destroyVersion']);
     Route::post('/treningstider/ai-forslag', [TrainingController::class, 'aiPropose']);
     Route::post('/treningstider/tom', [TrainingController::class, 'clearPlan']);
+    Route::post('/treningstider/import', [TrainingController::class, 'importPlan']);
 
     // Personlig dashboard-oppsett (alle innloggede kan styre sitt eget)
     Route::post('/dashboard-layout', [DashboardLayoutController::class, 'save']);

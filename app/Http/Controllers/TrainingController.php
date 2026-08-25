@@ -349,6 +349,94 @@ class TrainingController extends Controller
         ]);
     }
 
+    /**
+     * Importer ferdig-parsede blokker (fra opplastet Excel) inn i rutenettet.
+     * Tar auto-versjon først. Kobler/oppretter anlegg, kobler lag der navn matcher.
+     */
+    public function importPlan(Request $request)
+    {
+        $this->guard();
+        $company = $this->company();
+        $data = $request->validate([
+            'blocks' => ['required', 'array', 'min:1'],
+            'blocks.*.facility' => ['required', 'string', 'max:120'],
+            'blocks.*.weekday' => ['required', 'string', 'max:20'],
+            'blocks.*.start' => ['required', 'string', 'max:5'],
+            'blocks.*.end' => ['required', 'string', 'max:5'],
+            'blocks.*.label' => ['nullable', 'string', 'max:160'],
+            'blocks.*.org' => ['nullable', 'string', 'max:40'],
+            'locked' => ['nullable', 'boolean'],
+            'mode' => ['nullable', 'in:add,replace'],
+        ]);
+        $season = $this->season($company);
+        $locked = $request->boolean('locked');
+        $mode = $data['mode'] ?? 'add';
+        $days = ['Mandag', 'Tirsdag', 'Onsdag', 'Torsdag', 'Fredag', 'Lørdag', 'Søndag'];
+
+        $this->makeVersion($company, $season, 'Før import '.now()->format('d.m H:i'), true);
+
+        $norm = fn (string $s) => preg_replace('/\s+/', '', str_replace('bane', '', mb_strtolower($s)));
+        $facilities = TrainingFacility::where('company_id', $company->id)->get()->keyBy(fn ($f) => $norm($f->name));
+        $tnorm = fn (string $s) => preg_replace('/[^a-z0-9]/', '', mb_strtolower($s));
+        $teams = TrainingTeam::where('company_id', $company->id)->get()->keyBy(fn ($t) => $tnorm($t->name));
+
+        // Finn/opprett anlegg for alle blokkene
+        $facId = [];
+        foreach ($data['blocks'] as $b) {
+            $key = $norm($b['facility']);
+            if (isset($facId[$key])) {
+                continue;
+            }
+            $f = $facilities->get($key) ?? TrainingFacility::create([
+                'company_id' => $company->id, 'name' => $b['facility'],
+                'status' => 'aktiv', 'allowed_sports' => [],
+            ]);
+            $facilities->put($key, $f);
+            $facId[$key] = $f->id;
+        }
+
+        // Erstatt: tøm berørte anlegg (alt) før innlegging
+        if ($mode === 'replace') {
+            TrainingAssignment::where('company_id', $company->id)
+                ->where('training_season_id', $season->id)
+                ->whereIn('training_facility_id', array_values($facId))->delete();
+        }
+
+        $n = 0;
+        foreach ($data['blocks'] as $b) {
+            if (! in_array($b['weekday'], $days, true)) {
+                continue;
+            }
+            $team = $teams->get($tnorm((string) ($b['label'] ?? '')));
+            TrainingAssignment::create([
+                'company_id' => $company->id,
+                'training_season_id' => $season->id,
+                'training_facility_id' => $facId[$norm($b['facility'])],
+                'training_team_id' => $team?->id,
+                'label' => $b['label'] ?? null,
+                'org' => $b['org'] ?? 'FLIK',
+                'locked' => $locked,
+                'weekday' => $b['weekday'],
+                'block_start' => $b['start'],
+                'block_end' => $b['end'],
+            ]);
+            $n++;
+        }
+
+        $facilities = TrainingFacility::where('company_id', $company->id)->orderBy('name')
+            ->get()->map(fn (TrainingFacility $f) => $this->facilityCard($f))->values();
+        $assignments = TrainingAssignment::where('company_id', $company->id)
+            ->where('training_season_id', $season->id)->with('team.category')
+            ->get()->map(fn (TrainingAssignment $a) => $this->assignmentCard($a))->values();
+
+        return response()->json([
+            'assignments' => $assignments,
+            'facilities' => $facilities,
+            'versions' => $this->versionList($company, $season),
+            'imported' => $n,
+        ]);
+    }
+
     /* ---------- AI-forslag (steg 4) ---------- */
 
     private function extractJson(string $text): array
