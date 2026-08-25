@@ -14,7 +14,7 @@ class TrainingTeam extends Model
     protected $fillable = [
         'company_id', 'category_id', 'name', 'birth_year', 'grade',
         'players', 'coaches', 'area_indoor', 'area_outdoor',
-        'sessions_per_week', 'requires_indoor', 'allowed_facilities', 'external_ref',
+        'sessions_per_week', 'requires_indoor', 'allowed_facilities', 'no_collide', 'external_ref',
         'coach_unavailable',
     ];
 
@@ -26,6 +26,7 @@ class TrainingTeam extends Model
     protected $casts = [
         'requires_indoor' => 'boolean',
         'allowed_facilities' => 'array',
+        'no_collide' => 'array',
     ];
 
     public function category(): BelongsTo

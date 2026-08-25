@@ -51,9 +51,14 @@ class TrainingController extends Controller
                 ->orderBy('sort_order')->get(['id', 'name', 'color'])
             : collect();
 
+        $facilities = $company
+            ? TrainingFacility::where('company_id', $company->id)->orderBy('name')->get(['id', 'name'])
+            : collect();
+
         return view('training.lag', [
             'teams' => $teams,
             'cats' => $cats,
+            'facilities' => $facilities,
             'company' => $company,
         ]);
     }
@@ -124,6 +129,10 @@ class TrainingController extends Controller
             'area_outdoor' => ['nullable', 'string', 'max:60'],
             'requires_indoor' => ['nullable', 'boolean'],
             'coach_unavailable' => ['nullable', 'string', 'max:255'],
+            'allowed_facilities' => ['nullable', 'array'],
+            'allowed_facilities.*' => ['integer'],
+            'no_collide' => ['nullable', 'array'],
+            'no_collide.*' => ['integer'],
         ]);
     }
 
@@ -183,6 +192,8 @@ class TrainingController extends Controller
             ->get()->map(fn (TrainingTeam $t) => [
                 'id' => $t->id, 'name' => $t->name,
                 'sport' => $t->category?->name, 'color' => $t->category?->color,
+                'allowed_facilities' => array_map('intval', $t->allowed_facilities ?? []),
+                'no_collide' => array_map('intval', $t->no_collide ?? []),
             ])->values();
 
         $assignments = TrainingAssignment::where('company_id', $company->id)
@@ -412,15 +423,21 @@ class TrainingController extends Controller
             .(is_array($f->allowed_sports) ? implode(', ', $f->allowed_sports) : '–')
             .', soner: '.($f->zones ?? 1).', status: '.($f->status ?? 'aktiv').')')->implode("\n");
 
-        $teamLines = $teams->map(function (TrainingTeam $t) {
+        $facNameById = $facilities->pluck('name', 'id');
+        $teamNameById = $teams->pluck('name', 'id');
+        $teamLines = $teams->map(function (TrainingTeam $t) use ($facNameById, $teamNameById) {
             $w = $t->relationLoaded('wishes') ? $t->wishes->map(fn ($x) => ($x->weekday ?? '')
                 .' '.($x->time ?? ''))->filter()->implode('; ') : '';
+            $onlyFac = collect($t->allowed_facilities ?? [])->map(fn ($id) => $facNameById[$id] ?? null)->filter()->implode(', ');
+            $noCol = collect($t->no_collide ?? [])->map(fn ($id) => $teamNameById[$id] ?? null)->filter()->implode(', ');
 
             return '- '.$t->name.' ('.($t->category?->name ?? 'idrett?').'): '
                 .'økter/uke='.($t->sessions_per_week ?? '?')
                 .', innekrav='.($t->requires_indoor ? 'ja' : 'nei')
                 .($t->players ? ', spillere='.$t->players : '')
                 .($w ? ', ønsker: '.$w : '')
+                .($onlyFac ? ', KUN baner: '.$onlyFac : '')
+                .($noCol ? ', IKKE samtidig som: '.$noCol : '')
                 .($t->coach_unavailable ? ', trener utilgj.: '.$t->coach_unavailable : '');
         })->implode("\n");
 
@@ -449,7 +466,9 @@ class TrainingController extends Controller
             ."- Tider er mellom 16:00 og 22:00 i 30-minutters steg. Respekter lagenes ønsker og trenernes utilgjengelighet der det går.\n"
             ."- Maks ETT lag per sone samtidig på samme anlegg. De fleste anlegg har 1 sone = kun ett lag om gangen. Sett aldri to eller flere lag på samme anlegg til samme tid med mindre «soner» er større enn 1 (unntaket er 3er bane A/B/C som er én delt ressurs).\n"
             ."- Gi ALDRI et lag flere økter enn «økter/uke». Ved forslag for én enkelt dag: maks én økt per lag den dagen.\n"
-            ."- Ikke fyll ledige felt bare for å fylle – det er helt greit at et anlegg står tomt. Kvalitet framfor mengde.\n\n"
+            ."- Ikke fyll ledige felt bare for å fylle – det er helt greit at et anlegg står tomt. Kvalitet framfor mengde.\n"
+            ."- Har et lag «KUN baner: …», skal det BARE plasseres på de anleggene – aldri andre.\n"
+            ."- Har et lag «IKKE samtidig som: …», må laget ALDRI overlappe i tid med de oppgitte lagene (det er de samme barna), uansett anlegg eller idrett.\n\n"
             .'Svar KUN med JSON på formen {"blocks":[{"facility":"<anleggsnavn>","weekday":"Mandag","start":"16:00","end":"17:30","team":"<lagnavn>"}]}. '
             .'Bruk eksakte anleggsnavn og lagnavn fra listene. Ingen forklaring utenfor JSON.';
 
@@ -539,6 +558,11 @@ class TrainingController extends Controller
                 if (! in_array(mb_strtolower($team->category->name), $allowedLower, true)) {
                     continue;
                 }
+            }
+            // Hard sperre: laget kan bare stå på sine tillatte anlegg (hvis satt).
+            if ($team && is_array($team->allowed_facilities) && count($team->allowed_facilities)
+                && ! in_array((int) $f->id, array_map('intval', $team->allowed_facilities), true)) {
+                continue;
             }
             TrainingAssignment::create([
                 'company_id' => $company->id,
@@ -727,6 +751,8 @@ class TrainingController extends Controller
             'area_outdoor' => $t->area_outdoor,
             'requires_indoor' => (bool) $t->requires_indoor,
             'coach_unavailable' => $t->coach_unavailable,
+            'allowed_facilities' => array_map('intval', $t->allowed_facilities ?? []),
+            'no_collide' => array_map('intval', $t->no_collide ?? []),
             'wishes' => $t->relationLoaded('wishes')
                 ? $t->wishes->map(fn ($w) => [
                     'priority' => $w->priority,

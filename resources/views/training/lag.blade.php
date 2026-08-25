@@ -72,10 +72,12 @@
 <script>
   window.TT_TEAMS = @json($teams);
   window.TT_CATS = @json($cats);
+  window.TT_FACILITIES = @json($facilities);
   window.TT_CSRF = '{{ csrf_token() }}';
 </script>
 <script>
-  var TEAMS = window.TT_TEAMS || [], CATS = window.TT_CATS || [], CSRF = window.TT_CSRF;
+  var TEAMS = window.TT_TEAMS || [], CATS = window.TT_CATS || [], FACILITIES = window.TT_FACILITIES || [], CSRF = window.TT_CSRF;
+  var ttNc = [], ttCurrentId = null;
   function esc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');}
   function val(id){var el=document.getElementById(id);return el?el.value.trim():'';}
   async function api(method,url,body){
@@ -116,6 +118,9 @@
     var days=['','Mandag','Tirsdag','Onsdag','Torsdag','Fredag','Lørdag','Søndag'];
     var dayOpts=days.map(function(d){return '<option value="'+d+'">'+(d||'– dag –')+'</option>';}).join('');
     var wishRows=[1,2,3].map(function(p){return '<div class="two" style="grid-template-columns:22px 1.4fr 1fr;align-items:center;gap:10px;margin-bottom:6px"><div class="muted" style="font-weight:700">'+p+'.</div><select id="w'+p+'_day">'+dayOpts+'</select><input id="w'+p+'_time" placeholder="kl. 17:30"></div>';}).join('');
+    var af=(t.allowed_facilities||[]);
+    var facBoxes=FACILITIES.map(function(f){return '<label style="display:flex;align-items:center;gap:6px;font-weight:400;font-size:13px"><input type="checkbox" class="facbox" value="'+f.id+'" style="width:auto"'+(af.indexOf(f.id)>-1?' checked':'')+'>'+esc(f.name)+'</label>';}).join('')||'<span class="muted">Ingen anlegg lagt inn ennå.</span>';
+    var ncSportOpts='<option value="">– idrett –</option>'+CATS.map(function(c){return '<option value="'+c.id+'">'+esc(c.name)+'</option>';}).join('');
     document.getElementById('ttModal').innerHTML=
       '<div class="mhead"><h3>'+(id?'Rediger lag':'Nytt lag')+'</h3><button class="x" onclick="closeModal()">&times;</button></div>'+
       '<div class="mbody"><form class="f" onsubmit="ttSave(event,'+(id||'null')+')">'+
@@ -128,6 +133,21 @@
           wishRows+
           '<label>Begrunnelse (valgfri)</label><input id="w_note" placeholder="f.eks. trenere jobber til 17">'+
           '<label>Dager/tider trener(e) IKKE kan</label><input id="t_coach" placeholder="f.eks. tirsdager før 18">'+
+        '</div>'+
+        '<div style="margin-top:16px;border-top:1px solid var(--line);padding-top:14px">'+
+          '<div style="font-weight:700;font-size:13.5px;margin-bottom:8px">Baner laget kan bruke</div>'+
+          '<div id="fac_boxes" style="display:flex;flex-wrap:wrap;gap:12px">'+facBoxes+'</div>'+
+          '<div class="muted" style="font-size:12px;margin-top:6px">La stå tomt = laget kan bruke alle baner.</div>'+
+        '</div>'+
+        '<div style="margin-top:16px;border-top:1px solid var(--line);padding-top:14px">'+
+          '<div style="font-weight:700;font-size:13.5px;margin-bottom:2px">Må ikke trene samtidig som</div>'+
+          '<div class="muted" style="font-size:12px;margin-bottom:8px">Lag som deler de samme barna (f.eks. G10 fotball = G11 håndball).</div>'+
+          '<div class="two" style="grid-template-columns:1fr 1fr auto;gap:8px;align-items:end">'+
+            '<div><label>Idrett</label><select id="nc_sport" onchange="ncFill()">'+ncSportOpts+'</select></div>'+
+            '<div><label>Lag</label><select id="nc_team"></select></div>'+
+            '<button type="button" class="btn sm" onclick="ncAdd()">Legg til</button>'+
+          '</div>'+
+          '<div id="nc_list" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:10px"></div>'+
         '</div>'+
         '<div class="actions">'+(id?'<button type="button" class="btn danger sm" onclick="ttDelete('+id+')">Slett lag</button>':'<span></span>')+
           '<span style="display:flex;gap:8px"><button type="button" class="btn" onclick="closeModal()">Avbryt</button><button class="btn solid" type="submit">Lagre</button></span></div>'+
@@ -144,6 +164,20 @@
     document.getElementById('t_coach').value=t.coach_unavailable||'';
     (t.wishes||[]).forEach(function(w){var d=document.getElementById('w'+w.priority+'_day');var tm=document.getElementById('w'+w.priority+'_time');if(d)d.value=w.weekday||'';if(tm)tm.value=w.time||'';});
     document.getElementById('w_note').value=(t.wishes&&t.wishes[0]&&t.wishes[0].note)||'';
+    ttCurrentId=id||null; ttNc=(t.no_collide||[]).slice(); ncFill(); ncRender();
+  }
+  function ncFill(){
+    var sportSel=document.getElementById('nc_sport');if(!sportSel)return;
+    var sid=+sportSel.value||null, sel=document.getElementById('nc_team');
+    var list=TEAMS.filter(function(t){return t.id!==ttCurrentId&&ttNc.indexOf(t.id)<0&&(!sid||t.category_id===sid);});
+    list.sort(function(a,b){return String(a.name).localeCompare(String(b.name),'no');});
+    sel.innerHTML=list.length?list.map(function(t){return '<option value="'+t.id+'">'+esc(t.name)+(t.sport?' ('+esc(t.sport)+')':'')+'</option>';}).join(''):'<option value="">– ingen –</option>';
+  }
+  function ncAdd(){var v=+document.getElementById('nc_team').value;if(!v||ttNc.indexOf(v)>-1)return;ttNc.push(v);ncRender();ncFill();}
+  function ncRemove(id){ttNc=ttNc.filter(function(x){return x!==id;});ncRender();ncFill();}
+  function ncRender(){
+    var host=document.getElementById('nc_list');if(!host)return;
+    host.innerHTML=ttNc.map(function(id){var t=TEAMS.find(function(x){return x.id===id;});var nm=t?t.name:('#'+id);var sp=t&&t.sport?' · '+t.sport:'';return '<span style="display:inline-flex;align-items:center;gap:6px;background:#eef2f9;border:1px solid var(--line);border-radius:8px;padding:4px 8px;font-size:12.5px">'+esc(nm)+esc(sp)+' <button type="button" onclick="ncRemove('+id+')" style="background:none;border:none;color:#b23535;cursor:pointer;font-size:15px;line-height:1">&times;</button></span>';}).join('')||'<span class="muted" style="font-size:12px">Ingen valgt.</span>';
   }
   async function ttSave(ev,id){
     ev.preventDefault();
@@ -159,6 +193,8 @@
       area_outdoor:val('t_au')||null,
       requires_indoor:document.getElementById('t_indoor').checked,
       coach_unavailable:val('t_coach')||null,
+      allowed_facilities:[].slice.call(document.querySelectorAll('.facbox:checked')).map(function(c){return +c.value;}),
+      no_collide:ttNc.slice(),
       wishes:[1,2,3].map(function(p){var d=val('w'+p+'_day');return d?{priority:p,weekday:d,time:val('w'+p+'_time')||null,note:val('w_note')||null}:null;}).filter(Boolean)
     };
     try{

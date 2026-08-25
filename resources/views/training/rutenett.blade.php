@@ -120,7 +120,7 @@
   var FAC=window.TG_FAC||[], TEAMS=window.TG_TEAMS||[], ASSIGN=window.TG_ASSIGN||[], VERSIONS=window.TG_VERSIONS||[], CSRF=window.TG_CSRF;
   var UNDO=[];
   var DAYS=['Mandag','Tirsdag','Onsdag','Torsdag','Fredag'];
-  var TIMES=['16:00','16:30','17:00','17:30','18:00','18:30','19:00','19:30','20:00','20:30','21:00','21:30'];
+  var TIMES=['15:30','16:00','16:30','17:00','17:30','18:00','18:30','19:00','19:30','20:00','20:30','21:00','21:30'];
   var ENDS=TIMES.concat(['22:00']);
   var SLOTH=34, curFac=FAC.length?FAC[0].id:null, editing=null, dragTeamId=null;
   function esc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');}
@@ -140,15 +140,19 @@
   var GENERIC=/^(kamper|friidrett|gatefotball|old boys|spind|bobcats|flik)/i;
   function ident(a){return a.team_id?('t'+a.team_id):('l'+String(a.label||'').trim().toLowerCase());}
   function conflicts(){
-    var conf={};
+    var conf={}, ncMap={};
+    TEAMS.forEach(function(t){if(t.no_collide&&t.no_collide.length)ncMap[t.id]=t.no_collide;});
+    function linked(x,y){return (ncMap[x]&&ncMap[x].indexOf(y)>-1)||(ncMap[y]&&ncMap[y].indexOf(x)>-1);}
     for(var i=0;i<ASSIGN.length;i++)for(var j=i+1;j<ASSIGN.length;j++){
       var a=ASSIGN[i],b=ASSIGN[j];
-      if(a.weekday!==b.weekday||a.facility_id===b.facility_id)continue;
-      if(!a.team_id&&GENERIC.test(a.label||''))continue;
-      if(ident(a)!==ident(b))continue;
+      if(a.weekday!==b.weekday)continue;
       if(!(mins(a.block_start)<mins(b.block_end)&&mins(b.block_start)<mins(a.block_end)))continue;
-      if(is3er(a.facility_id)&&is3er(b.facility_id))continue;
-      conf[a.id]=1;conf[b.id]=1;
+      // 1) samme lag/etikett på to ulike anlegg samtidig (unntatt 3er A/B/C som er delt ressurs)
+      if(a.facility_id!==b.facility_id && ident(a)===ident(b) && !(!a.team_id&&GENERIC.test(a.label||''))){
+        if(!(is3er(a.facility_id)&&is3er(b.facility_id))){conf[a.id]=1;conf[b.id]=1;}
+      }
+      // 2) lag som deler barn (må ikke kollidere) overlapper i tid – uansett anlegg
+      if(a.team_id&&b.team_id&&a.team_id!==b.team_id&&linked(a.team_id,b.team_id)){conf[a.id]=1;conf[b.id]=1;}
     }
     return conf;
   }
@@ -188,7 +192,7 @@
       for(var i=1;i<TIMES.length;i++)html+='<div class="row" style="top:'+(i*SLOTH)+'px"></div>';
       var bs=ASSIGN.filter(function(a){return a.facility_id===curFac&&a.weekday===d;});
       layout(bs).forEach(function(o){
-        var b=o.b, top=(mins(b.block_start)-mins('16:00'))/30*SLOTH;
+        var b=o.b, top=(mins(b.block_start)-mins(TIMES[0]))/30*SLOTH;
         var h=(mins(b.block_end)-mins(b.block_start))/30*SLOTH-2;
         var w=100/o.nl, left=o.lane*w;
         html+='<div class="blk'+(b.locked?' locked':'')+(conf[b.id]?' conf':'')+'" style="top:'+top+'px;height:'+Math.max(h,16)+'px;left:calc('+left+'% + 1px);width:calc('+w+'% - 2px);background:'+(b.color||'#2f6fd6')+'" onclick="editBlk(event,'+b.id+')">'+

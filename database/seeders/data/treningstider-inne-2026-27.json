@@ -1,0 +1,418 @@
+[
+{
+"venue": "Alcoa flerbrukshall",
+"day": "Fredag",
+"start": "16:00",
+"end": "17:30",
+"label": "Flik H.G12/13",
+"org": "FLIK"
+},
+{
+"venue": "Alcoa flerbrukshall",
+"day": "Fredag",
+"start": "17:30",
+"end": "19:00",
+"label": "Flik HJ14/G15",
+"org": "FLIK"
+},
+{
+"venue": "Alcoa flerbrukshall",
+"day": "Fredag",
+"start": "19:00",
+"end": "20:30",
+"label": "Volley G/J17",
+"org": "FLIK"
+},
+{
+"venue": "Alcoa flerbrukshall",
+"day": "Mandag",
+"start": "20:30",
+"end": "22:00",
+"label": "FLIK J.15",
+"org": "FLIK"
+},
+{
+"venue": "Alcoa flerbrukshall",
+"day": "Mandag",
+"start": "16:00",
+"end": "17:30",
+"label": "Flik H J 8",
+"org": "FLIK"
+},
+{
+"venue": "Alcoa flerbrukshall",
+"day": "Mandag",
+"start": "17:30",
+"end": "19:00",
+"label": "Flik H J.14/H.G.11",
+"org": "FLIK"
+},
+{
+"venue": "Alcoa flerbrukshall",
+"day": "Mandag",
+"start": "19:00",
+"end": "20:30",
+"label": "Flik H.G15",
+"org": "FLIK"
+},
+{
+"venue": "Alcoa flerbrukshall",
+"day": "Onsdag",
+"start": "19:00",
+"end": "20:30",
+"label": "Flik H J15/16",
+"org": "FLIK"
+},
+{
+"venue": "Alcoa flerbrukshall",
+"day": "Onsdag",
+"start": "20:30",
+"end": "22:00",
+"label": "Flik H.G15",
+"org": "FLIK"
+},
+{
+"venue": "Alcoa flerbrukshall",
+"day": "Onsdag",
+"start": "16:00",
+"end": "17:30",
+"label": "Flik HG.11",
+"org": "FLIK"
+},
+{
+"venue": "Alcoa flerbrukshall",
+"day": "Onsdag",
+"start": "17:30",
+"end": "19:00",
+"label": "Flik HJ.13",
+"org": "FLIK"
+},
+{
+"venue": "Alcoa flerbrukshall",
+"day": "Tirsdag",
+"start": "16:00",
+"end": "17:30",
+"label": "Flik H J/7-G7/8",
+"org": "FLIK"
+},
+{
+"venue": "Alcoa flerbrukshall",
+"day": "Tirsdag",
+"start": "17:30",
+"end": "19:00",
+"label": "Flik H.J.13",
+"org": "FLIK"
+},
+{
+"venue": "Alcoa flerbrukshall",
+"day": "Tirsdag",
+"start": "19:00",
+"end": "20:30",
+"label": "Flik volley 15-17",
+"org": "FLIK"
+},
+{
+"venue": "Alcoa flerbrukshall",
+"day": "Tirsdag",
+"start": "20:30",
+"end": "22:00",
+"label": "Flik volley senior",
+"org": "FLIK"
+},
+{
+"venue": "Alcoa flerbrukshall",
+"day": "Torsdag",
+"start": "20:30",
+"end": "22:00",
+"label": "Flik H J16",
+"org": "FLIK"
+},
+{
+"venue": "Alcoa flerbrukshall",
+"day": "Torsdag",
+"start": "17:30",
+"end": "19:00",
+"label": "Flik Volley G/J.15",
+"org": "FLIK"
+},
+{
+"venue": "Alcoa flerbrukshall",
+"day": "Torsdag",
+"start": "17:00",
+"end": "17:30",
+"label": "Flik voley mini",
+"org": "FLIK"
+},
+{
+"venue": "Alcoa flerbrukshall",
+"day": "Torsdag",
+"start": "16:00",
+"end": "17:00",
+"label": "Flik volley mini",
+"org": "FLIK"
+},
+{
+"venue": "Alcoa flerbrukshall",
+"day": "Torsdag",
+"start": "19:00",
+"end": "20:30",
+"label": "Flik volley senior",
+"org": "FLIK"
+},
+{
+"venue": "Listahallen",
+"day": "Fredag",
+"start": "16:00",
+"end": "17:30",
+"label": "FLIK HJ12",
+"org": "FLIK"
+},
+{
+"venue": "Listahallen",
+"day": "Fredag",
+"start": "19:30",
+"end": "22:00",
+"label": "Farsund tennis",
+"org": "Annet"
+},
+{
+"venue": "Listahallen",
+"day": "Fredag",
+"start": "16:00",
+"end": "17:30",
+"label": "Flik H J 11",
+"org": "FLIK"
+},
+{
+"venue": "Listahallen",
+"day": "Fredag",
+"start": "17:30",
+"end": "19:00",
+"label": "Flik J13",
+"org": "FLIK"
+},
+{
+"venue": "Listahallen",
+"day": "Fredag",
+"start": "17:30",
+"end": "19:30",
+"label": "Flik bue",
+"org": "FLIK"
+},
+{
+"venue": "Listahallen",
+"day": "Fredag",
+"start": "19:00",
+"end": "20:30",
+"label": "H.Mosjon",
+"org": "FLIK"
+},
+{
+"venue": "Listahallen",
+"day": "Mandag",
+"start": "20:30",
+"end": "22:00",
+"label": "Farsund tennis",
+"org": "Annet"
+},
+{
+"venue": "Listahallen",
+"day": "Mandag",
+"start": "20:00",
+"end": "22:00",
+"label": "Flik  Dame A+B+J16",
+"org": "FLIK"
+},
+{
+"venue": "Listahallen",
+"day": "Mandag",
+"start": "16:00",
+"end": "17:30",
+"label": "Flik H J/G 6",
+"org": "FLIK"
+},
+{
+"venue": "Listahallen",
+"day": "Mandag",
+"start": "17:30",
+"end": "19:00",
+"label": "Flik HJ.10",
+"org": "FLIK"
+},
+{
+"venue": "Listahallen",
+"day": "Mandag",
+"start": "19:00",
+"end": "20:30",
+"label": "Flik HJ12",
+"org": "FLIK"
+},
+{
+"venue": "Listahallen",
+"day": "Mandag",
+"start": "15:30",
+"end": "20:00",
+"label": "Flik turn",
+"org": "FLIK"
+},
+{
+"venue": "Listahallen",
+"day": "Onsdag",
+"start": "20:30",
+"end": "22:00",
+"label": "Farsund tennis",
+"org": "Annet"
+},
+{
+"venue": "Listahallen",
+"day": "Onsdag",
+"start": "19:00",
+"end": "20:30",
+"label": "Flik Dame A+B",
+"org": "FLIK"
+},
+{
+"venue": "Listahallen",
+"day": "Onsdag",
+"start": "17:30",
+"end": "19:00",
+"label": "Flik H.G12/13",
+"org": "FLIK"
+},
+{
+"venue": "Listahallen",
+"day": "Onsdag",
+"start": "16:00",
+"end": "17:30",
+"label": "Flik HJ10",
+"org": "FLIK"
+},
+{
+"venue": "Listahallen",
+"day": "Onsdag",
+"start": "17:30",
+"end": "19:00",
+"label": "Flik HJ12",
+"org": "FLIK"
+},
+{
+"venue": "Listahallen",
+"day": "Onsdag",
+"start": "16:00",
+"end": "17:30",
+"label": "Flik J14",
+"org": "FLIK"
+},
+{
+"venue": "Listahallen",
+"day": "Onsdag",
+"start": "19:00",
+"end": "20:30",
+"label": "Lista Karateklubb",
+"org": "Annet"
+},
+{
+"venue": "Listahallen",
+"day": "Tirsdag",
+"start": "16:00",
+"end": "17:30",
+"label": "FLIK Basket",
+"org": "FLIK"
+},
+{
+"venue": "Listahallen",
+"day": "Tirsdag",
+"start": "17:30",
+"end": "19:00",
+"label": "FLIK H.G/J9",
+"org": "FLIK"
+},
+{
+"venue": "Listahallen",
+"day": "Tirsdag",
+"start": "19:00",
+"end": "20:30",
+"label": "Flik H.J.11",
+"org": "FLIK"
+},
+{
+"venue": "Listahallen",
+"day": "Tirsdag",
+"start": "19:00",
+"end": "21:30",
+"label": "Flik bue",
+"org": "FLIK"
+},
+{
+"venue": "Listahallen",
+"day": "Tirsdag",
+"start": "17:30",
+"end": "19:00",
+"label": "Lista Karateklubb",
+"org": "Annet"
+},
+{
+"venue": "Listahallen",
+"day": "Tirsdag",
+"start": "16:00",
+"end": "17:30",
+"label": "VIA",
+"org": "Annet"
+},
+{
+"venue": "Listahallen",
+"day": "Torsdag",
+"start": "17:30",
+"end": "19:00",
+"label": "FLIK Basket",
+"org": "FLIK"
+},
+{
+"venue": "Listahallen",
+"day": "Torsdag",
+"start": "19:00",
+"end": "20:30",
+"label": "Farsund tennis",
+"org": "Annet"
+},
+{
+"venue": "Listahallen",
+"day": "Torsdag",
+"start": "20:30",
+"end": "22:00",
+"label": "Flik",
+"org": "FLIK"
+},
+{
+"venue": "Listahallen",
+"day": "Torsdag",
+"start": "19:30",
+"end": "21:00",
+"label": "Flik H.J.15",
+"org": "FLIK"
+},
+{
+"venue": "Listahallen",
+"day": "Torsdag",
+"start": "16:00",
+"end": "17:30",
+"label": "Flik H.J11",
+"org": "FLIK"
+},
+{
+"venue": "Listahallen",
+"day": "Torsdag",
+"start": "15:30",
+"end": "18:00",
+"label": "Flik turn",
+"org": "FLIK"
+},
+{
+"venue": "Listahallen",
+"day": "Torsdag",
+"start": "18:00",
+"end": "19:30",
+"label": "Lista Karateklubb",
+"org": "Annet"
+}
+]
