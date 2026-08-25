@@ -257,7 +257,7 @@ function analyse() {
       const [t, d] = k.split('|');
       for (let i = 0; i < bs.length; i++) for (let j = i + 1; j < bs.length; j++) {
         const a = bs[i], c = bs[j];
-        if (a.venue !== c.venue && !(is3er(a.venue) && is3er(c.venue)) && mins(a.start) < mins(c.endx) && mins(c.start) < mins(a.endx)) {
+        if (a.venue !== c.venue && !(is3er(a.venue) || is3er(c.venue)) && mins(a.start) < mins(c.endx) && mins(c.start) < mins(a.endx)) {
           out.push({ sev: 'critical', rule: 'dup', ttl: `${t} står på to anlegg samtidig`,
             det: `${d} ${a.start}–${a.endx} · ${short(a.venue)} og ${short(c.venue)}` });
           flagged.add(key(a)); flagged.add(key(c));

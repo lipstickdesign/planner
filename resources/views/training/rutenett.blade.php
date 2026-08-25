@@ -149,7 +149,7 @@
       if(!(mins(a.block_start)<mins(b.block_end)&&mins(b.block_start)<mins(a.block_end)))continue;
       // 1) samme lag/etikett på to ulike anlegg samtidig (unntatt 3er A/B/C som er delt ressurs)
       if(a.facility_id!==b.facility_id && ident(a)===ident(b) && !(!a.team_id&&GENERIC.test(a.label||''))){
-        if(!(is3er(a.facility_id)&&is3er(b.facility_id))){conf[a.id]=1;conf[b.id]=1;}
+        if(!(is3er(a.facility_id)||is3er(b.facility_id))){conf[a.id]=1;conf[b.id]=1;}
       }
       // 2) lag som deler barn (må ikke kollidere) overlapper i tid – uansett anlegg
       if(a.team_id&&b.team_id&&a.team_id!==b.team_id&&linked(a.team_id,b.team_id)){conf[a.id]=1;conf[b.id]=1;}
