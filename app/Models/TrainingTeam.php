@@ -15,7 +15,7 @@ class TrainingTeam extends Model
         'company_id', 'category_id', 'name', 'birth_year', 'grade',
         'players', 'coaches', 'area_indoor', 'area_outdoor',
         'sessions_per_week', 'requires_indoor', 'allowed_facilities', 'no_collide', 'external_ref',
-        'coach_unavailable',
+        'coach_unavailable', 'notes', 'avoid_days', 'latest_end',
     ];
 
     public function wishes(): HasMany
@@ -27,6 +27,7 @@ class TrainingTeam extends Model
         'requires_indoor' => 'boolean',
         'allowed_facilities' => 'array',
         'no_collide' => 'array',
+        'avoid_days' => 'array',
     ];
 
     public function category(): BelongsTo

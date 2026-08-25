@@ -121,6 +121,13 @@
     var af=(t.allowed_facilities||[]);
     var facBoxes=FACILITIES.map(function(f){return '<label style="display:flex;align-items:center;gap:6px;font-weight:400;font-size:13px"><input type="checkbox" class="facbox" value="'+f.id+'" style="width:auto"'+(af.indexOf(f.id)>-1?' checked':'')+'>'+esc(f.name)+'</label>';}).join('')||'<span class="muted">Ingen anlegg lagt inn ennå.</span>';
     var ncSportOpts='<option value="">– idrett –</option>'+CATS.map(function(c){return '<option value="'+c.id+'">'+esc(c.name)+'</option>';}).join('');
+    function selOpts(arr,cur){return arr.map(function(o){return '<option value="'+o+'"'+(String(cur||'')===o?' selected':'')+'>'+(o||'– velg –')+'</option>';}).join('');}
+    var areaInOpts=selOpts(['','Hel hall','Halv hall','Sone/del av hall'],t.area_indoor);
+    var areaUteOpts=selOpts(['','Hel bane','Halv bane','3er-bane','Sone/del av bane'],t.area_outdoor);
+    var endTimes=['','16:00','16:30','17:00','17:30','18:00','18:30','19:00','19:30','20:00','20:30','21:00','21:30','22:00'];
+    var endOpts=selOpts(endTimes,t.latest_end);
+    var avoidSel=(t.avoid_days||[]);
+    var avoidBoxes=['Mandag','Tirsdag','Onsdag','Torsdag','Fredag','Lørdag','Søndag'].map(function(d){return '<label style="display:flex;align-items:center;gap:5px;font-weight:400;font-size:12.5px"><input type="checkbox" class="avoidday" value="'+d+'" style="width:auto"'+(avoidSel.indexOf(d)>-1?' checked':'')+'>'+d.slice(0,3)+'</label>';}).join('');
     document.getElementById('ttModal').innerHTML=
       '<div class="mhead"><h3>'+(id?'Rediger lag':'Nytt lag')+'</h3><button class="x" onclick="closeModal()">&times;</button></div>'+
       '<div class="mbody"><form class="f" onsubmit="ttSave(event,'+(id||'null')+')">'+
@@ -128,11 +135,13 @@
         '<div class="two"><div><label>Årskull</label><input id="t_birth" placeholder="f.eks. 2015 eller 2014-2015"></div><div><label>Skoletrinn</label><input id="t_grade"></div></div>'+
         '<div class="two"><div><label>Antall spillere</label><input id="t_players" type="number" min="0"></div><div><label>Antall trenere</label><input id="t_coaches" type="number" min="0"></div></div>'+
         '<div class="two"><div><label>Økter per uke</label><input id="t_sessions" placeholder="f.eks. 2 eller 2-3"></div><div><label>&nbsp;</label><label style="display:flex;align-items:center;gap:8px;font-weight:400"><input id="t_indoor" type="checkbox" style="width:auto" '+(t.requires_indoor?'checked':'')+'>Krever innendørsøkt</label></div></div>'+
-        '<div class="two"><div><label>Areal inne</label><input id="t_ai" placeholder="hel hall / halv hall"></div><div><label>Areal ute</label><input id="t_au" placeholder="hel bane / halv bane"></div></div>'+
+        '<div class="two"><div><label>Areal inne</label><select id="t_ai">'+areaInOpts+'</select></div><div><label>Areal ute</label><select id="t_au">'+areaUteOpts+'</select></div></div>'+
         '<div style="margin-top:18px;border-top:1px solid var(--line);padding-top:14px"><div style="font-weight:700;font-size:13.5px;margin-bottom:8px">Ønsket treningstid (prioritert)</div>'+
           wishRows+
           '<label>Begrunnelse (valgfri)</label><input id="w_note" placeholder="f.eks. trenere jobber til 17">'+
-          '<label>Dager/tider trener(e) IKKE kan</label><input id="t_coach" placeholder="f.eks. tirsdager før 18">'+
+          '<div class="two"><div><label>Uønskede dager</label><div style="display:flex;flex-wrap:wrap;gap:10px;padding:6px 0">'+avoidBoxes+'</div></div><div><label>Seneste sluttid (hverdager)</label><select id="t_end">'+endOpts+'</select></div></div>'+
+          '<label>Dager/tider trener(e) IKKE kan</label><textarea id="t_coach" rows="2" style="width:100%;font-family:inherit;font-size:14px;padding:9px 11px;border:1px solid var(--line);border-radius:9px;background:#fbfcfe;color:var(--ink);resize:vertical" placeholder="f.eks. tirsdager før 18"></textarea>'+
+          '<label>Notater / ønsker (fritekst – brukes i analysen)</label><textarea id="t_notes" rows="3" style="width:100%;font-family:inherit;font-size:14px;padding:9px 11px;border:1px solid var(--line);border-radius:9px;background:#fbfcfe;color:var(--ink);resize:vertical" placeholder="f.eks. faste tider foretrekkes; halv bane ute holder; ikke sent på kvelden for de yngste"></textarea>'+
         '</div>'+
         '<div style="margin-top:16px;border-top:1px solid var(--line);padding-top:14px">'+
           '<div style="font-weight:700;font-size:13.5px;margin-bottom:8px">Baner laget kan bruke</div>'+
@@ -162,6 +171,7 @@
     document.getElementById('t_ai').value=t.area_indoor||'';
     document.getElementById('t_au').value=t.area_outdoor||'';
     document.getElementById('t_coach').value=t.coach_unavailable||'';
+    document.getElementById('t_notes').value=t.notes||'';
     (t.wishes||[]).forEach(function(w){var d=document.getElementById('w'+w.priority+'_day');var tm=document.getElementById('w'+w.priority+'_time');if(d)d.value=w.weekday||'';if(tm)tm.value=w.time||'';});
     document.getElementById('w_note').value=(t.wishes&&t.wishes[0]&&t.wishes[0].note)||'';
     ttCurrentId=id||null; ttNc=(t.no_collide||[]).slice(); ncFill(); ncRender();
@@ -193,6 +203,9 @@
       area_outdoor:val('t_au')||null,
       requires_indoor:document.getElementById('t_indoor').checked,
       coach_unavailable:val('t_coach')||null,
+      notes:val('t_notes')||null,
+      avoid_days:[].slice.call(document.querySelectorAll('.avoidday:checked')).map(function(c){return c.value;}),
+      latest_end:val('t_end')||null,
       allowed_facilities:[].slice.call(document.querySelectorAll('.facbox:checked')).map(function(c){return +c.value;}),
       no_collide:ttNc.slice(),
       wishes:[1,2,3].map(function(p){var d=val('w'+p+'_day');return d?{priority:p,weekday:d,time:val('w'+p+'_time')||null,note:val('w_note')||null}:null;}).filter(Boolean)

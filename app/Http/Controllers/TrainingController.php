@@ -129,6 +129,10 @@ class TrainingController extends Controller
             'area_outdoor' => ['nullable', 'string', 'max:60'],
             'requires_indoor' => ['nullable', 'boolean'],
             'coach_unavailable' => ['nullable', 'string', 'max:255'],
+            'notes' => ['nullable', 'string', 'max:2000'],
+            'avoid_days' => ['nullable', 'array'],
+            'avoid_days.*' => ['string', 'max:20'],
+            'latest_end' => ['nullable', 'string', 'max:5'],
             'allowed_facilities' => ['nullable', 'array'],
             'allowed_facilities.*' => ['integer'],
             'no_collide' => ['nullable', 'array'],
@@ -438,7 +442,12 @@ class TrainingController extends Controller
                 .($w ? ', ønsker: '.$w : '')
                 .($onlyFac ? ', KUN baner: '.$onlyFac : '')
                 .($noCol ? ', IKKE samtidig som: '.$noCol : '')
-                .($t->coach_unavailable ? ', trener utilgj.: '.$t->coach_unavailable : '');
+                .($t->area_outdoor ? ', areal ute: '.$t->area_outdoor : '')
+                .($t->area_indoor ? ', areal inne: '.$t->area_indoor : '')
+                .(is_array($t->avoid_days) && $t->avoid_days ? ', unngå dager: '.implode('/', $t->avoid_days) : '')
+                .($t->latest_end ? ', senest ferdig: '.$t->latest_end : '')
+                .($t->coach_unavailable ? ', trener utilgj.: '.$t->coach_unavailable : '')
+                .($t->notes ? ', notater: '.str_replace(["\n", "\r"], ' ', $t->notes) : '');
         })->implode("\n");
 
         $lockLines = $assign->where('locked', true)->map(fn ($a) => '- '
@@ -467,6 +476,7 @@ class TrainingController extends Controller
             ."- Maks ETT lag per sone samtidig på samme anlegg. De fleste anlegg har 1 sone = kun ett lag om gangen. Sett aldri to eller flere lag på samme anlegg til samme tid med mindre «soner» er større enn 1 (unntaket er 3er bane A/B/C som er én delt ressurs).\n"
             ."- Gi ALDRI et lag flere økter enn «økter/uke». Ved forslag for én enkelt dag: maks én økt per lag den dagen.\n"
             ."- Ikke fyll ledige felt bare for å fylle – det er helt greit at et anlegg står tomt. Kvalitet framfor mengde.\n"
+            ."- Respekter «unngå dager» (ikke legg trening på de dagene) og «senest ferdig» (økten skal være slutt innen den tiden) per lag.\n"
             ."- Har et lag «KUN baner: …», skal det BARE plasseres på de anleggene – aldri andre.\n"
             ."- Har et lag «IKKE samtidig som: …», må laget ALDRI overlappe i tid med de oppgitte lagene (det er de samme barna), uansett anlegg eller idrett.\n\n"
             .'Svar KUN med JSON på formen {"blocks":[{"facility":"<anleggsnavn>","weekday":"Mandag","start":"16:00","end":"17:30","team":"<lagnavn>"}]}. '
@@ -751,6 +761,9 @@ class TrainingController extends Controller
             'area_outdoor' => $t->area_outdoor,
             'requires_indoor' => (bool) $t->requires_indoor,
             'coach_unavailable' => $t->coach_unavailable,
+            'notes' => $t->notes,
+            'avoid_days' => $t->avoid_days ?? [],
+            'latest_end' => $t->latest_end,
             'allowed_facilities' => array_map('intval', $t->allowed_facilities ?? []),
             'no_collide' => array_map('intval', $t->no_collide ?? []),
             'wishes' => $t->relationLoaded('wishes')
