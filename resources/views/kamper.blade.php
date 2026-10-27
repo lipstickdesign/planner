@@ -80,6 +80,7 @@
   .poster.ov .slogan{font-weight:700;font-size:calc(40px*var(--ts,1));letter-spacing:.05em;text-transform:uppercase;line-height:1.08}
   .poster.ov .slogan .hrt{color:var(--sky)}
   .poster.ov .crest{height:calc(150px*var(--lo,1));width:auto;opacity:.98}
+  .poster.ov .titleimg{display:block;height:auto;max-width:100%}
 
   /* ---- Enkeltkamp ---- */
   .poster.ek{display:flex;flex-direction:column;background:var(--navy)}
@@ -127,6 +128,10 @@
       <div class="hint">Dag-overskrift på egen linje. Kamp: <b>tid | lag | serie | hall | kamp</b>, skilt med loddrett strek.</div>
       <div class="seph">Format & design</div>
       <div class="seg"><button id="ovf_s" class="on" onclick="setFmt('story')">Story 1080×1920</button><button id="ovf_p" onclick="setFmt('post')">Post 1080×1350</button></div>
+      <label>Tittel-bilde (valgfritt – erstatter «Denne ukens …»)</label>
+      <input type="file" accept="image/*" onchange="onOvTitle(event)" style="font-size:12px">
+      <label>Tittel – størrelse</label><input type="range" min="0.5" max="1.4" step="0.05" value="1" oninput="ovTitleScale=+this.value;buildOv()">
+      <button class="btn soft" onclick="ovTitle=null;buildOv()">Fjern tittel-bilde</button>
       <label>Tekststørrelse</label><input type="range" min="0.85" max="1.2" step="0.05" value="1" oninput="ovTs=+this.value;buildOv()">
       <label>Luft / tetthet</label><input type="range" min="0.8" max="1.3" step="0.05" value="1" oninput="ovSp=+this.value;buildOv()">
       <label>Egen bakgrunn (valgfritt)</label>
@@ -182,7 +187,7 @@
   var FORMATS={story:{w:1080,h:1920,budget:12},post:{w:1080,h:1350,budget:6.5}};
   var mode='ov', fmt='story';
   // oversikt-state
-  var sport=null, ovTs=1, ovSp=1, ovLo=1, ovBG=null, ovDark=true, ovPages=[];
+  var sport=null, ovTs=1, ovSp=1, ovLo=1, ovBG=null, ovDark=true, ovPages=[], ovTitle=null, ovTitleScale=1;
   // enkeltkamp-state
   var OPP=null, SPON=null, ekBG=null, ekDark=true, ekLogo=1, ekSpon=1, ekTs=1, ekSp=1;
 
@@ -200,6 +205,7 @@
     });
   }
   function onBg(ev,m){var f=ev.target.files[0];if(!f)return;var r=new FileReader();r.onload=function(e){if(m==='ov'){ovBG=e.target.result;buildOv();}else{ekBG=e.target.result;buildEk();}};r.readAsDataURL(f);}
+  function onOvTitle(ev){var f=ev.target.files[0];if(!f)return;var r=new FileReader();r.onload=function(e){ovTitle=e.target.result;buildOv();};r.readAsDataURL(f);}
   function onOpp(ev){var f=ev.target.files[0];if(!f)return;var r=new FileReader();r.onload=function(e){OPP=e.target.result;buildEk();};r.readAsDataURL(f);}
   function onSpon(ev){var f=ev.target.files[0];if(!f)return;var r=new FileReader();r.onload=function(e){SPON=e.target.result;buildEk();};r.readAsDataURL(f);}
 
@@ -215,7 +221,7 @@
   function ballOv(s){if(/fotball/i.test(s))return '<svg class="ball" viewBox="0 0 100 100"><circle cx="50" cy="50" r="46" fill="#fff"/><path d="M50 28l11 8-4 13H43l-4-13z" fill="#12284c"/><g fill="none" stroke="#12284c" stroke-width="3"><circle cx="50" cy="50" r="46"/><path d="M50 4v16M11 32l14 9M89 32l-14 9M26 86l6-15M74 86l-6-15"/></g></svg>';return '<svg class="ball" viewBox="0 0 100 100"><circle cx="50" cy="50" r="46" fill="#fff" stroke="#12284c" stroke-width="3"/><g fill="none" stroke="#12284c" stroke-width="3" stroke-linecap="round"><path d="M50 6C33 30 33 70 50 94M50 6C67 30 67 70 50 94M18 26C37 44 37 56 18 74M82 26C63 44 63 56 82 74"/></g></svg>';}
   function layoutPages(days,budget){var dayCost=0.75,matchCost=1,pages=[],page=[],used=0;days.forEach(function(d){var i=0;while(i<d.matches.length){if(used+dayCost>budget&&page.length){pages.push(page);page=[];used=0;}var grp={day:d.day,matches:[]};used+=dayCost;while(i<d.matches.length&&used+matchCost<=budget){grp.matches.push(d.matches[i]);i++;used+=matchCost;}page.push(grp);if(i<d.matches.length){pages.push(page);page=[];used=0;}}});if(page.length)pages.push(page);return pages;}
   function daysHtml(groups){return groups.map(function(d){return '<div><div class="dayhead">'+ICON_CAL+' '+esc(d.day)+'</div>'+d.matches.map(function(m){var r2=[];if(m.team)r2.push('<span class="team">'+esc(m.team)+'</span>');if(m.serie)r2.push('<span>'+esc(m.serie)+'</span>');if(m.hall)r2.push('<span class="hall">'+ICON_PIN+' '+esc(m.hall)+'</span>');return '<div class="card"><div class="r1"><div class="time">'+ICON_CLOCK+' '+esc(m.time)+'</div><div class="match">'+fmtMatch(m.match)+'</div></div>'+(r2.length?'<div class="r2">'+r2.join('<span class="dot">·</span>')+'</div>':'')+'</div>';}).join('')+'</div>';}).join('');}
-  function ovPoster(groups,pageNo,pageTot,dispW){var F=FORMATS[fmt];dispW=dispW||330;return '<div class="poster ov" style="height:'+F.h+'px;transform:scale('+(dispW/F.w)+');--ts:'+ovTs+';--sp:'+ovSp+';--lo:'+ovLo+'">'+'<div class="bg" style="'+bgCss(ovBG,ovDark)+'"></div><div class="inner">'+(pageTot>1?'<div class="pageno">'+pageNo+' / '+pageTot+'</div>':'')+'<div class="top"><div><div class="kicker">Denne ukens '+esc(sport||'').toLowerCase()+'</div><div class="big">Kamper</div></div></div><div class="days">'+daysHtml(groups)+'</div></div></div>';}
+  function ovPoster(groups,pageNo,pageTot,dispW){var F=FORMATS[fmt];dispW=dispW||330;return '<div class="poster ov" style="height:'+F.h+'px;transform:scale('+(dispW/F.w)+');--ts:'+ovTs+';--sp:'+ovSp+';--lo:'+ovLo+'">'+'<div class="bg" style="'+bgCss(ovBG,ovDark)+'"></div><div class="inner">'+(pageTot>1?'<div class="pageno">'+pageNo+' / '+pageTot+'</div>':'')+'<div class="top"><div>'+(ovTitle?'<img class="titleimg" style="width:'+Math.round(700*ovTitleScale)+'px" src="'+ovTitle+'">':'<div class="kicker">Denne ukens '+esc(sport||'').toLowerCase()+'</div><div class="big">Kamper</div>')+'</div></div><div class="days">'+daysHtml(groups)+'</div></div></div>';}
   function buildOv(){var F=FORMATS[fmt],days=parse(document.getElementById('editor').value);var budget=Math.max(3,F.budget/ovSp);var pages=layoutPages(days,budget);ovPages=pages;var g=document.getElementById('gallery');if(!pages.length){g.innerHTML='<div class="emptyc">Ingen kamper lagt inn. Skriv inn kampene i feltet til venstre.</div>';return;}var frameH=Math.round(F.h*(330/F.w));g.innerHTML=pages.map(function(pg,i){return '<div class="item"><div class="frame" style="width:330px;height:'+frameH+'px">'+ovPoster(pg,i+1,pages.length)+'</div><div class="dlrow"><span class="lbl">Bilde '+(i+1)+' av '+pages.length+'</span><button class="dlbtn" onclick="dlOv('+i+')">Last ned JPG</button></div></div>';}).join('');}
   function dlOv(i){var F=FORMATS[fmt];if(!ovPages[i])return;captureHtml(ovPoster(ovPages[i],i+1,ovPages.length,F.w),F,'FLIK-'+(sport||'kamper').toLowerCase()+'-'+fmt+'-'+(i+1)+'.jpg');}
   function downloadAllOv(){document.querySelectorAll('#gallery .poster').forEach(function(_,i){setTimeout(function(){dlOv(i);},i*700);});}
