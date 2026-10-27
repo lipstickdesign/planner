@@ -64,5 +64,6 @@
   <button class="tab {{ $active === 'tasks' ? 'active' : '' }}" data-view="tasks">Oppgaver</button>
   <button class="tab {{ $active === 'klubbliv' ? 'active' : '' }}" data-view="klubbliv">Klubbliv</button>
   @if($vpCanEdit)<button class="tab {{ $active === 'team' ? 'active' : '' }}" data-view="team">Brukere</button>@endif
+  <a class="tab {{ $active === 'kamper' ? 'active' : '' }}" href="/kamper" style="text-decoration:none">Kamper</a>
   @if($vpSuper)<a class="tab {{ $active === 'training' ? 'active' : '' }}" href="/treningstider" style="text-decoration:none">Treningstider</a>@endif
 </div></div>

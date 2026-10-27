@@ -111,6 +111,9 @@ Route::post('/reset-password', function (Request $request) {
 Route::middleware('auth')->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
+    // Kampplakat-generator (egen side)
+    Route::get('/kamper', [KampController::class, 'plakat'])->name('kamper');
+
     // Treningstider – fordelingsverktøy (egen side, foreløpig kontroll-visningen)
     Route::get('/treningstider', [TrainingController::class, 'index'])->name('training');
     Route::get('/treningstider/lag', [TrainingController::class, 'teams'])->name('training.lag');
