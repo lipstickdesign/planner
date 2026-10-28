@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@300;400;500;700&display=swap" rel="stylesheet">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html-to-image/1.11.11/html-to-image.min.js"></script>
 <title>Vivu Planner · Kamper</title>
 @verbatim
 <style>
@@ -196,15 +196,19 @@
   function esc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;');}
   function fmtMatch(m){return esc(m).replace(/\bFLIK\b/g,'<b>FLIK</b>');}
   function bgCss(img,dark){if(!img)return '';var ov=dark?'linear-gradient(180deg,rgba(9,18,38,.5),rgba(9,18,38,.8)),':'';return 'background:'+ov+'url('+img+') center/cover;';}
-  // Rendrer plakat-markup i FULL størrelse utenfor skjermen og laster ned som JPG.
+  // Rendrer plakat-markup i FULL størrelse utenfor skjermen og laster ned som JPG
+  // (html-to-image = nettleserens egen rendring → riktig font, skygger og bakgrunner).
   function captureHtml(innerHtml,F,filename){
     var d=document.createElement('div');
     d.style.cssText='position:fixed;left:-99999px;top:0;width:'+F.w+'px;height:'+F.h+'px';
     d.innerHTML=innerHtml;document.body.appendChild(d);
     var node=d.querySelector('.poster');
-    return html2canvas(node,{width:F.w,height:F.h,scale:1,backgroundColor:'#12284c',windowWidth:F.w,windowHeight:F.h}).then(function(c){
-      var a=document.createElement('a');a.download=filename;a.href=c.toDataURL('image/jpeg',0.92);a.click();document.body.removeChild(d);
-    });
+    var ready=(document.fonts&&document.fonts.ready)?document.fonts.ready:Promise.resolve();
+    return ready.then(function(){
+      return htmlToImage.toJpeg(node,{width:F.w,height:F.h,quality:0.95,backgroundColor:'#12284c',pixelRatio:1,cacheBust:true});
+    }).then(function(dataUrl){
+      var a=document.createElement('a');a.download=filename;a.href=dataUrl;a.click();document.body.removeChild(d);
+    }).catch(function(e){document.body.removeChild(d);alert('Klarte ikke lage bilde: '+((e&&e.message)||e));});
   }
   function onBg(ev,m){var f=ev.target.files[0];if(!f)return;var r=new FileReader();r.onload=function(e){if(m==='ov'){ovBG=e.target.result;buildOv();}else{ekBG=e.target.result;buildEk();}};r.readAsDataURL(f);}
   function onOvTitle(ev){var f=ev.target.files[0];if(!f)return;var r=new FileReader();r.onload=function(e){ovTitle=e.target.result;buildOv();};r.readAsDataURL(f);}
@@ -227,7 +231,7 @@
   function buildOv(){var F=FORMATS[fmt],days=parse(document.getElementById('editor').value);var budget=Math.max(3,F.budget/ovSp);var pages=layoutPages(days,budget);ovPages=pages;var g=document.getElementById('gallery');if(!pages.length){g.innerHTML='<div class="emptyc">Ingen kamper lagt inn. Skriv inn kampene i feltet til venstre.</div>';return;}var frameH=Math.round(F.h*(330/F.w));g.innerHTML=pages.map(function(pg,i){return '<div class="item"><div class="frame" style="width:330px;height:'+frameH+'px">'+ovPoster(pg,i+1,pages.length)+'</div><div class="dlrow"><span class="lbl">Bilde '+(i+1)+' av '+pages.length+'</span><button class="dlbtn" onclick="dlOv('+i+')">Last ned JPG</button></div></div>';}).join('');}
   function dlOv(i){var F=FORMATS[fmt];if(!ovPages[i])return;captureHtml(ovPoster(ovPages[i],i+1,ovPages.length,F.w),F,'FLIK-'+(sport||'kamper').toLowerCase()+'-'+fmt+'-'+(i+1)+'.jpg');}
   function downloadAllOv(){document.querySelectorAll('#gallery .poster').forEach(function(_,i){setTimeout(function(){dlOv(i);},i*700);});}
-  function dlBg(m){var F=FORMATS[fmt];var d=document.createElement('div');d.style.cssText='position:fixed;left:-9999px;top:0;width:'+F.w+'px;height:'+F.h+'px';d.innerHTML='<div class="poster ov" style="height:'+F.h+'px"><div class="bg" style="'+bgCss(ovBG,ovDark)+'"></div></div>';document.body.appendChild(d);html2canvas(d.querySelector('.poster'),{width:F.w,height:F.h,scale:1,backgroundColor:'#12284c'}).then(function(c){var a=document.createElement('a');a.download='FLIK-bakgrunn-'+fmt+'.jpg';a.href=c.toDataURL('image/jpeg',0.92);a.click();document.body.removeChild(d);});}
+  function dlBg(m){var F=FORMATS[fmt];captureHtml('<div class="poster ov" style="height:'+F.h+'px"><div class="bg" style="'+bgCss(ovBG,ovDark)+'"></div></div>',F,'FLIK-bakgrunn-'+fmt+'.jpg');}
 
   /* ---------- Enkeltkamp ---------- */
   function dateParts(v){if(!v)return{wd:'',dm:''};var d=new Date(v+'T12:00:00');if(isNaN(d))return{wd:'',dm:''};return{wd:DAYS[d.getDay()].toUpperCase(),dm:d.getDate()+'. '+MONTHS[d.getMonth()].toUpperCase()};}
