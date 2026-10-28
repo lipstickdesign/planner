@@ -20,8 +20,8 @@
   .modetabs button.on{background:var(--flik);border-color:var(--flik);color:#fff}
   .layout3{display:grid;grid-template-columns:238px 330px 1fr;gap:22px;align-items:start}
   @media(max-width:1120px){.layout3{grid-template-columns:1fr}}
-  .col{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px}
-  .col.sticky{position:sticky;top:16px}
+  .pcol{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px}
+  .pcol.sticky{position:sticky;top:16px}
   .coltitle{font-size:15px;font-weight:700;margin:0 0 4px}
   .colnote{font-size:11.5px;color:var(--grey);margin:0 0 12px;line-height:1.5}
   .malhead{font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:var(--ink-soft);margin:16px 0 8px;border-top:1px solid var(--line);padding-top:13px}
@@ -129,7 +129,7 @@
   <div class="layout3">
 
     <!-- Kolonne 1: Maler -->
-    <div class="col sticky">
+    <div class="pcol sticky">
       <div class="coltitle">Maler</div>
       <p class="colnote">Lagre et ferdig oppsett (tekst, bilder og design) som mal – delt med hele klubben.</p>
       <label style="display:block;font-size:12.5px;font-weight:600;color:var(--ink-soft);margin:0 0 6px">Idrett</label>
@@ -141,7 +141,7 @@
     </div>
 
     <!-- Kolonne 2: Innstillinger -->
-    <div class="col sticky">
+    <div class="pcol sticky">
       <div class="coltitle">Innstillinger</div>
       <div class="modetabs">
         <button id="md_ov" class="on" onclick="setMode('ov')">Kampoversikt</button>
@@ -198,7 +198,7 @@
     </div>
 
     <!-- Kolonne 3: Resultat -->
-    <div class="col">
+    <div class="pcol">
       <div class="coltitle">Resultat</div>
       <p class="colnote">Forhåndsvisning. Last ned som JPG med knappen i innstillinger.</p>
       <div class="gallery" id="gallery"></div>
