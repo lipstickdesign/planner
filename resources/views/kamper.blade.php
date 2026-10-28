@@ -30,6 +30,11 @@
   .malitem:hover{border-color:var(--flik)}
   .malitem.on{background:var(--flik);border-color:var(--flik);color:#fff}
   .malempty{font-size:12px;color:var(--grey);padding:12px 2px}
+  .sponrow{display:flex;align-items:center;gap:9px;padding:6px 7px;border:1px solid var(--line);border-radius:9px}
+  .spthumb{width:46px;height:32px;flex:none;background:#12284c;border-radius:6px;background-size:contain;background-repeat:no-repeat;background-position:center}
+  .spname{flex:1;font-size:12.5px;line-height:1.25;word-break:break-word}
+  .spdel{border:none;background:none;color:var(--grey);cursor:pointer;font-size:15px;line-height:1;padding:2px 4px}
+  .spdel:hover{color:var(--accent)}
   .controls{padding:0}
   .controls label{display:block;font-size:12.5px;font-weight:600;color:var(--ink-soft);margin:13px 0 6px}
   .controls label:first-child{margin-top:0}
@@ -93,6 +98,9 @@
   .poster.ov .slogan .hrt{color:var(--sky)}
   .poster.ov .crest{height:calc(150px*var(--lo,1));width:auto;opacity:.98}
   .poster.ov .titleimg{display:block;height:auto;max-width:100%}
+  .poster.ov .spongrid{display:flex;justify-content:center;align-items:center;gap:70px;margin-top:calc(26px*var(--sp,1));padding-top:calc(22px*var(--sp,1));border-top:2px solid rgba(255,255,255,.14)}
+  .poster.ov .spongrid .sponcell{display:flex;align-items:center;justify-content:center;min-width:0}
+  .poster.ov .spongrid img{max-height:calc(96px*var(--lo,1));max-width:300px;object-fit:contain}
 
   /* ---- Enkeltkamp ---- */
   .poster.ek{display:flex;flex-direction:column;background:var(--navy)}
@@ -129,16 +137,32 @@
   <p class="sub">Lag ferdige kampbilder til sosiale medier – on-brand, uten AI. Velg type, juster om du vil, og last ned som JPG (story eller post).</p>
   <div class="layout3">
 
-    <!-- Kolonne 1: Maler -->
+    <!-- Kolonne 1: Maler / Sponsorer -->
     <div class="pcol sticky">
-      <div class="coltitle">Maler</div>
-      <p class="colnote">Lagre et ferdig oppsett (tekst, bilder og design) som mal – delt med hele klubben.</p>
       <label style="display:block;font-size:12.5px;font-weight:600;color:var(--ink-soft);margin:0 0 6px">Idrett</label>
       <select id="sport" onchange="onSport()"></select>
-      <div class="malhead" id="malhead">Lagrede maler</div>
-      <div class="mallist" id="mallist"></div>
-      <button class="btn" onclick="saveMal()">Lagre som mal</button>
-      <button class="btn soft" id="delmalbtn" onclick="deleteMal()" disabled>Slett valgt mal</button>
+      <div class="modetabs" style="margin:14px 0 14px">
+        <button id="c1_maler" class="on" onclick="setCol1('maler')">Maler</button>
+        <button id="c1_spon" onclick="setCol1('spon')">Sponsorer</button>
+      </div>
+
+      <div id="col1-maler">
+        <div class="malhead" id="malhead" style="margin-top:0;border-top:none;padding-top:0">Lagrede maler</div>
+        <div class="mallist" id="mallist"></div>
+        <button class="btn" onclick="saveMal()">Lagre som mal</button>
+        <button class="btn soft" id="delmalbtn" onclick="deleteMal()" disabled>Slett valgt mal</button>
+      </div>
+
+      <div id="col1-spon" class="hide">
+        <p class="colnote" style="margin-top:0">Legg inn klubbens sponsorer én gang – velg dem så på plakatene.</p>
+        <label>Sponsornavn</label>
+        <input type="text" id="sp_name" placeholder="F.eks. Flekkefjord Sparebank">
+        <label>Logofil (PNG/SVG – helst hvit)</label>
+        <input type="file" id="sp_file" accept="image/png,image/jpeg,image/svg+xml,image/webp" style="font-size:12px">
+        <button class="btn" onclick="uploadSponsor()">Legg til sponsor</button>
+        <div class="malhead">Sponsorer i biblioteket</div>
+        <div class="mallist" id="sponlist"></div>
+      </div>
     </div>
 
     <!-- Kolonne 2: Innstillinger -->
@@ -169,6 +193,11 @@
       <label class="ck"><input id="ov_dark" type="checkbox" checked onchange="ovDark=this.checked;buildOv()">Mørkt filter</label>
       <button class="btn ghost" onclick="dlBg('ov')">Last ned bakgrunnsmal</button>
       <button class="btn soft" onclick="ovBG=null;buildOv()">Fjern bakgrunn</button>
+      <div class="seph">Sponsorer (nederst, opptil 3)</div>
+      <label>Sponsor 1</label><select id="ov_spon0" onchange="ovSpon[0]=this.value;buildOv()"></select>
+      <label>Sponsor 2</label><select id="ov_spon1" onchange="ovSpon[1]=this.value;buildOv()"></select>
+      <label>Sponsor 3</label><select id="ov_spon2" onchange="ovSpon[2]=this.value;buildOv()"></select>
+      <div class="hint">Legg til sponsorer under «Sponsorer» i venstre kolonne.</div>
       <button class="btn" onclick="downloadAllOv()">Last ned alle bilder (JPG)</button>
       </div>
 
@@ -184,7 +213,8 @@
       <label>Motstander – logo</label><input type="file" accept="image/*" onchange="onOpp(event)" style="font-size:12px">
       <label>Motstander – farge</label>
       <div class="colorrow"><input type="color" id="e_color" value="#c8102e" oninput="buildEk()"><span class="hint" style="margin:0">Høyre side fylles i denne fargen.</span></div>
-      <label>Sponsorlogo (valgfritt)</label><input type="file" accept="image/*" onchange="onSpon(event)" style="font-size:12px">
+      <label>Sponsor (fra biblioteket)</label><select id="ek_spon_sel" onchange="onEkSponSel()"></select>
+      <label>… eller last opp egen sponsorlogo</label><input type="file" accept="image/*" onchange="onSpon(event)" style="font-size:12px">
       <div class="seph">Format & design</div>
       <div class="seg"><button id="ekf_s" class="on" onclick="setFmt('story')">Story 1080×1920</button><button id="ekf_p" onclick="setFmt('post')">Post 1080×1350</button></div>
       <label>Hjemmelogo (FLIK) – størrelse</label><input id="ek_home" type="range" min="0.6" max="1.6" step="0.05" value="1" oninput="ekHomeLogo=+this.value;buildEk()">
@@ -216,6 +246,7 @@
   window.SPORTS = @json($sports);
   window.EK_MATCHES = @json($matches);
   window.TEMPLATES = @json($templates);
+  window.SPONSORS = @json($sponsors);
   window.CSRF = '{{ csrf_token() }}';
   window.FLIK_VLOGO = '{{ asset('img/flik-vertical-white.png') }}';
 </script>
@@ -223,6 +254,7 @@
 <script>
   var KAMPDATA=window.KAMPDATA||{}, SPORTS=window.SPORTS||[], MATCHES=window.EK_MATCHES||[];
   var TEMPLATES=window.TEMPLATES||[], CSRF=window.CSRF||'', selMal=null;
+  var SPONSORS=window.SPONSORS||[];
   var ICON_CLOCK='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>';
   var ICON_PIN='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s7-6.2 7-11a7 7 0 1 0-14 0c0 4.8 7 11 7 11z"/><circle cx="12" cy="10" r="2.5"/></svg>';
   var ICON_CAL='<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4.5" width="18" height="16" rx="2.5"/><path d="M3 9h18M8 2.5v4M16 2.5v4"/></svg>';
@@ -232,7 +264,7 @@
   var FORMATS={story:{w:1080,h:1920,budget:12},post:{w:1080,h:1350,budget:6.5}};
   var mode='ov', fmt='story';
   // oversikt-state
-  var sport=null, ovTs=1, ovSp=1, ovLo=1, ovBG=null, ovDark=true, ovPages=[], ovTitle=null, ovTitleScale=1;
+  var sport=null, ovTs=1, ovSp=1, ovLo=1, ovBG=null, ovDark=true, ovPages=[], ovTitle=null, ovTitleScale=1, ovSpon=['','',''];
   // enkeltkamp-state
   var OPP=null, SPON=null, ekBG=null, ekDark=true, ekLogo=1, ekSpon=1, ekTs=1, ekSp=1, ekSerie=1, ekSponY=0, ekHomeLogo=1;
   var FLIK_VLOGO=window.FLIK_VLOGO||'';
@@ -259,7 +291,7 @@
   function onBg(ev,m){var f=ev.target.files[0];if(!f)return;var r=new FileReader();r.onload=function(e){if(m==='ov'){ovBG=e.target.result;buildOv();}else{ekBG=e.target.result;buildEk();}};r.readAsDataURL(f);}
   function onOvTitle(ev){var f=ev.target.files[0];if(!f)return;var r=new FileReader();r.onload=function(e){ovTitle=e.target.result;buildOv();};r.readAsDataURL(f);}
   function onOpp(ev){var f=ev.target.files[0];if(!f)return;var r=new FileReader();r.onload=function(e){OPP=e.target.result;buildEk();};r.readAsDataURL(f);}
-  function onSpon(ev){var f=ev.target.files[0];if(!f)return;var r=new FileReader();r.onload=function(e){SPON=e.target.result;buildEk();};r.readAsDataURL(f);}
+  function onSpon(ev){var f=ev.target.files[0];if(!f)return;var r=new FileReader();r.onload=function(e){SPON=e.target.result;var s=document.getElementById('ek_spon_sel');if(s)s.value='';buildEk();};r.readAsDataURL(f);}
 
   function setMode(m){mode=m;document.getElementById('md_ov').classList.toggle('on',m==='ov');document.getElementById('md_ek').classList.toggle('on',m==='ek');
     document.getElementById('ctrl-ov').classList.toggle('hide',m!=='ov');document.getElementById('ctrl-ek').classList.toggle('hide',m!=='ek');renderMalList();if(m==='ek')renderEkMatches(true);build();}
@@ -281,14 +313,16 @@
       document.getElementById('editor').value=d.text||'';
       ovTitle=d.titleUrl||null;ovBG=d.bgUrl||null;ovDark=d.dark!==false;
       ovTitleScale=+d.titleScale||1;ovTs=+d.ts||1;ovSp=+d.sp||1;
+      ovSpon=[(d.sponsors&&d.sponsors[0])||'',(d.sponsors&&d.sponsors[1])||'',(d.sponsors&&d.sponsors[2])||''];
       setVal('ov_titlescale',ovTitleScale);setVal('ov_ts',ovTs);setVal('ov_sp',ovSp);setChk('ov_dark',ovDark);
+      renderSponsorPickers();
       syncFmt();buildOv();
     }else{
       setTxt('e_occ',d.occ);setTxt('e_serie',d.serie);setTxt('e_date',d.date);setTxt('e_time',d.time);setTxt('e_color',d.color||'#c8102e');
       OPP=d.oppUrl||null;SPON=d.sponUrl||null;ekBG=d.bgUrl||null;ekDark=d.dark!==false;
       ekLogo=+d.logoScale||1;ekSpon=+d.sponScale||1;ekTs=+d.ts||1;ekSp=+d.sp||1;ekSerie=+d.serieScale||1;ekSponY=+d.sponY||0;ekHomeLogo=+d.homeScale||1;
       setVal('ek_logo',ekLogo);setVal('ek_spon',ekSpon);setVal('ek_ts',ekTs);setVal('ek_sp',ekSp);setVal('ek_serie',ekSerie);setVal('ek_spony',ekSponY);setVal('ek_home',ekHomeLogo);setChk('ek_dark',ekDark);
-      renderEkMatches(false);document.getElementById('ek_match').value='';
+      renderEkMatches(false);document.getElementById('ek_match').value='';renderSponsorPickers();
       syncFmt();buildEk();
     }
     renderMalList();
@@ -302,7 +336,7 @@
     if(!name||!name.trim())return;name=name.trim();
     var data,images;
     if(mode==='ov'){
-      data={fmt:fmt,text:document.getElementById('editor').value,dark:ovDark,titleScale:ovTitleScale,ts:ovTs,sp:ovSp};
+      data={fmt:fmt,text:document.getElementById('editor').value,dark:ovDark,titleScale:ovTitleScale,ts:ovTs,sp:ovSp,sponsors:ovSpon.slice()};
       images={titleUrl:ovTitle,bgUrl:ovBG};
     }else{
       data={fmt:fmt,occ:document.getElementById('e_occ').value,serie:document.getElementById('e_serie').value,date:document.getElementById('e_date').value,time:document.getElementById('e_time').value,color:document.getElementById('e_color').value,dark:ekDark,logoScale:ekLogo,homeScale:ekHomeLogo,sponScale:ekSpon,serieScale:ekSerie,sponY:ekSponY,ts:ekTs,sp:ekSp};
@@ -320,6 +354,40 @@
       .then(function(r){if(!r.ok)throw new Error('Kunne ikke slette');TEMPLATES=TEMPLATES.filter(function(x){return x.id!==selMal;});selMal=null;renderMalList();})
       .catch(function(e){alert(e.message||e);});
   }
+  /* ---------- Sponsorer ---------- */
+  function setCol1(w){document.getElementById('c1_maler').classList.toggle('on',w==='maler');document.getElementById('c1_spon').classList.toggle('on',w==='spon');
+    document.getElementById('col1-maler').classList.toggle('hide',w!=='maler');document.getElementById('col1-spon').classList.toggle('hide',w!=='spon');}
+  function renderSponsorLib(){
+    var box=document.getElementById('sponlist');
+    if(!SPONSORS.length){box.innerHTML='<div class="malempty">Ingen sponsorer lagt inn ennå.</div>';return;}
+    box.innerHTML=SPONSORS.map(function(s){return '<div class="sponrow"><span class="spthumb" style="background-image:url('+s.url+')"></span><span class="spname">'+esc(s.name)+'</span><button class="spdel" title="Slett" onclick="deleteSponsor('+s.id+')">✕</button></div>';}).join('');
+  }
+  function sponOpts(sel){return '<option value="">– ingen –</option>'+SPONSORS.map(function(s){return '<option value="'+s.url+'"'+(s.url===sel?' selected':'')+'>'+esc(s.name)+'</option>';}).join('');}
+  function renderSponsorPickers(){
+    [0,1,2].forEach(function(i){var el=document.getElementById('ov_spon'+i);if(el)el.innerHTML=sponOpts(ovSpon[i]);});
+    var ek=document.getElementById('ek_spon_sel');if(ek){var cur=(SPON&&SPON.indexOf('/uploads/sponsors/')===0)?SPON:'';ek.innerHTML=sponOpts(cur);}
+  }
+  function uploadSponsor(){
+    var name=(document.getElementById('sp_name').value||'').trim();var f=document.getElementById('sp_file').files[0];
+    if(!name){alert('Skriv inn sponsornavn.');return;}
+    if(!f){alert('Velg en logofil.');return;}
+    var fd=new FormData();fd.append('name',name);fd.append('logo',f);
+    fetch('/sponsorer',{method:'POST',headers:{'X-CSRF-TOKEN':CSRF,'Accept':'application/json'},body:fd})
+      .then(function(r){return r.json().then(function(j){if(!r.ok)throw new Error(j.error||(j.message||'Feil ved opplasting'));return j;});})
+      .then(function(j){SPONSORS.push(j.sponsor);document.getElementById('sp_name').value='';document.getElementById('sp_file').value='';renderSponsorLib();renderSponsorPickers();})
+      .catch(function(e){alert(e.message||e);});
+  }
+  function deleteSponsor(id){
+    var s=SPONSORS.find(function(x){return x.id===id;});if(!s)return;
+    if(!confirm('Slette sponsoren «'+s.name+'»?'))return;
+    fetch('/sponsorer/'+id,{method:'DELETE',headers:{'X-CSRF-TOKEN':CSRF,'Accept':'application/json'}})
+      .then(function(r){if(!r.ok)throw new Error('Kunne ikke slette');var url=s.url;SPONSORS=SPONSORS.filter(function(x){return x.id!==id;});
+        ovSpon=ovSpon.map(function(u){return u===url?'':u;});if(SPON===url)SPON=null;
+        renderSponsorLib();renderSponsorPickers();build();})
+      .catch(function(e){alert(e.message||e);});
+  }
+  function onEkSponSel(){var v=document.getElementById('ek_spon_sel').value;SPON=v||null;buildEk();}
+
   function setFmt(f){fmt=f;['ovf','ekf'].forEach(function(p){document.getElementById(p+'_s').classList.toggle('on',f==='story');document.getElementById(p+'_p').classList.toggle('on',f==='post');});build();}
   function build(){mode==='ov'?buildOv():buildEk();}
 
@@ -331,8 +399,9 @@
   function ballOv(s){if(/fotball/i.test(s))return '<svg class="ball" viewBox="0 0 100 100"><circle cx="50" cy="50" r="46" fill="#fff"/><path d="M50 28l11 8-4 13H43l-4-13z" fill="#12284c"/><g fill="none" stroke="#12284c" stroke-width="3"><circle cx="50" cy="50" r="46"/><path d="M50 4v16M11 32l14 9M89 32l-14 9M26 86l6-15M74 86l-6-15"/></g></svg>';return '<svg class="ball" viewBox="0 0 100 100"><circle cx="50" cy="50" r="46" fill="#fff" stroke="#12284c" stroke-width="3"/><g fill="none" stroke="#12284c" stroke-width="3" stroke-linecap="round"><path d="M50 6C33 30 33 70 50 94M50 6C67 30 67 70 50 94M18 26C37 44 37 56 18 74M82 26C63 44 63 56 82 74"/></g></svg>';}
   function layoutPages(days,budget){var dayCost=0.75,matchCost=1,pages=[],page=[],used=0;days.forEach(function(d){var i=0;while(i<d.matches.length){if(used+dayCost>budget&&page.length){pages.push(page);page=[];used=0;}var grp={day:d.day,matches:[]};used+=dayCost;while(i<d.matches.length&&used+matchCost<=budget){grp.matches.push(d.matches[i]);i++;used+=matchCost;}page.push(grp);if(i<d.matches.length){pages.push(page);page=[];used=0;}}});if(page.length)pages.push(page);return pages;}
   function daysHtml(groups){return groups.map(function(d){return '<div><div class="dayhead">'+ICON_CAL+' '+esc(d.day)+'</div>'+d.matches.map(function(m){var r2=[];if(m.team)r2.push('<span class="team">'+esc(m.team)+'</span>');if(m.serie)r2.push('<span>'+esc(m.serie)+'</span>');if(m.hall)r2.push('<span class="hall">'+ICON_PIN+' '+esc(m.hall)+'</span>');return '<div class="card"><div class="r1"><div class="time">'+ICON_CLOCK+' '+esc(m.time)+'</div><div class="match">'+fmtMatch(m.match)+'</div></div>'+(r2.length?'<div class="r2">'+r2.join('<span class="dot">·</span>')+'</div>':'')+'</div>';}).join('')+'</div>';}).join('');}
-  function ovPoster(groups,pageNo,pageTot,dispW){var F=FORMATS[fmt];dispW=dispW||330;return '<div class="poster ov" style="height:'+F.h+'px;transform:scale('+(dispW/F.w)+');--ts:'+ovTs+';--sp:'+ovSp+';--lo:'+ovLo+'">'+'<div class="bg" style="'+bgCss(ovBG,ovDark)+'"></div><div class="inner">'+(pageTot>1?'<div class="pageno">'+pageNo+' / '+pageTot+'</div>':'')+'<div class="top">'+(ovTitle?'<div class="titlebar" style="height:'+Math.round(240*ovTitleScale)+'px;background-image:url('+ovTitle+')"></div>':'<div class="kicker">Denne ukens '+esc(sport||'').toLowerCase()+'</div><div class="big">Kamper</div>')+'</div><div class="days">'+daysHtml(groups)+'</div></div></div>';}
-  function buildOv(){var F=FORMATS[fmt],days=parse(document.getElementById('editor').value);var budget=Math.max(3,F.budget/ovSp);var pages=layoutPages(days,budget);ovPages=pages;var g=document.getElementById('gallery');if(!pages.length){g.innerHTML='<div class="emptyc">Ingen kamper lagt inn. Skriv inn kampene i feltet til venstre.</div>';return;}var frameH=Math.round(F.h*(330/F.w));g.innerHTML=pages.map(function(pg,i){return '<div class="item"><div class="frame" style="width:330px;height:'+frameH+'px">'+ovPoster(pg,i+1,pages.length)+'</div><div class="dlrow"><span class="lbl">Bilde '+(i+1)+' av '+pages.length+'</span><button class="dlbtn" onclick="dlOv('+i+')">Last ned JPG</button></div></div>';}).join('');}
+  function spongridHtml(){var sg=ovSpon.filter(Boolean);if(!sg.length)return '';return '<div class="spongrid">'+sg.map(function(u){return '<div class="sponcell"><img src="'+u+'"></div>';}).join('')+'</div>';}
+  function ovPoster(groups,pageNo,pageTot,dispW){var F=FORMATS[fmt];dispW=dispW||330;return '<div class="poster ov" style="height:'+F.h+'px;transform:scale('+(dispW/F.w)+');--ts:'+ovTs+';--sp:'+ovSp+';--lo:'+ovLo+'">'+'<div class="bg" style="'+bgCss(ovBG,ovDark)+'"></div><div class="inner">'+(pageTot>1?'<div class="pageno">'+pageNo+' / '+pageTot+'</div>':'')+'<div class="top">'+(ovTitle?'<div class="titlebar" style="height:'+Math.round(240*ovTitleScale)+'px;background-image:url('+ovTitle+')"></div>':'<div class="kicker">Denne ukens '+esc(sport||'').toLowerCase()+'</div><div class="big">Kamper</div>')+'</div><div class="days">'+daysHtml(groups)+'</div>'+spongridHtml()+'</div></div>';}
+  function buildOv(){var F=FORMATS[fmt],days=parse(document.getElementById('editor').value);var hasSpon=ovSpon.some(Boolean);var budget=Math.max(3,F.budget/ovSp-(hasSpon?1.5:0));var pages=layoutPages(days,budget);ovPages=pages;var g=document.getElementById('gallery');if(!pages.length){g.innerHTML='<div class="emptyc">Ingen kamper lagt inn. Skriv inn kampene i feltet til venstre.</div>';return;}var frameH=Math.round(F.h*(330/F.w));g.innerHTML=pages.map(function(pg,i){return '<div class="item"><div class="frame" style="width:330px;height:'+frameH+'px">'+ovPoster(pg,i+1,pages.length)+'</div><div class="dlrow"><span class="lbl">Bilde '+(i+1)+' av '+pages.length+'</span><button class="dlbtn" onclick="dlOv('+i+')">Last ned JPG</button></div></div>';}).join('');}
   function dlOv(i){var F=FORMATS[fmt];if(!ovPages[i])return;captureHtml(ovPoster(ovPages[i],i+1,ovPages.length,F.w),F,'FLIK-'+(sport||'kamper').toLowerCase()+'-'+fmt+'-'+(i+1)+'.jpg');}
   function downloadAllOv(){document.querySelectorAll('#gallery .poster').forEach(function(_,i){setTimeout(function(){dlOv(i);},i*700);});}
   function dlBg(m){var F=FORMATS[fmt];captureHtml('<div class="poster ov" style="height:'+F.h+'px"><div class="bg" style="'+bgCss(ovBG,ovDark)+'"></div></div>',F,'FLIK-bakgrunn-'+fmt+'.jpg');}
@@ -372,6 +441,7 @@
     sel.value=first;sport=first;document.getElementById('editor').value=serialize(KAMPDATA[first]||[]);
     if(!document.getElementById('e_date').value){var t=new Date();document.getElementById('e_date').value=t.toISOString().slice(0,10);}
     renderEkMatches(false);
+    renderSponsorLib();renderSponsorPickers();
     renderMalList();
     buildOv();
   })();

@@ -72,7 +72,10 @@ class KampController extends Controller
         $templates = KampTemplate::where('company_id', $company->id)
             ->orderBy('sport')->orderBy('name')->get()->map->card()->values();
 
-        return view('kamper', compact('kampdata', 'matches', 'sports', 'company', 'templates'));
+        $sponsors = \App\Models\Sponsor::where('company_id', $company->id)
+            ->orderBy('sort_order')->orderBy('name')->get()->map->card()->values();
+
+        return view('kamper', compact('kampdata', 'matches', 'sports', 'company', 'templates', 'sponsors'));
     }
 
     /** Lagre (eller oppdatere) en kampplakat-mal. Bilder sendes som data-URL og lagres som fil. */
