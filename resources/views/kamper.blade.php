@@ -101,7 +101,7 @@
   .poster.ov .titleimg{display:block;height:auto;max-width:100%}
   .poster.ov .spongrid{display:flex;justify-content:center;align-items:center;gap:64px;margin-top:calc(26px*var(--sp,1));padding-top:calc(22px*var(--sp,1));border-top:2px solid rgba(255,255,255,.14)}
   .poster.ov .spongrid .sponcell{display:flex;align-items:center;justify-content:center;min-width:0}
-  .poster.ov .spongrid img{height:calc(96px*var(--lo,1));width:auto;max-width:320px;object-fit:contain}
+  .poster.ov .spongrid img{height:calc(96px*var(--spz,1));width:auto;max-width:360px;object-fit:contain}
 
   /* ---- Enkeltkamp ---- */
   .poster.ek{display:flex;flex-direction:column;background:var(--navy)}
@@ -198,6 +198,7 @@
       <label>Sponsor 1</label><select id="ov_spon0" onchange="ovSpon[0]=this.value;buildOv()"></select>
       <label>Sponsor 2</label><select id="ov_spon1" onchange="ovSpon[1]=this.value;buildOv()"></select>
       <label>Sponsor 3</label><select id="ov_spon2" onchange="ovSpon[2]=this.value;buildOv()"></select>
+      <label>Logorad – størrelse</label><input id="ov_sponsize" type="range" min="0.5" max="1.8" step="0.05" value="1" oninput="ovSponSize=+this.value;buildOv()">
       <div class="hint">Legg til sponsorer under «Sponsorer» i venstre kolonne.</div>
       <button class="btn" onclick="downloadAllOv()">Last ned alle bilder (JPG)</button>
       </div>
@@ -265,7 +266,7 @@
   var FORMATS={story:{w:1080,h:1920,budget:12},post:{w:1080,h:1350,budget:6.5}};
   var mode='ov', fmt='story';
   // oversikt-state
-  var sport=null, ovTs=1, ovSp=1, ovLo=1, ovBG=null, ovDark=true, ovPages=[], ovTitle=null, ovTitleScale=1, ovSpon=['','',''];
+  var sport=null, ovTs=1, ovSp=1, ovLo=1, ovBG=null, ovDark=true, ovPages=[], ovTitle=null, ovTitleScale=1, ovSpon=['','',''], ovSponSize=1;
   // enkeltkamp-state
   var OPP=null, SPON=null, ekBG=null, ekDark=true, ekLogo=1, ekSpon=1, ekTs=1, ekSp=1, ekSerie=1, ekSponY=0, ekHomeLogo=1;
   var FLIK_VLOGO=window.FLIK_VLOGO||'';
@@ -315,7 +316,8 @@
       ovTitle=d.titleUrl||null;ovBG=d.bgUrl||null;ovDark=d.dark!==false;
       ovTitleScale=+d.titleScale||1;ovTs=+d.ts||1;ovSp=+d.sp||1;
       ovSpon=[(d.sponsors&&d.sponsors[0])||'',(d.sponsors&&d.sponsors[1])||'',(d.sponsors&&d.sponsors[2])||''];
-      setVal('ov_titlescale',ovTitleScale);setVal('ov_ts',ovTs);setVal('ov_sp',ovSp);setChk('ov_dark',ovDark);
+      ovSponSize=+d.sponSize||1;
+      setVal('ov_titlescale',ovTitleScale);setVal('ov_ts',ovTs);setVal('ov_sp',ovSp);setVal('ov_sponsize',ovSponSize);setChk('ov_dark',ovDark);
       renderSponsorPickers();
       syncFmt();buildOv();
     }else{
@@ -337,7 +339,7 @@
     if(!name||!name.trim())return;name=name.trim();
     var data,images;
     if(mode==='ov'){
-      data={fmt:fmt,text:document.getElementById('editor').value,dark:ovDark,titleScale:ovTitleScale,ts:ovTs,sp:ovSp,sponsors:ovSpon.slice()};
+      data={fmt:fmt,text:document.getElementById('editor').value,dark:ovDark,titleScale:ovTitleScale,ts:ovTs,sp:ovSp,sponsors:ovSpon.slice(),sponSize:ovSponSize};
       images={titleUrl:ovTitle,bgUrl:ovBG};
     }else{
       data={fmt:fmt,occ:document.getElementById('e_occ').value,serie:document.getElementById('e_serie').value,date:document.getElementById('e_date').value,time:document.getElementById('e_time').value,color:document.getElementById('e_color').value,dark:ekDark,logoScale:ekLogo,homeScale:ekHomeLogo,sponScale:ekSpon,serieScale:ekSerie,sponY:ekSponY,ts:ekTs,sp:ekSp};
@@ -401,7 +403,7 @@
   function layoutPages(days,budget){var dayCost=0.75,matchCost=1,pages=[],page=[],used=0;days.forEach(function(d){var i=0;while(i<d.matches.length){if(used+dayCost>budget&&page.length){pages.push(page);page=[];used=0;}var grp={day:d.day,matches:[]};used+=dayCost;while(i<d.matches.length&&used+matchCost<=budget){grp.matches.push(d.matches[i]);i++;used+=matchCost;}page.push(grp);if(i<d.matches.length){pages.push(page);page=[];used=0;}}});if(page.length)pages.push(page);return pages;}
   function daysHtml(groups){return groups.map(function(d){return '<div><div class="dayhead">'+ICON_CAL+' '+esc(d.day)+'</div>'+d.matches.map(function(m){var r2=[];if(m.team)r2.push('<span class="team">'+esc(m.team)+'</span>');if(m.serie)r2.push('<span>'+esc(m.serie)+'</span>');if(m.hall)r2.push('<span class="hall">'+ICON_PIN+' '+esc(m.hall)+'</span>');return '<div class="card"><div class="r1"><div class="time">'+ICON_CLOCK+' '+esc(m.time)+'</div><div class="match">'+fmtMatch(m.match)+'</div></div>'+(r2.length?'<div class="r2">'+r2.join('<span class="dot">·</span>')+'</div>':'')+'</div>';}).join('')+'</div>';}).join('');}
   function spongridHtml(){var sg=ovSpon.filter(Boolean);if(!sg.length)return '';return '<div class="spongrid">'+sg.map(function(u){return '<div class="sponcell"><img src="'+u+'"></div>';}).join('')+'</div>';}
-  function ovPoster(groups,pageNo,pageTot,dispW){var F=FORMATS[fmt];dispW=dispW||330;return '<div class="poster ov" style="height:'+F.h+'px;transform:scale('+(dispW/F.w)+');--ts:'+ovTs+';--sp:'+ovSp+';--lo:'+ovLo+'">'+'<div class="bg" style="'+bgCss(ovBG,ovDark)+'"></div><div class="inner">'+(pageTot>1?'<div class="pageno">'+pageNo+' / '+pageTot+'</div>':'')+'<div class="top">'+(ovTitle?'<div class="titlebar" style="height:'+Math.round(240*ovTitleScale)+'px;background-image:url('+ovTitle+')"></div>':'<div class="kicker">Denne ukens '+esc(sport||'').toLowerCase()+'</div><div class="big">Kamper</div>')+'</div><div class="days">'+daysHtml(groups)+'</div>'+spongridHtml()+'</div></div>';}
+  function ovPoster(groups,pageNo,pageTot,dispW){var F=FORMATS[fmt];dispW=dispW||330;return '<div class="poster ov" style="height:'+F.h+'px;transform:scale('+(dispW/F.w)+');--ts:'+ovTs+';--sp:'+ovSp+';--lo:'+ovLo+';--spz:'+ovSponSize+'">'+'<div class="bg" style="'+bgCss(ovBG,ovDark)+'"></div><div class="inner">'+(pageTot>1?'<div class="pageno">'+pageNo+' / '+pageTot+'</div>':'')+'<div class="top">'+(ovTitle?'<div class="titlebar" style="height:'+Math.round(240*ovTitleScale)+'px;background-image:url('+ovTitle+')"></div>':'<div class="kicker">Denne ukens '+esc(sport||'').toLowerCase()+'</div><div class="big">Kamper</div>')+'</div><div class="days">'+daysHtml(groups)+'</div>'+spongridHtml()+'</div></div>';}
   function buildOv(){var F=FORMATS[fmt],days=parse(document.getElementById('editor').value);var hasSpon=ovSpon.some(Boolean);var budget=Math.max(3,F.budget/ovSp-(hasSpon?1.5:0));var pages=layoutPages(days,budget);ovPages=pages;var g=document.getElementById('gallery');if(!pages.length){g.innerHTML='<div class="emptyc">Ingen kamper lagt inn. Skriv inn kampene i feltet til venstre.</div>';return;}var frameH=Math.round(F.h*(330/F.w));g.innerHTML=pages.map(function(pg,i){return '<div class="item"><div class="frame" style="width:330px;height:'+frameH+'px">'+ovPoster(pg,i+1,pages.length)+'</div><div class="dlrow"><span class="lbl">Bilde '+(i+1)+' av '+pages.length+'</span><button class="dlbtn" onclick="dlOv('+i+')">Last ned JPG</button></div></div>';}).join('');}
   function dlOv(i){var F=FORMATS[fmt];if(!ovPages[i])return;captureHtml(ovPoster(ovPages[i],i+1,ovPages.length,F.w),F,'FLIK-'+(sport||'kamper').toLowerCase()+'-'+fmt+'-'+(i+1)+'.jpg');}
   function downloadAllOv(){document.querySelectorAll('#gallery .poster').forEach(function(_,i){setTimeout(function(){dlOv(i);},i*700);});}
