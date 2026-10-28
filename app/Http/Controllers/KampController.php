@@ -127,12 +127,23 @@ class KampController extends Controller
         if (! str_starts_with($val, 'data:')) {
             return $val; // allerede en lagret URL
         }
-        if (! preg_match('/^data:image\/(png|jpe?g|webp);base64,(.+)$/s', $val, $m)) {
+        // Godta alle bildeformater (png/jpg/jpeg/webp/gif/svg/avif), base64 eller URL-kodet (svg).
+        if (! preg_match('#^data:image/([a-zA-Z0-9.+-]+)([^,]*),(.*)$#s', $val, $m)) {
             return null;
         }
-        $ext = $m[1] === 'jpeg' ? 'jpg' : $m[1];
-        $bin = base64_decode($m[2], true);
-        if ($bin === false) {
+        $extMap = [
+            'jpeg' => 'jpg', 'jpg' => 'jpg', 'png' => 'png', 'webp' => 'webp',
+            'gif' => 'gif', 'svg+xml' => 'svg', 'svg' => 'svg', 'avif' => 'avif',
+        ];
+        $subtype = strtolower($m[1]);
+        $ext = $extMap[$subtype] ?? null;
+        if ($ext === null) {
+            return null;
+        }
+        $bin = (stripos($m[2], 'base64') !== false)
+            ? base64_decode($m[3], true)
+            : rawurldecode($m[3]);
+        if ($bin === false || $bin === '') {
             return null;
         }
         $dir = public_path('uploads/kampmaler');
