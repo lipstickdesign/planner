@@ -175,6 +175,7 @@
       <div class="controls hide" id="ctrl-ek">
       <label>Velg kamp</label>
       <select id="ek_match" onchange="onPickMatch()"></select>
+      <div id="ek_feednote" class="hint" style="margin-top:6px"></div>
       <label>Anledning / sted</label><input type="text" id="e_occ" value="Hjemmekamp Alcoaparken" oninput="buildEk()">
       <label>Serie / lag</label><input type="text" id="e_serie" value="A-lag" oninput="buildEk()">
       <div class="two"><div><label>Dato</label><input type="date" id="e_date" oninput="buildEk()"></div><div><label>Kampstart</label><input type="text" id="e_time" value="19:00" oninput="buildEk()"></div></div>
@@ -252,7 +253,7 @@
   function onSpon(ev){var f=ev.target.files[0];if(!f)return;var r=new FileReader();r.onload=function(e){SPON=e.target.result;buildEk();};r.readAsDataURL(f);}
 
   function setMode(m){mode=m;document.getElementById('md_ov').classList.toggle('on',m==='ov');document.getElementById('md_ek').classList.toggle('on',m==='ek');
-    document.getElementById('ctrl-ov').classList.toggle('hide',m!=='ov');document.getElementById('ctrl-ek').classList.toggle('hide',m!=='ek');renderMalList();build();}
+    document.getElementById('ctrl-ov').classList.toggle('hide',m!=='ov');document.getElementById('ctrl-ek').classList.toggle('hide',m!=='ek');renderMalList();if(m==='ek')renderEkMatches(true);build();}
 
   /* ---------- Maler ---------- */
   function renderMalList(){
@@ -278,6 +279,7 @@
       OPP=d.oppUrl||null;SPON=d.sponUrl||null;ekBG=d.bgUrl||null;ekDark=d.dark!==false;
       ekLogo=+d.logoScale||1;ekSpon=+d.sponScale||1;ekTs=+d.ts||1;ekSp=+d.sp||1;
       setVal('ek_logo',ekLogo);setVal('ek_spon',ekSpon);setVal('ek_ts',ekTs);setVal('ek_sp',ekSp);setChk('ek_dark',ekDark);
+      renderEkMatches(false);document.getElementById('ek_match').value='';
       syncFmt();buildEk();
     }
     renderMalList();
@@ -315,7 +317,7 @@
   /* ---------- Oversikt ---------- */
   function parse(txt){var days=[],cur=null;(txt||'').split('\n').forEach(function(line){var l=line.trim();if(!l)return;if(l.indexOf('|')>-1){var p=l.split('|').map(function(x){return x.trim();});if(cur)cur.matches.push({time:p[0]||'',team:p[1]||'',serie:p[2]||'',hall:p[3]||'',match:p[4]||''});}else{cur={day:l,matches:[]};days.push(cur);}});return days;}
   function serialize(days){return (days||[]).map(function(d){return d.day+'\n'+d.matches.map(function(m){return [m.time,m.team,m.serie,m.hall,m.match].join(' | ');}).join('\n');}).join('\n');}
-  function onSport(){sport=document.getElementById('sport').value;document.getElementById('editor').value=serialize(KAMPDATA[sport]||[]);renderMalList();buildOv();}
+  function onSport(){sport=document.getElementById('sport').value;document.getElementById('editor').value=serialize(KAMPDATA[sport]||[]);renderMalList();if(mode==='ek'){renderEkMatches(true);buildEk();}else{buildOv();}}
   function refreshMatches(){document.getElementById('editor').value=serialize(KAMPDATA[sport]||[]);buildOv();}
   function ballOv(s){if(/fotball/i.test(s))return '<svg class="ball" viewBox="0 0 100 100"><circle cx="50" cy="50" r="46" fill="#fff"/><path d="M50 28l11 8-4 13H43l-4-13z" fill="#12284c"/><g fill="none" stroke="#12284c" stroke-width="3"><circle cx="50" cy="50" r="46"/><path d="M50 4v16M11 32l14 9M89 32l-14 9M26 86l6-15M74 86l-6-15"/></g></svg>';return '<svg class="ball" viewBox="0 0 100 100"><circle cx="50" cy="50" r="46" fill="#fff" stroke="#12284c" stroke-width="3"/><g fill="none" stroke="#12284c" stroke-width="3" stroke-linecap="round"><path d="M50 6C33 30 33 70 50 94M50 6C67 30 67 70 50 94M18 26C37 44 37 56 18 74M82 26C63 44 63 56 82 74"/></g></svg>';}
   function layoutPages(days,budget){var dayCost=0.75,matchCost=1,pages=[],page=[],used=0;days.forEach(function(d){var i=0;while(i<d.matches.length){if(used+dayCost>budget&&page.length){pages.push(page);page=[];used=0;}var grp={day:d.day,matches:[]};used+=dayCost;while(i<d.matches.length&&used+matchCost<=budget){grp.matches.push(d.matches[i]);i++;used+=matchCost;}page.push(grp);if(i<d.matches.length){pages.push(page);page=[];used=0;}}});if(page.length)pages.push(page);return pages;}
@@ -328,7 +330,16 @@
 
   /* ---------- Enkeltkamp ---------- */
   function dateParts(v){if(!v)return{wd:'',dm:''};var d=new Date(v+'T12:00:00');if(isNaN(d))return{wd:'',dm:''};return{wd:DAYS[d.getDay()].toUpperCase(),dm:d.getDate()+'. '+MONTHS[d.getMonth()].toUpperCase()};}
-  function onPickMatch(){var i=document.getElementById('ek_match').value;if(i===''||!MATCHES[i])return;var m=MATCHES[i];
+  // Filtrer kampvelgeren på valgt idrett; autofyll fra feed hvis den finnes
+  function renderEkMatches(autofill){
+    var em=document.getElementById('ek_match'),note=document.getElementById('ek_feednote');if(!em)return;
+    var items=[];MATCHES.forEach(function(m,i){if(m.sport===sport)items.push({m:m,i:i});});
+    em.innerHTML='<option value="">– manuell innlegging –</option>'+items.map(function(x){return '<option value="'+x.i+'">'+esc(x.m.label)+'</option>';}).join('');
+    if(!items.length){note.innerHTML='Ingen kommende kamper i feed for <b>'+esc(sport||'')+'</b> – legg inn manuelt under.';return;}
+    note.innerHTML=items.length+' kommende '+esc(sport||'').toLowerCase()+'-kamp'+(items.length>1?'er':'')+' hentet fra feed.';
+    if(autofill){em.value=String(items[0].i);onPickMatch();}
+  }
+  function onPickMatch(){var i=document.getElementById('ek_match').value;if(i===''||!MATCHES[i]){buildEk();return;}var m=MATCHES[i];
     document.getElementById('e_occ').value='Hjemmekamp'+(m.location?' '+m.location:'');
     document.getElementById('e_serie').value=m.tournament||'';
     document.getElementById('e_date').value=m.date||'';
@@ -348,9 +359,8 @@
     sel.innerHTML=SPORTS.map(function(s){return '<option>'+esc(s)+'</option>';}).join('');
     var first=SPORTS.find(function(s){return (KAMPDATA[s]||[]).length;})||SPORTS[0]||'';
     sel.value=first;sport=first;document.getElementById('editor').value=serialize(KAMPDATA[first]||[]);
-    var em=document.getElementById('ek_match');
-    em.innerHTML='<option value="">– manuell –</option>'+MATCHES.map(function(m,i){return '<option value="'+i+'">'+esc(m.label)+'</option>';}).join('');
     if(!document.getElementById('e_date').value){var t=new Date();document.getElementById('e_date').value=t.toISOString().slice(0,10);}
+    renderEkMatches(false);
     renderMalList();
     buildOv();
   })();
