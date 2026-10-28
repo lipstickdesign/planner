@@ -99,22 +99,23 @@
   .poster.ek .swirl{position:absolute;inset:0;background:radial-gradient(60% 50% at 80% 30%, rgba(60,110,190,.18), transparent 60%),radial-gradient(70% 60% at 15% 85%, rgba(50,95,170,.16), transparent 62%),radial-gradient(130% 80% at 50% -10%, rgba(47,111,214,.22), transparent 60%),linear-gradient(180deg,#15284c,#0e1d39)}
   .poster.ek .ek-top{flex:1;position:relative;z-index:2;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:calc(60px*var(--sp,1)) 70px calc(30px*var(--sp,1));gap:calc(6px*var(--sp,1))}
   .poster.ek .brand{width:150px;height:auto;margin-bottom:calc(26px*var(--sp,1))}
-  .poster.ek .occ{font-size:calc(52px*var(--ts,1));font-weight:700;letter-spacing:.02em;line-height:1.05}
-  .poster.ek .serie{font-size:calc(72px*var(--ts,1));font-weight:700;line-height:1.02;margin-top:6px}
+  .poster.ek .occ{font-size:calc(54px*var(--ts,1));font-weight:700;letter-spacing:.02em;line-height:1.05}
+  .poster.ek .serie{font-size:calc(72px*var(--ts,1)*var(--se,1));font-weight:700;line-height:1.05;margin-top:10px}
   .poster.ek .ek-mid{position:relative;height:calc(430px*var(--sp,1));z-index:2}
   .poster.ek .half{position:absolute;top:0;bottom:0;width:50%;display:flex;align-items:center;justify-content:center}
   .poster.ek .half.left{left:0;background:var(--flik);clip-path:polygon(0 0,100% 0,84% 100%,0 100%)}
   .poster.ek .half.right{left:50%;clip-path:polygon(16% 0,100% 0,100% 100%,0 100%)}
   .poster.ek .half .inner{display:flex;flex-direction:column;align-items:center;gap:16px}
   .poster.ek .flogo{width:140px;height:auto}
+  .poster.ek .fhome{height:340px;width:auto}
   .poster.ek .fname{font-size:calc(52px*var(--ts,1));font-weight:700;letter-spacing:.06em}
   .poster.ek .oppimg{object-fit:contain;filter:drop-shadow(0 6px 16px rgba(0,0,0,.3))}
   .poster.ek .oppph{border:4px dashed rgba(255,255,255,.5);border-radius:18px;display:flex;align-items:center;justify-content:center;font-size:22px;color:rgba(255,255,255,.7);text-align:center;padding:16px}
   .poster.ek .ek-bot{position:relative;z-index:2;padding:calc(40px*var(--sp,1)) 80px 46px;text-align:center}
   .poster.ek .dt{display:flex;justify-content:space-between;max-width:760px;margin:0 auto}
   .poster.ek .dt .col{flex:1}
-  .poster.ek .dt .lbl{font-size:calc(34px*var(--ts,1));font-weight:500;letter-spacing:.06em;text-transform:uppercase;opacity:.92}
-  .poster.ek .dt .val{font-size:calc(54px*var(--ts,1));font-weight:700;letter-spacing:.02em;text-transform:uppercase;margin-top:4px}
+  .poster.ek .dt .lbl{font-size:calc(34px*var(--ts,1));font-weight:500;letter-spacing:.06em;text-transform:uppercase;opacity:.92;white-space:nowrap}
+  .poster.ek .dt .val{font-size:calc(54px*var(--ts,1));font-weight:700;letter-spacing:.02em;text-transform:uppercase;margin-top:4px;white-space:nowrap}
   .poster.ek .sponsor{margin-top:calc(34px*var(--sp,1));min-height:70px;display:flex;align-items:center;justify-content:center}
   .poster.ek .sponsor img{max-width:66%;object-fit:contain}
 </style>
@@ -177,7 +178,8 @@
       <select id="ek_match" onchange="onPickMatch()"></select>
       <div id="ek_feednote" class="hint" style="margin-top:6px"></div>
       <label>Anledning / sted</label><input type="text" id="e_occ" value="Hjemmekamp Alcoaparken" oninput="buildEk()">
-      <label>Serie / lag</label><input type="text" id="e_serie" value="A-lag" oninput="buildEk()">
+      <label>Serie / lag</label><textarea id="e_serie" oninput="buildEk()" style="height:66px;font-family:inherit;font-size:14px;resize:vertical">A-lag</textarea>
+      <div class="hint">Bruk linjeskift (Enter) for flere linjer.</div>
       <div class="two"><div><label>Dato</label><input type="date" id="e_date" oninput="buildEk()"></div><div><label>Kampstart</label><input type="text" id="e_time" value="19:00" oninput="buildEk()"></div></div>
       <label>Motstander – logo</label><input type="file" accept="image/*" onchange="onOpp(event)" style="font-size:12px">
       <label>Motstander – farge</label>
@@ -186,7 +188,9 @@
       <div class="seph">Format & design</div>
       <div class="seg"><button id="ekf_s" class="on" onclick="setFmt('story')">Story 1080×1920</button><button id="ekf_p" onclick="setFmt('post')">Post 1080×1350</button></div>
       <label>Motstanderlogo – størrelse</label><input id="ek_logo" type="range" min="0.6" max="1.6" step="0.05" value="1" oninput="ekLogo=+this.value;buildEk()">
+      <label>Serie / lag – størrelse</label><input id="ek_serie" type="range" min="0.5" max="1.4" step="0.05" value="1" oninput="ekSerie=+this.value;buildEk()">
       <label>Sponsorlogo – størrelse</label><input id="ek_spon" type="range" min="0.6" max="1.9" step="0.05" value="1" oninput="ekSpon=+this.value;buildEk()">
+      <label>Sponsorlogo – løft opp</label><input id="ek_spony" type="range" min="0" max="180" step="5" value="0" oninput="ekSponY=+this.value;buildEk()">
       <label>Tekststørrelse</label><input id="ek_ts" type="range" min="0.85" max="1.2" step="0.05" value="1" oninput="ekTs=+this.value;buildEk()">
       <label>Luft / avstand</label><input id="ek_sp" type="range" min="0.8" max="1.3" step="0.05" value="1" oninput="ekSp=+this.value;buildEk()">
       <label>Egen bakgrunn (valgfritt)</label>
@@ -212,6 +216,7 @@
   window.EK_MATCHES = @json($matches);
   window.TEMPLATES = @json($templates);
   window.CSRF = '{{ csrf_token() }}';
+  window.FLIK_VLOGO = '{{ asset('img/flik-vertical-white.png') }}';
 </script>
 @verbatim
 <script>
@@ -228,9 +233,12 @@
   // oversikt-state
   var sport=null, ovTs=1, ovSp=1, ovLo=1, ovBG=null, ovDark=true, ovPages=[], ovTitle=null, ovTitleScale=1;
   // enkeltkamp-state
-  var OPP=null, SPON=null, ekBG=null, ekDark=true, ekLogo=1, ekSpon=1, ekTs=1, ekSp=1;
+  var OPP=null, SPON=null, ekBG=null, ekDark=true, ekLogo=1, ekSpon=1, ekTs=1, ekSp=1, ekSerie=1, ekSponY=0;
+  var FLIK_VLOGO=window.FLIK_VLOGO||'';
+  var MON_ABBR=['jan.','feb.','mars','apr.','mai','juni','juli','aug.','sep.','okt.','nov.','des.'];
 
   function esc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;');}
+  function escBr(s){return esc(s).replace(/\r?\n/g,'<br>');}
   function fmtMatch(m){return esc(m).replace(/\bFLIK\b/g,'<b>FLIK</b>');}
   function bgCss(img,dark){if(!img)return '';var ov=dark?'linear-gradient(180deg,rgba(9,18,38,.5),rgba(9,18,38,.8)),':'';return 'background:'+ov+'url('+img+') center/cover;';}
   // Rendrer plakat-markup i FULL størrelse utenfor skjermen og laster ned som JPG
@@ -277,8 +285,8 @@
     }else{
       setTxt('e_occ',d.occ);setTxt('e_serie',d.serie);setTxt('e_date',d.date);setTxt('e_time',d.time);setTxt('e_color',d.color||'#c8102e');
       OPP=d.oppUrl||null;SPON=d.sponUrl||null;ekBG=d.bgUrl||null;ekDark=d.dark!==false;
-      ekLogo=+d.logoScale||1;ekSpon=+d.sponScale||1;ekTs=+d.ts||1;ekSp=+d.sp||1;
-      setVal('ek_logo',ekLogo);setVal('ek_spon',ekSpon);setVal('ek_ts',ekTs);setVal('ek_sp',ekSp);setChk('ek_dark',ekDark);
+      ekLogo=+d.logoScale||1;ekSpon=+d.sponScale||1;ekTs=+d.ts||1;ekSp=+d.sp||1;ekSerie=+d.serieScale||1;ekSponY=+d.sponY||0;
+      setVal('ek_logo',ekLogo);setVal('ek_spon',ekSpon);setVal('ek_ts',ekTs);setVal('ek_sp',ekSp);setVal('ek_serie',ekSerie);setVal('ek_spony',ekSponY);setChk('ek_dark',ekDark);
       renderEkMatches(false);document.getElementById('ek_match').value='';
       syncFmt();buildEk();
     }
@@ -296,7 +304,7 @@
       data={fmt:fmt,text:document.getElementById('editor').value,dark:ovDark,titleScale:ovTitleScale,ts:ovTs,sp:ovSp};
       images={titleUrl:ovTitle,bgUrl:ovBG};
     }else{
-      data={fmt:fmt,occ:document.getElementById('e_occ').value,serie:document.getElementById('e_serie').value,date:document.getElementById('e_date').value,time:document.getElementById('e_time').value,color:document.getElementById('e_color').value,dark:ekDark,logoScale:ekLogo,sponScale:ekSpon,ts:ekTs,sp:ekSp};
+      data={fmt:fmt,occ:document.getElementById('e_occ').value,serie:document.getElementById('e_serie').value,date:document.getElementById('e_date').value,time:document.getElementById('e_time').value,color:document.getElementById('e_color').value,dark:ekDark,logoScale:ekLogo,sponScale:ekSpon,serieScale:ekSerie,sponY:ekSponY,ts:ekTs,sp:ekSp};
       images={oppUrl:OPP,sponUrl:SPON,bgUrl:ekBG};
     }
     fetch('/kamper/mal',{method:'POST',headers:{'Content-Type':'application/json','X-CSRF-TOKEN':CSRF,'Accept':'application/json'},body:JSON.stringify({sport:sport,mode:mode,name:name,data:data,images:images})})
@@ -329,7 +337,7 @@
   function dlBg(m){var F=FORMATS[fmt];captureHtml('<div class="poster ov" style="height:'+F.h+'px"><div class="bg" style="'+bgCss(ovBG,ovDark)+'"></div></div>',F,'FLIK-bakgrunn-'+fmt+'.jpg');}
 
   /* ---------- Enkeltkamp ---------- */
-  function dateParts(v){if(!v)return{wd:'',dm:''};var d=new Date(v+'T12:00:00');if(isNaN(d))return{wd:'',dm:''};return{wd:DAYS[d.getDay()].toUpperCase(),dm:d.getDate()+'. '+MONTHS[d.getMonth()].toUpperCase()};}
+  function dateParts(v){if(!v)return{wd:'',dm:''};var d=new Date(v+'T12:00:00');if(isNaN(d))return{wd:'',dm:''};return{wd:DAYS[d.getDay()].toUpperCase(),dm:d.getDate()+'. '+MON_ABBR[d.getMonth()].toUpperCase()};}
   // Filtrer kampvelgeren på valgt idrett; autofyll fra feed hvis den finnes
   function renderEkMatches(autofill){
     var em=document.getElementById('ek_match'),note=document.getElementById('ek_feednote');if(!em)return;
@@ -345,11 +353,12 @@
     document.getElementById('e_date').value=m.date||'';
     document.getElementById('e_time').value=m.time||'';
     buildEk();}
-  function ekPoster(dispW){var F=FORMATS[fmt];dispW=dispW||360;var occ=esc(document.getElementById('e_occ').value),serie=esc(document.getElementById('e_serie').value),color=document.getElementById('e_color').value,time=esc(document.getElementById('e_time').value),dp=dateParts(document.getElementById('e_date').value);
+  function ekPoster(dispW){var F=FORMATS[fmt];dispW=dispW||360;var occ=esc(document.getElementById('e_occ').value),serie=escBr(document.getElementById('e_serie').value),color=document.getElementById('e_color').value,time=esc(document.getElementById('e_time').value),dp=dateParts(document.getElementById('e_date').value);
     var ow=Math.round(230*ekLogo),pw=Math.round(210*ekLogo);
     var opp=OPP?'<img class="oppimg" style="width:'+ow+'px;height:'+ow+'px" src="'+OPP+'">':'<div class="oppph" style="width:'+pw+'px;height:'+pw+'px">Last opp<br>motstander-<br>logo</div>';
-    var spon=SPON?'<div class="sponsor"><img style="max-height:'+Math.round(92*ekSpon)+'px" src="'+SPON+'"></div>':'<div class="sponsor"></div>';
-    return '<div class="poster ek" style="height:'+F.h+'px;transform:scale('+(dispW/F.w)+');--ts:'+ekTs+';--sp:'+ekSp+'">'+'<div class="swirl" style="'+bgCss(ekBG,ekDark)+'"></div>'+'<div class="ek-top">'+LOGO.replace('class="crest"','class="brand"')+'<div class="occ">'+occ+'</div><div class="serie">'+serie+'</div></div>'+'<div class="ek-mid"><div class="half left"><div class="inner">'+LOGO.replace('class="crest"','class="flogo"')+'<div class="fname">FLIK</div></div></div><div class="half right" style="background:'+color+'"><div class="inner">'+opp+'</div></div></div>'+'<div class="ek-bot"><div class="dt"><div class="col"><div class="lbl">'+dp.wd+'</div><div class="val">'+dp.dm+'</div></div><div class="col"><div class="lbl">Kampstart</div><div class="val">Kl. '+time+'</div></div></div>'+spon+'</div></div>';}
+    var spon=SPON?'<div class="sponsor" style="transform:translateY(-'+ekSponY+'px)"><img style="max-height:'+Math.round(92*ekSpon)+'px" src="'+SPON+'"></div>':'<div class="sponsor"></div>';
+    var home='<img class="fhome" src="'+FLIK_VLOGO+'">';
+    return '<div class="poster ek" style="height:'+F.h+'px;transform:scale('+(dispW/F.w)+');--ts:'+ekTs+';--sp:'+ekSp+';--se:'+ekSerie+'">'+'<div class="swirl" style="'+bgCss(ekBG,ekDark)+'"></div>'+'<div class="ek-top">'+LOGO.replace('class="crest"','class="brand"')+'<div class="occ">'+occ+'</div><div class="serie">'+serie+'</div></div>'+'<div class="ek-mid"><div class="half left"><div class="inner">'+home+'</div></div><div class="half right" style="background:'+color+'"><div class="inner">'+opp+'</div></div></div>'+'<div class="ek-bot"><div class="dt"><div class="col"><div class="lbl">'+dp.wd+'</div><div class="val">'+dp.dm+'</div></div><div class="col"><div class="lbl">Kampstart</div><div class="val">Kl. '+time+'</div></div></div>'+spon+'</div></div>';}
   function buildEk(){var F=FORMATS[fmt];var frameH=Math.round(F.h*(360/F.w));document.getElementById('gallery').innerHTML='<div class="item"><div class="frame" style="width:360px;height:'+frameH+'px">'+ekPoster()+'</div></div>';}
   function dlEk(){var F=FORMATS[fmt];captureHtml(ekPoster(F.w),F,'FLIK-enkeltkamp-'+fmt+'.jpg');}
 
