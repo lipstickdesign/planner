@@ -103,11 +103,11 @@
   .poster.ek .serie{font-size:calc(72px*var(--ts,1)*var(--se,1));font-weight:700;line-height:1.05;margin-top:10px}
   .poster.ek .ek-mid{position:relative;height:calc(430px*var(--sp,1));z-index:2}
   .poster.ek .half{position:absolute;top:0;bottom:0;width:50%;display:flex;align-items:center;justify-content:center}
-  .poster.ek .half.left{left:0;background:var(--flik);clip-path:polygon(0 0,100% 0,84% 100%,0 100%)}
-  .poster.ek .half.right{left:50%;clip-path:polygon(16% 0,100% 0,100% 100%,0 100%)}
+  .poster.ek .half.left{left:0;background:var(--flik);clip-path:polygon(0 0,100% 0,92% 100%,0 100%)}
+  .poster.ek .half.right{left:50%;clip-path:polygon(8% 0,100% 0,100% 100%,0 100%)}
   .poster.ek .half .inner{display:flex;flex-direction:column;align-items:center;gap:16px}
   .poster.ek .flogo{width:140px;height:auto}
-  .poster.ek .fhome{height:340px;width:auto}
+  .poster.ek .fhome{height:300px;width:auto}
   .poster.ek .fname{font-size:calc(52px*var(--ts,1));font-weight:700;letter-spacing:.06em}
   .poster.ek .oppimg{object-fit:contain;filter:drop-shadow(0 6px 16px rgba(0,0,0,.3))}
   .poster.ek .oppph{border:4px dashed rgba(255,255,255,.5);border-radius:18px;display:flex;align-items:center;justify-content:center;font-size:22px;color:rgba(255,255,255,.7);text-align:center;padding:16px}
@@ -190,7 +190,7 @@
       <label>Motstanderlogo – størrelse</label><input id="ek_logo" type="range" min="0.6" max="1.6" step="0.05" value="1" oninput="ekLogo=+this.value;buildEk()">
       <label>Serie / lag – størrelse</label><input id="ek_serie" type="range" min="0.5" max="1.4" step="0.05" value="1" oninput="ekSerie=+this.value;buildEk()">
       <label>Sponsorlogo – størrelse</label><input id="ek_spon" type="range" min="0.6" max="1.9" step="0.05" value="1" oninput="ekSpon=+this.value;buildEk()">
-      <label>Sponsorlogo – løft opp</label><input id="ek_spony" type="range" min="0" max="180" step="5" value="0" oninput="ekSponY=+this.value;buildEk()">
+      <label>Løft bunn opp (dato + sponsor)</label><input id="ek_spony" type="range" min="0" max="220" step="5" value="0" oninput="ekSponY=+this.value;buildEk()">
       <label>Tekststørrelse</label><input id="ek_ts" type="range" min="0.85" max="1.2" step="0.05" value="1" oninput="ekTs=+this.value;buildEk()">
       <label>Luft / avstand</label><input id="ek_sp" type="range" min="0.8" max="1.3" step="0.05" value="1" oninput="ekSp=+this.value;buildEk()">
       <label>Egen bakgrunn (valgfritt)</label>
@@ -356,9 +356,10 @@
   function ekPoster(dispW){var F=FORMATS[fmt];dispW=dispW||360;var occ=esc(document.getElementById('e_occ').value),serie=escBr(document.getElementById('e_serie').value),color=document.getElementById('e_color').value,time=esc(document.getElementById('e_time').value),dp=dateParts(document.getElementById('e_date').value);
     var ow=Math.round(230*ekLogo),pw=Math.round(210*ekLogo);
     var opp=OPP?'<img class="oppimg" style="width:'+ow+'px;height:'+ow+'px" src="'+OPP+'">':'<div class="oppph" style="width:'+pw+'px;height:'+pw+'px">Last opp<br>motstander-<br>logo</div>';
-    var spon=SPON?'<div class="sponsor" style="transform:translateY(-'+ekSponY+'px)"><img style="max-height:'+Math.round(92*ekSpon)+'px" src="'+SPON+'"></div>':'<div class="sponsor"></div>';
+    var spon=SPON?'<div class="sponsor"><img style="max-height:'+Math.round(92*ekSpon)+'px" src="'+SPON+'"></div>':'<div class="sponsor"></div>';
     var home='<img class="fhome" src="'+FLIK_VLOGO+'">';
-    return '<div class="poster ek" style="height:'+F.h+'px;transform:scale('+(dispW/F.w)+');--ts:'+ekTs+';--sp:'+ekSp+';--se:'+ekSerie+'">'+'<div class="swirl" style="'+bgCss(ekBG,ekDark)+'"></div>'+'<div class="ek-top">'+LOGO.replace('class="crest"','class="brand"')+'<div class="occ">'+occ+'</div><div class="serie">'+serie+'</div></div>'+'<div class="ek-mid"><div class="half left"><div class="inner">'+home+'</div></div><div class="half right" style="background:'+color+'"><div class="inner">'+opp+'</div></div></div>'+'<div class="ek-bot"><div class="dt"><div class="col"><div class="lbl">'+dp.wd+'</div><div class="val">'+dp.dm+'</div></div><div class="col"><div class="lbl">Kampstart</div><div class="val">Kl. '+time+'</div></div></div>'+spon+'</div></div>';}
+    var botPad=46+ekSponY;
+    return '<div class="poster ek" style="height:'+F.h+'px;transform:scale('+(dispW/F.w)+');--ts:'+ekTs+';--sp:'+ekSp+';--se:'+ekSerie+'">'+'<div class="swirl" style="'+bgCss(ekBG,ekDark)+'"></div>'+'<div class="ek-top">'+LOGO.replace('class="crest"','class="brand"')+'<div class="occ">'+occ+'</div><div class="serie">'+serie+'</div></div>'+'<div class="ek-mid"><div class="half left"><div class="inner">'+home+'</div></div><div class="half right" style="background:'+color+'"><div class="inner">'+opp+'</div></div></div>'+'<div class="ek-bot" style="padding-bottom:'+botPad+'px"><div class="dt"><div class="col"><div class="lbl">'+dp.wd+'</div><div class="val">'+dp.dm+'</div></div><div class="col"><div class="lbl">Kampstart</div><div class="val">Kl. '+time+'</div></div></div>'+spon+'</div></div>';}
   function buildEk(){var F=FORMATS[fmt];var frameH=Math.round(F.h*(360/F.w));document.getElementById('gallery').innerHTML='<div class="item"><div class="frame" style="width:360px;height:'+frameH+'px">'+ekPoster()+'</div></div>';}
   function dlEk(){var F=FORMATS[fmt];captureHtml(ekPoster(F.w),F,'FLIK-enkeltkamp-'+fmt+'.jpg');}
 
