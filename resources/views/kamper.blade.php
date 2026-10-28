@@ -15,11 +15,22 @@
   .wrap{max-width:1240px;margin:0 auto;padding:26px 28px 70px}
   h1{font-size:23px;font-weight:700;margin:4px 0 2px}
   .sub{color:var(--ink-soft);font-size:13px;margin:0 0 14px;max-width:80ch}
-  .modetabs{display:flex;gap:6px;margin:0 0 18px}
-  .modetabs button{font-family:inherit;font-size:13.5px;font-weight:600;padding:9px 16px;border:1px solid var(--line);border-radius:10px;background:#fff;color:var(--ink-soft);cursor:pointer}
+  .modetabs{display:flex;gap:6px;margin:0 0 16px}
+  .modetabs button{flex:1;font-family:inherit;font-size:13.5px;font-weight:600;padding:9px 12px;border:1px solid var(--line);border-radius:10px;background:#fff;color:var(--ink-soft);cursor:pointer}
   .modetabs button.on{background:var(--flik);border-color:var(--flik);color:#fff}
-  .layout{display:flex;gap:24px;align-items:flex-start;flex-wrap:wrap}
-  .controls{flex:none;width:326px;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px;position:sticky;top:16px}
+  .layout3{display:grid;grid-template-columns:238px 330px 1fr;gap:22px;align-items:start}
+  @media(max-width:1120px){.layout3{grid-template-columns:1fr}}
+  .col{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px}
+  .col.sticky{position:sticky;top:16px}
+  .coltitle{font-size:15px;font-weight:700;margin:0 0 4px}
+  .colnote{font-size:11.5px;color:var(--grey);margin:0 0 12px;line-height:1.5}
+  .malhead{font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:var(--ink-soft);margin:16px 0 8px;border-top:1px solid var(--line);padding-top:13px}
+  .mallist{display:flex;flex-direction:column;gap:6px;max-height:420px;overflow:auto}
+  .malitem{text-align:left;font-family:inherit;font-size:13px;font-weight:500;padding:9px 11px;border:1px solid var(--line);border-radius:9px;background:#fff;color:var(--ink);cursor:pointer;line-height:1.3}
+  .malitem:hover{border-color:var(--flik)}
+  .malitem.on{background:var(--flik);border-color:var(--flik);color:#fff}
+  .malempty{font-size:12px;color:var(--grey);padding:12px 2px}
+  .controls{padding:0}
   .controls label{display:block;font-size:12.5px;font-weight:600;color:var(--ink-soft);margin:13px 0 6px}
   .controls label:first-child{margin-top:0}
   select,input[type=text],input[type=date]{width:100%;font-family:inherit;font-size:14px;padding:10px 11px;border:1px solid var(--line);border-radius:9px;background:#fbfcfe;color:var(--ink)}
@@ -38,7 +49,7 @@
   .btn.soft{background:#fff;color:var(--ink-soft);border-color:var(--line)}
   .hint{font-size:11.5px;color:var(--grey);margin-top:8px;line-height:1.5}
   .seph{font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:var(--ink-soft);margin:16px 0 2px;border-top:1px solid var(--line);padding-top:12px}
-  .gallery{flex:1;min-width:300px;display:flex;flex-wrap:wrap;gap:22px;align-content:flex-start}
+  .gallery{min-width:300px;display:flex;flex-wrap:wrap;gap:22px;align-content:flex-start}
   .item{display:flex;flex-direction:column;gap:8px}
   .frame{overflow:hidden;border-radius:10px;box-shadow:0 14px 40px rgba(16,27,51,.26)}
   .dlrow{display:flex;gap:8px;align-items:center}
@@ -115,37 +126,53 @@
 <div class="wrap">
   <h1>Kamper</h1>
   <p class="sub">Lag ferdige kampbilder til sosiale medier – on-brand, uten AI. Velg type, juster om du vil, og last ned som JPG (story eller post).</p>
-  <div class="modetabs">
-    <button id="md_ov" class="on" onclick="setMode('ov')">Kampoversikt</button>
-    <button id="md_ek" onclick="setMode('ek')">Enkeltkamp</button>
-  </div>
-  <div class="layout">
-    <!-- Kontroller: Oversikt -->
-    <div class="controls" id="ctrl-ov">
-      <label>Idrett</label>
+  <div class="layout3">
+
+    <!-- Kolonne 1: Maler -->
+    <div class="col sticky">
+      <div class="coltitle">Maler</div>
+      <p class="colnote">Lagre et ferdig oppsett (tekst, bilder og design) som mal – delt med hele klubben.</p>
+      <label style="display:block;font-size:12.5px;font-weight:600;color:var(--ink-soft);margin:0 0 6px">Idrett</label>
       <select id="sport" onchange="onSport()"></select>
+      <div class="malhead" id="malhead">Lagrede maler</div>
+      <div class="mallist" id="mallist"></div>
+      <button class="btn" onclick="saveMal()">Lagre som mal</button>
+      <button class="btn soft" id="delmalbtn" onclick="deleteMal()" disabled>Slett valgt mal</button>
+    </div>
+
+    <!-- Kolonne 2: Innstillinger -->
+    <div class="col sticky">
+      <div class="coltitle">Innstillinger</div>
+      <div class="modetabs">
+        <button id="md_ov" class="on" onclick="setMode('ov')">Kampoversikt</button>
+        <button id="md_ek" onclick="setMode('ek')">Enkeltkamp</button>
+      </div>
+
+      <!-- Kontroller: Oversikt -->
+      <div class="controls" id="ctrl-ov">
       <label>Kamper (hjemmekamper hentes automatisk – rediger ved behov)</label>
       <textarea id="editor" oninput="buildOv()"></textarea>
       <div class="hint">Dag-overskrift på egen linje. Kamp: <b>tid | lag | serie | hall | kamp</b>, skilt med loddrett strek.</div>
+      <button class="btn soft" onclick="refreshMatches()">Hent kamper nå</button>
       <div class="seph">Format & design</div>
       <div class="seg"><button id="ovf_s" class="on" onclick="setFmt('story')">Story 1080×1920</button><button id="ovf_p" onclick="setFmt('post')">Post 1080×1350</button></div>
       <label>Tittel-bilde (valgfritt – erstatter «Denne ukens …»)</label>
       <input type="file" accept="image/png,image/jpeg" onchange="onOvTitle(event)" style="font-size:12px">
       <div class="hint">Bruk transparent <b>PNG</b> (høy oppløsning). SVG rendrer ikke riktig ved nedlasting.</div>
-      <label>Tittel – størrelse</label><input type="range" min="0.5" max="1.4" step="0.05" value="1" oninput="ovTitleScale=+this.value;buildOv()">
+      <label>Tittel – størrelse</label><input id="ov_titlescale" type="range" min="0.5" max="1.4" step="0.05" value="1" oninput="ovTitleScale=+this.value;buildOv()">
       <button class="btn soft" onclick="ovTitle=null;buildOv()">Fjern tittel-bilde</button>
-      <label>Tekststørrelse</label><input type="range" min="0.85" max="1.2" step="0.05" value="1" oninput="ovTs=+this.value;buildOv()">
-      <label>Luft / tetthet</label><input type="range" min="0.8" max="1.3" step="0.05" value="1" oninput="ovSp=+this.value;buildOv()">
+      <label>Tekststørrelse</label><input id="ov_ts" type="range" min="0.85" max="1.2" step="0.05" value="1" oninput="ovTs=+this.value;buildOv()">
+      <label>Luft / tetthet</label><input id="ov_sp" type="range" min="0.8" max="1.3" step="0.05" value="1" oninput="ovSp=+this.value;buildOv()">
       <label>Egen bakgrunn (valgfritt)</label>
       <input type="file" accept="image/*" onchange="onBg(event,'ov')" style="font-size:12px">
-      <label class="ck"><input type="checkbox" checked onchange="ovDark=this.checked;buildOv()">Mørkt filter</label>
+      <label class="ck"><input id="ov_dark" type="checkbox" checked onchange="ovDark=this.checked;buildOv()">Mørkt filter</label>
       <button class="btn ghost" onclick="dlBg('ov')">Last ned bakgrunnsmal</button>
       <button class="btn soft" onclick="ovBG=null;buildOv()">Fjern bakgrunn</button>
       <button class="btn" onclick="downloadAllOv()">Last ned alle bilder (JPG)</button>
-    </div>
+      </div>
 
-    <!-- Kontroller: Enkeltkamp -->
-    <div class="controls hide" id="ctrl-ek">
+      <!-- Kontroller: Enkeltkamp -->
+      <div class="controls hide" id="ctrl-ek">
       <label>Velg kamp</label>
       <select id="ek_match" onchange="onPickMatch()"></select>
       <label>Anledning / sted</label><input type="text" id="e_occ" value="Hjemmekamp Alcoaparken" oninput="buildEk()">
@@ -157,18 +184,24 @@
       <label>Sponsorlogo (valgfritt)</label><input type="file" accept="image/*" onchange="onSpon(event)" style="font-size:12px">
       <div class="seph">Format & design</div>
       <div class="seg"><button id="ekf_s" class="on" onclick="setFmt('story')">Story 1080×1920</button><button id="ekf_p" onclick="setFmt('post')">Post 1080×1350</button></div>
-      <label>Motstanderlogo – størrelse</label><input type="range" min="0.6" max="1.6" step="0.05" value="1" oninput="ekLogo=+this.value;buildEk()">
-      <label>Sponsorlogo – størrelse</label><input type="range" min="0.6" max="1.9" step="0.05" value="1" oninput="ekSpon=+this.value;buildEk()">
-      <label>Tekststørrelse</label><input type="range" min="0.85" max="1.2" step="0.05" value="1" oninput="ekTs=+this.value;buildEk()">
-      <label>Luft / avstand</label><input type="range" min="0.8" max="1.3" step="0.05" value="1" oninput="ekSp=+this.value;buildEk()">
+      <label>Motstanderlogo – størrelse</label><input id="ek_logo" type="range" min="0.6" max="1.6" step="0.05" value="1" oninput="ekLogo=+this.value;buildEk()">
+      <label>Sponsorlogo – størrelse</label><input id="ek_spon" type="range" min="0.6" max="1.9" step="0.05" value="1" oninput="ekSpon=+this.value;buildEk()">
+      <label>Tekststørrelse</label><input id="ek_ts" type="range" min="0.85" max="1.2" step="0.05" value="1" oninput="ekTs=+this.value;buildEk()">
+      <label>Luft / avstand</label><input id="ek_sp" type="range" min="0.8" max="1.3" step="0.05" value="1" oninput="ekSp=+this.value;buildEk()">
       <label>Egen bakgrunn (valgfritt)</label>
       <input type="file" accept="image/*" onchange="onBg(event,'ek')" style="font-size:12px">
-      <label class="ck"><input type="checkbox" checked onchange="ekDark=this.checked;buildEk()">Mørkt filter</label>
+      <label class="ck"><input id="ek_dark" type="checkbox" checked onchange="ekDark=this.checked;buildEk()">Mørkt filter</label>
       <button class="btn soft" onclick="ekBG=null;buildEk()">Fjern bakgrunn</button>
       <button class="btn" onclick="dlEk()">Last ned som bilde (JPG)</button>
+      </div>
     </div>
 
-    <div class="gallery" id="gallery"></div>
+    <!-- Kolonne 3: Resultat -->
+    <div class="col">
+      <div class="coltitle">Resultat</div>
+      <p class="colnote">Forhåndsvisning. Last ned som JPG med knappen i innstillinger.</p>
+      <div class="gallery" id="gallery"></div>
+    </div>
   </div>
 </div>
 
@@ -176,10 +209,13 @@
   window.KAMPDATA = @json($kampdata);
   window.SPORTS = @json($sports);
   window.EK_MATCHES = @json($matches);
+  window.TEMPLATES = @json($templates);
+  window.CSRF = '{{ csrf_token() }}';
 </script>
 @verbatim
 <script>
   var KAMPDATA=window.KAMPDATA||{}, SPORTS=window.SPORTS||[], MATCHES=window.EK_MATCHES||[];
+  var TEMPLATES=window.TEMPLATES||[], CSRF=window.CSRF||'', selMal=null;
   var ICON_CLOCK='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>';
   var ICON_PIN='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s7-6.2 7-11a7 7 0 1 0-14 0c0 4.8 7 11 7 11z"/><circle cx="12" cy="10" r="2.5"/></svg>';
   var ICON_CAL='<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4.5" width="18" height="16" rx="2.5"/><path d="M3 9h18M8 2.5v4M16 2.5v4"/></svg>';
@@ -216,14 +252,71 @@
   function onSpon(ev){var f=ev.target.files[0];if(!f)return;var r=new FileReader();r.onload=function(e){SPON=e.target.result;buildEk();};r.readAsDataURL(f);}
 
   function setMode(m){mode=m;document.getElementById('md_ov').classList.toggle('on',m==='ov');document.getElementById('md_ek').classList.toggle('on',m==='ek');
-    document.getElementById('ctrl-ov').classList.toggle('hide',m!=='ov');document.getElementById('ctrl-ek').classList.toggle('hide',m!=='ek');build();}
+    document.getElementById('ctrl-ov').classList.toggle('hide',m!=='ov');document.getElementById('ctrl-ek').classList.toggle('hide',m!=='ek');renderMalList();build();}
+
+  /* ---------- Maler ---------- */
+  function renderMalList(){
+    var box=document.getElementById('mallist');
+    var list=TEMPLATES.filter(function(t){return t.sport===sport&&t.mode===mode;});
+    document.getElementById('malhead').textContent='Maler · '+(mode==='ov'?'Kampoversikt':'Enkeltkamp');
+    if(selMal&&!list.some(function(t){return t.id===selMal;}))selMal=null;
+    document.getElementById('delmalbtn').disabled=!selMal;
+    if(!list.length){box.innerHTML='<div class="malempty">Ingen maler for '+esc(sport||'')+' ennå. Lag et oppsett og trykk «Lagre som mal».</div>';return;}
+    box.innerHTML=list.map(function(t){return '<button class="malitem'+(t.id===selMal?' on':'')+'" onclick="loadMal('+t.id+')">'+esc(t.name)+'</button>';}).join('');
+  }
+  function loadMal(id){
+    var t=TEMPLATES.find(function(x){return x.id===id;});if(!t)return;selMal=id;
+    var d=t.data||{};fmt=(d.fmt==='post')?'post':'story';
+    if(t.mode==='ov'){
+      document.getElementById('editor').value=d.text||'';
+      ovTitle=d.titleUrl||null;ovBG=d.bgUrl||null;ovDark=d.dark!==false;
+      ovTitleScale=+d.titleScale||1;ovTs=+d.ts||1;ovSp=+d.sp||1;
+      setVal('ov_titlescale',ovTitleScale);setVal('ov_ts',ovTs);setVal('ov_sp',ovSp);setChk('ov_dark',ovDark);
+      syncFmt();buildOv();
+    }else{
+      setTxt('e_occ',d.occ);setTxt('e_serie',d.serie);setTxt('e_date',d.date);setTxt('e_time',d.time);setTxt('e_color',d.color||'#c8102e');
+      OPP=d.oppUrl||null;SPON=d.sponUrl||null;ekBG=d.bgUrl||null;ekDark=d.dark!==false;
+      ekLogo=+d.logoScale||1;ekSpon=+d.sponScale||1;ekTs=+d.ts||1;ekSp=+d.sp||1;
+      setVal('ek_logo',ekLogo);setVal('ek_spon',ekSpon);setVal('ek_ts',ekTs);setVal('ek_sp',ekSp);setChk('ek_dark',ekDark);
+      syncFmt();buildEk();
+    }
+    renderMalList();
+  }
+  function setVal(id,v){var e=document.getElementById(id);if(e)e.value=v;}
+  function setChk(id,v){var e=document.getElementById(id);if(e)e.checked=!!v;}
+  function setTxt(id,v){var e=document.getElementById(id);if(e)e.value=(v==null?'':v);}
+  function syncFmt(){['ovf','ekf'].forEach(function(p){var s=document.getElementById(p+'_s'),q=document.getElementById(p+'_p');if(s)s.classList.toggle('on',fmt==='story');if(q)q.classList.toggle('on',fmt==='post');});}
+  function saveMal(){
+    var name=prompt('Navn på malen:', selMal?(TEMPLATES.find(function(x){return x.id===selMal;})||{}).name:'');
+    if(!name||!name.trim())return;name=name.trim();
+    var data,images;
+    if(mode==='ov'){
+      data={fmt:fmt,text:document.getElementById('editor').value,dark:ovDark,titleScale:ovTitleScale,ts:ovTs,sp:ovSp};
+      images={titleUrl:ovTitle,bgUrl:ovBG};
+    }else{
+      data={fmt:fmt,occ:document.getElementById('e_occ').value,serie:document.getElementById('e_serie').value,date:document.getElementById('e_date').value,time:document.getElementById('e_time').value,color:document.getElementById('e_color').value,dark:ekDark,logoScale:ekLogo,sponScale:ekSpon,ts:ekTs,sp:ekSp};
+      images={oppUrl:OPP,sponUrl:SPON,bgUrl:ekBG};
+    }
+    fetch('/kamper/mal',{method:'POST',headers:{'Content-Type':'application/json','X-CSRF-TOKEN':CSRF,'Accept':'application/json'},body:JSON.stringify({sport:sport,mode:mode,name:name,data:data,images:images})})
+      .then(function(r){return r.json().then(function(j){if(!r.ok)throw new Error(j.error||'Feil ved lagring');return j;});})
+      .then(function(j){var t=j.template;var i=TEMPLATES.findIndex(function(x){return x.id===t.id;});if(i>-1)TEMPLATES[i]=t;else TEMPLATES.push(t);selMal=t.id;renderMalList();})
+      .catch(function(e){alert(e.message||e);});
+  }
+  function deleteMal(){
+    if(!selMal)return;var t=TEMPLATES.find(function(x){return x.id===selMal;});if(!t)return;
+    if(!confirm('Slette malen «'+t.name+'»?'))return;
+    fetch('/kamper/mal/'+selMal,{method:'DELETE',headers:{'X-CSRF-TOKEN':CSRF,'Accept':'application/json'}})
+      .then(function(r){if(!r.ok)throw new Error('Kunne ikke slette');TEMPLATES=TEMPLATES.filter(function(x){return x.id!==selMal;});selMal=null;renderMalList();})
+      .catch(function(e){alert(e.message||e);});
+  }
   function setFmt(f){fmt=f;['ovf','ekf'].forEach(function(p){document.getElementById(p+'_s').classList.toggle('on',f==='story');document.getElementById(p+'_p').classList.toggle('on',f==='post');});build();}
   function build(){mode==='ov'?buildOv():buildEk();}
 
   /* ---------- Oversikt ---------- */
   function parse(txt){var days=[],cur=null;(txt||'').split('\n').forEach(function(line){var l=line.trim();if(!l)return;if(l.indexOf('|')>-1){var p=l.split('|').map(function(x){return x.trim();});if(cur)cur.matches.push({time:p[0]||'',team:p[1]||'',serie:p[2]||'',hall:p[3]||'',match:p[4]||''});}else{cur={day:l,matches:[]};days.push(cur);}});return days;}
   function serialize(days){return (days||[]).map(function(d){return d.day+'\n'+d.matches.map(function(m){return [m.time,m.team,m.serie,m.hall,m.match].join(' | ');}).join('\n');}).join('\n');}
-  function onSport(){sport=document.getElementById('sport').value;document.getElementById('editor').value=serialize(KAMPDATA[sport]||[]);buildOv();}
+  function onSport(){sport=document.getElementById('sport').value;document.getElementById('editor').value=serialize(KAMPDATA[sport]||[]);renderMalList();buildOv();}
+  function refreshMatches(){document.getElementById('editor').value=serialize(KAMPDATA[sport]||[]);buildOv();}
   function ballOv(s){if(/fotball/i.test(s))return '<svg class="ball" viewBox="0 0 100 100"><circle cx="50" cy="50" r="46" fill="#fff"/><path d="M50 28l11 8-4 13H43l-4-13z" fill="#12284c"/><g fill="none" stroke="#12284c" stroke-width="3"><circle cx="50" cy="50" r="46"/><path d="M50 4v16M11 32l14 9M89 32l-14 9M26 86l6-15M74 86l-6-15"/></g></svg>';return '<svg class="ball" viewBox="0 0 100 100"><circle cx="50" cy="50" r="46" fill="#fff" stroke="#12284c" stroke-width="3"/><g fill="none" stroke="#12284c" stroke-width="3" stroke-linecap="round"><path d="M50 6C33 30 33 70 50 94M50 6C67 30 67 70 50 94M18 26C37 44 37 56 18 74M82 26C63 44 63 56 82 74"/></g></svg>';}
   function layoutPages(days,budget){var dayCost=0.75,matchCost=1,pages=[],page=[],used=0;days.forEach(function(d){var i=0;while(i<d.matches.length){if(used+dayCost>budget&&page.length){pages.push(page);page=[];used=0;}var grp={day:d.day,matches:[]};used+=dayCost;while(i<d.matches.length&&used+matchCost<=budget){grp.matches.push(d.matches[i]);i++;used+=matchCost;}page.push(grp);if(i<d.matches.length){pages.push(page);page=[];used=0;}}});if(page.length)pages.push(page);return pages;}
   function daysHtml(groups){return groups.map(function(d){return '<div><div class="dayhead">'+ICON_CAL+' '+esc(d.day)+'</div>'+d.matches.map(function(m){var r2=[];if(m.team)r2.push('<span class="team">'+esc(m.team)+'</span>');if(m.serie)r2.push('<span>'+esc(m.serie)+'</span>');if(m.hall)r2.push('<span class="hall">'+ICON_PIN+' '+esc(m.hall)+'</span>');return '<div class="card"><div class="r1"><div class="time">'+ICON_CLOCK+' '+esc(m.time)+'</div><div class="match">'+fmtMatch(m.match)+'</div></div>'+(r2.length?'<div class="r2">'+r2.join('<span class="dot">·</span>')+'</div>':'')+'</div>';}).join('')+'</div>';}).join('');}
@@ -258,6 +351,7 @@
     var em=document.getElementById('ek_match');
     em.innerHTML='<option value="">– manuell –</option>'+MATCHES.map(function(m,i){return '<option value="'+i+'">'+esc(m.label)+'</option>';}).join('');
     if(!document.getElementById('e_date').value){var t=new Date();document.getElementById('e_date').value=t.toISOString().slice(0,10);}
+    renderMalList();
     buildOv();
   })();
 </script>

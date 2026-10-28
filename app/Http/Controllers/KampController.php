@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Company;
 use App\Models\Kamp;
+use App\Models\KampTemplate;
 use App\Services\KampImportService;
 use Illuminate\Http\Request;
 
@@ -68,7 +69,80 @@ class KampController extends Controller
         $sports = \App\Models\Category::where('company_id', $company->id)->whereNull('archived_at')
             ->orderBy('sort_order')->pluck('name')->values();
 
-        return view('kamper', compact('kampdata', 'matches', 'sports', 'company'));
+        $templates = KampTemplate::where('company_id', $company->id)
+            ->orderBy('sport')->orderBy('name')->get()->map->card()->values();
+
+        return view('kamper', compact('kampdata', 'matches', 'sports', 'company', 'templates'));
+    }
+
+    /** Lagre (eller oppdatere) en kampplakat-mal. Bilder sendes som data-URL og lagres som fil. */
+    public function saveTemplate(Request $request)
+    {
+        $company = app()->bound('currentCompany') ? app('currentCompany') : Company::first();
+        if (! $company) {
+            return response()->json(['error' => 'Fant ikke selskap.'], 422);
+        }
+
+        $data = $request->validate([
+            'sport' => ['required', 'string', 'max:80'],
+            'mode' => ['required', 'in:ov,ek'],
+            'name' => ['required', 'string', 'max:120'],
+            'data' => ['required', 'array'],
+            'images' => ['nullable', 'array'],
+        ]);
+
+        $payload = $data['data'];
+        foreach (($data['images'] ?? []) as $key => $val) {
+            $payload[$key] = $this->storeImageData($val, $company->id);
+        }
+
+        $tpl = KampTemplate::updateOrCreate(
+            ['company_id' => $company->id, 'sport' => $data['sport'], 'mode' => $data['mode'], 'name' => $data['name']],
+            ['data' => $payload, 'created_by' => $request->user()?->id]
+        );
+
+        return response()->json(['ok' => true, 'template' => $tpl->fresh()->card()]);
+    }
+
+    /** Slett en mal. */
+    public function deleteTemplate(KampTemplate $template)
+    {
+        foreach (['titleUrl', 'bgUrl', 'oppUrl', 'sponUrl'] as $key) {
+            $url = $template->data[$key] ?? null;
+            if (is_string($url) && str_starts_with($url, '/uploads/kampmaler/')) {
+                @unlink(public_path(ltrim($url, '/')));
+            }
+        }
+        $template->delete();
+
+        return response()->json(['ok' => true]);
+    }
+
+    /** Dekoder en data-URL til fil og returnerer offentlig sti. Allerede-lagrede URLer / null beholdes. */
+    private function storeImageData($val, int $companyId): ?string
+    {
+        if (! is_string($val) || $val === '') {
+            return null;
+        }
+        if (! str_starts_with($val, 'data:')) {
+            return $val; // allerede en lagret URL
+        }
+        if (! preg_match('/^data:image\/(png|jpe?g|webp);base64,(.+)$/s', $val, $m)) {
+            return null;
+        }
+        $ext = $m[1] === 'jpeg' ? 'jpg' : $m[1];
+        $bin = base64_decode($m[2], true);
+        if ($bin === false) {
+            return null;
+        }
+        $dir = public_path('uploads/kampmaler');
+        if (! is_dir($dir)) {
+            @mkdir($dir, 0755, true);
+        }
+        $name = 'm'.$companyId.'-'.bin2hex(random_bytes(6)).'.'.$ext;
+        file_put_contents($dir.'/'.$name, $bin);
+
+        return '/uploads/kampmaler/'.$name;
     }
 
     /** Importer hjemmekamper fra klubbens fotball.no-feed. */

@@ -113,6 +113,8 @@ Route::middleware('auth')->group(function () {
 
     // Kampplakat-generator (egen side)
     Route::get('/kamper', [KampController::class, 'plakat'])->name('kamper');
+    Route::post('/kamper/mal', [KampController::class, 'saveTemplate'])->name('kamper.mal.save');
+    Route::delete('/kamper/mal/{template}', [KampController::class, 'deleteTemplate'])->name('kamper.mal.delete');
 
     // Treningstider – fordelingsverktøy (egen side, foreløpig kontroll-visningen)
     Route::get('/treningstider', [TrainingController::class, 'index'])->name('training');
