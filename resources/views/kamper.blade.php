@@ -187,6 +187,7 @@
       <label>Sponsorlogo (valgfritt)</label><input type="file" accept="image/*" onchange="onSpon(event)" style="font-size:12px">
       <div class="seph">Format & design</div>
       <div class="seg"><button id="ekf_s" class="on" onclick="setFmt('story')">Story 1080×1920</button><button id="ekf_p" onclick="setFmt('post')">Post 1080×1350</button></div>
+      <label>Hjemmelogo (FLIK) – størrelse</label><input id="ek_home" type="range" min="0.6" max="1.6" step="0.05" value="1" oninput="ekHomeLogo=+this.value;buildEk()">
       <label>Motstanderlogo – størrelse</label><input id="ek_logo" type="range" min="0.6" max="1.6" step="0.05" value="1" oninput="ekLogo=+this.value;buildEk()">
       <label>Serie / lag – størrelse</label><input id="ek_serie" type="range" min="0.5" max="1.4" step="0.05" value="1" oninput="ekSerie=+this.value;buildEk()">
       <label>Sponsorlogo – størrelse</label><input id="ek_spon" type="range" min="0.6" max="1.9" step="0.05" value="1" oninput="ekSpon=+this.value;buildEk()">
@@ -233,7 +234,7 @@
   // oversikt-state
   var sport=null, ovTs=1, ovSp=1, ovLo=1, ovBG=null, ovDark=true, ovPages=[], ovTitle=null, ovTitleScale=1;
   // enkeltkamp-state
-  var OPP=null, SPON=null, ekBG=null, ekDark=true, ekLogo=1, ekSpon=1, ekTs=1, ekSp=1, ekSerie=1, ekSponY=0;
+  var OPP=null, SPON=null, ekBG=null, ekDark=true, ekLogo=1, ekSpon=1, ekTs=1, ekSp=1, ekSerie=1, ekSponY=0, ekHomeLogo=1;
   var FLIK_VLOGO=window.FLIK_VLOGO||'';
   var MON_ABBR=['jan.','feb.','mars','apr.','mai','juni','juli','aug.','sep.','okt.','nov.','des.'];
 
@@ -285,8 +286,8 @@
     }else{
       setTxt('e_occ',d.occ);setTxt('e_serie',d.serie);setTxt('e_date',d.date);setTxt('e_time',d.time);setTxt('e_color',d.color||'#c8102e');
       OPP=d.oppUrl||null;SPON=d.sponUrl||null;ekBG=d.bgUrl||null;ekDark=d.dark!==false;
-      ekLogo=+d.logoScale||1;ekSpon=+d.sponScale||1;ekTs=+d.ts||1;ekSp=+d.sp||1;ekSerie=+d.serieScale||1;ekSponY=+d.sponY||0;
-      setVal('ek_logo',ekLogo);setVal('ek_spon',ekSpon);setVal('ek_ts',ekTs);setVal('ek_sp',ekSp);setVal('ek_serie',ekSerie);setVal('ek_spony',ekSponY);setChk('ek_dark',ekDark);
+      ekLogo=+d.logoScale||1;ekSpon=+d.sponScale||1;ekTs=+d.ts||1;ekSp=+d.sp||1;ekSerie=+d.serieScale||1;ekSponY=+d.sponY||0;ekHomeLogo=+d.homeScale||1;
+      setVal('ek_logo',ekLogo);setVal('ek_spon',ekSpon);setVal('ek_ts',ekTs);setVal('ek_sp',ekSp);setVal('ek_serie',ekSerie);setVal('ek_spony',ekSponY);setVal('ek_home',ekHomeLogo);setChk('ek_dark',ekDark);
       renderEkMatches(false);document.getElementById('ek_match').value='';
       syncFmt();buildEk();
     }
@@ -304,7 +305,7 @@
       data={fmt:fmt,text:document.getElementById('editor').value,dark:ovDark,titleScale:ovTitleScale,ts:ovTs,sp:ovSp};
       images={titleUrl:ovTitle,bgUrl:ovBG};
     }else{
-      data={fmt:fmt,occ:document.getElementById('e_occ').value,serie:document.getElementById('e_serie').value,date:document.getElementById('e_date').value,time:document.getElementById('e_time').value,color:document.getElementById('e_color').value,dark:ekDark,logoScale:ekLogo,sponScale:ekSpon,serieScale:ekSerie,sponY:ekSponY,ts:ekTs,sp:ekSp};
+      data={fmt:fmt,occ:document.getElementById('e_occ').value,serie:document.getElementById('e_serie').value,date:document.getElementById('e_date').value,time:document.getElementById('e_time').value,color:document.getElementById('e_color').value,dark:ekDark,logoScale:ekLogo,homeScale:ekHomeLogo,sponScale:ekSpon,serieScale:ekSerie,sponY:ekSponY,ts:ekTs,sp:ekSp};
       images={oppUrl:OPP,sponUrl:SPON,bgUrl:ekBG};
     }
     fetch('/kamper/mal',{method:'POST',headers:{'Content-Type':'application/json','X-CSRF-TOKEN':CSRF,'Accept':'application/json'},body:JSON.stringify({sport:sport,mode:mode,name:name,data:data,images:images})})
@@ -357,7 +358,7 @@
     var ow=Math.round(230*ekLogo),pw=Math.round(210*ekLogo);
     var opp=OPP?'<img class="oppimg" style="width:'+ow+'px;height:'+ow+'px" src="'+OPP+'">':'<div class="oppph" style="width:'+pw+'px;height:'+pw+'px">Last opp<br>motstander-<br>logo</div>';
     var spon=SPON?'<div class="sponsor"><img style="max-height:'+Math.round(92*ekSpon)+'px" src="'+SPON+'"></div>':'<div class="sponsor"></div>';
-    var home='<img class="fhome" src="'+FLIK_VLOGO+'">';
+    var home='<img class="fhome" style="height:'+Math.round(300*ekHomeLogo)+'px" src="'+FLIK_VLOGO+'">';
     var botPad=46+ekSponY;
     return '<div class="poster ek" style="height:'+F.h+'px;transform:scale('+(dispW/F.w)+');--ts:'+ekTs+';--sp:'+ekSp+';--se:'+ekSerie+'">'+'<div class="swirl" style="'+bgCss(ekBG,ekDark)+'"></div>'+'<div class="ek-top">'+LOGO.replace('class="crest"','class="brand"')+'<div class="occ">'+occ+'</div><div class="serie">'+serie+'</div></div>'+'<div class="ek-mid"><div class="half left"><div class="inner">'+home+'</div></div><div class="half right" style="background:'+color+'"><div class="inner">'+opp+'</div></div></div>'+'<div class="ek-bot" style="padding-bottom:'+botPad+'px"><div class="dt"><div class="col"><div class="lbl">'+dp.wd+'</div><div class="val">'+dp.dm+'</div></div><div class="col"><div class="lbl">Kampstart</div><div class="val">Kl. '+time+'</div></div></div>'+spon+'</div></div>';}
   function buildEk(){var F=FORMATS[fmt];var frameH=Math.round(F.h*(360/F.w));document.getElementById('gallery').innerHTML='<div class="item"><div class="frame" style="width:360px;height:'+frameH+'px">'+ekPoster()+'</div></div>';}
