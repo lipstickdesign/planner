@@ -31,7 +31,8 @@
   .malitem.on{background:var(--flik);border-color:var(--flik);color:#fff}
   .malempty{font-size:12px;color:var(--grey);padding:12px 2px}
   .sponrow{display:flex;align-items:center;gap:9px;padding:6px 7px;border:1px solid var(--line);border-radius:9px}
-  .spthumb{width:46px;height:32px;flex:none;background:#12284c;border-radius:6px;background-size:contain;background-repeat:no-repeat;background-position:center}
+  .spthumb{width:46px;height:32px;flex:none;background:#12284c;border-radius:6px;display:flex;align-items:center;justify-content:center;padding:3px}
+  .spthumb img{max-width:100%;max-height:100%;object-fit:contain}
   .spname{flex:1;font-size:12.5px;line-height:1.25;word-break:break-word}
   .spdel{border:none;background:none;color:var(--grey);cursor:pointer;font-size:15px;line-height:1;padding:2px 4px}
   .spdel:hover{color:var(--accent)}
@@ -98,9 +99,9 @@
   .poster.ov .slogan .hrt{color:var(--sky)}
   .poster.ov .crest{height:calc(150px*var(--lo,1));width:auto;opacity:.98}
   .poster.ov .titleimg{display:block;height:auto;max-width:100%}
-  .poster.ov .spongrid{display:flex;justify-content:center;align-items:center;gap:70px;margin-top:calc(26px*var(--sp,1));padding-top:calc(22px*var(--sp,1));border-top:2px solid rgba(255,255,255,.14)}
+  .poster.ov .spongrid{display:flex;justify-content:center;align-items:center;gap:64px;margin-top:calc(26px*var(--sp,1));padding-top:calc(22px*var(--sp,1));border-top:2px solid rgba(255,255,255,.14)}
   .poster.ov .spongrid .sponcell{display:flex;align-items:center;justify-content:center;min-width:0}
-  .poster.ov .spongrid img{max-height:calc(96px*var(--lo,1));max-width:300px;object-fit:contain}
+  .poster.ov .spongrid img{height:calc(96px*var(--lo,1));width:auto;max-width:320px;object-fit:contain}
 
   /* ---- Enkeltkamp ---- */
   .poster.ek{display:flex;flex-direction:column;background:var(--navy)}
@@ -125,7 +126,7 @@
   .poster.ek .dt .lbl{font-size:calc(34px*var(--ts,1));font-weight:500;letter-spacing:.06em;text-transform:uppercase;opacity:.92;white-space:nowrap}
   .poster.ek .dt .val{font-size:calc(54px*var(--ts,1));font-weight:700;letter-spacing:.02em;text-transform:uppercase;margin-top:4px;white-space:nowrap}
   .poster.ek .sponsor{margin-top:calc(34px*var(--sp,1));min-height:70px;display:flex;align-items:center;justify-content:center}
-  .poster.ek .sponsor img{max-width:66%;object-fit:contain}
+  .poster.ek .sponsor img{width:auto;max-width:66%;object-fit:contain}
 </style>
 @endverbatim
 </head>
@@ -360,7 +361,7 @@
   function renderSponsorLib(){
     var box=document.getElementById('sponlist');
     if(!SPONSORS.length){box.innerHTML='<div class="malempty">Ingen sponsorer lagt inn ennå.</div>';return;}
-    box.innerHTML=SPONSORS.map(function(s){return '<div class="sponrow"><span class="spthumb" style="background-image:url('+s.url+')"></span><span class="spname">'+esc(s.name)+'</span><button class="spdel" title="Slett" onclick="deleteSponsor('+s.id+')">✕</button></div>';}).join('');
+    box.innerHTML=SPONSORS.map(function(s){return '<div class="sponrow"><span class="spthumb"><img src="'+s.url+'" alt=""></span><span class="spname">'+esc(s.name)+'</span><button class="spdel" title="Slett" onclick="deleteSponsor('+s.id+')">✕</button></div>';}).join('');
   }
   function sponOpts(sel){return '<option value="">– ingen –</option>'+SPONSORS.map(function(s){return '<option value="'+s.url+'"'+(s.url===sel?' selected':'')+'>'+esc(s.name)+'</option>';}).join('');}
   function renderSponsorPickers(){
@@ -426,7 +427,7 @@
   function ekPoster(dispW){var F=FORMATS[fmt];dispW=dispW||360;var occ=esc(document.getElementById('e_occ').value),serie=escBr(document.getElementById('e_serie').value),color=document.getElementById('e_color').value,time=esc(document.getElementById('e_time').value),dp=dateParts(document.getElementById('e_date').value);
     var ow=Math.round(230*ekLogo),pw=Math.round(210*ekLogo);
     var opp=OPP?'<img class="oppimg" style="width:'+ow+'px;height:'+ow+'px" src="'+OPP+'">':'<div class="oppph" style="width:'+pw+'px;height:'+pw+'px">Last opp<br>motstander-<br>logo</div>';
-    var spon=SPON?'<div class="sponsor"><img style="max-height:'+Math.round(92*ekSpon)+'px" src="'+SPON+'"></div>':'<div class="sponsor"></div>';
+    var spon=SPON?'<div class="sponsor"><img style="height:'+Math.round(92*ekSpon)+'px" src="'+SPON+'"></div>':'<div class="sponsor"></div>';
     var home='<img class="fhome" style="height:'+Math.round(300*ekHomeLogo)+'px" src="'+FLIK_VLOGO+'">';
     var botPad=46+ekSponY;
     return '<div class="poster ek" style="height:'+F.h+'px;transform:scale('+(dispW/F.w)+');--ts:'+ekTs+';--sp:'+ekSp+';--se:'+ekSerie+'">'+'<div class="swirl" style="'+bgCss(ekBG,ekDark)+'"></div>'+'<div class="ek-top">'+LOGO.replace('class="crest"','class="brand"')+'<div class="occ">'+occ+'</div><div class="serie">'+serie+'</div></div>'+'<div class="ek-mid"><div class="half left"><div class="inner">'+home+'</div></div><div class="half right" style="background:'+color+'"><div class="inner">'+opp+'</div></div></div>'+'<div class="ek-bot" style="padding-bottom:'+botPad+'px"><div class="dt"><div class="col"><div class="lbl">'+dp.wd+'</div><div class="val">'+dp.dm+'</div></div><div class="col"><div class="lbl">Kampstart</div><div class="val">Kl. '+time+'</div></div></div>'+spon+'</div></div>';}

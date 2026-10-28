@@ -18,11 +18,15 @@ class SponsorController extends Controller
 
         $request->validate([
             'name' => ['required', 'string', 'max:120'],
-            'logo' => ['required', 'file', 'mimes:png,jpg,jpeg,svg,webp', 'max:4096'],
+            'logo' => ['required', 'file', 'max:4096'],
         ]);
 
+        // Sjekk filtype på extension (unngår flaky SVG-MIME-deteksjon).
         $file = $request->file('logo');
         $ext = strtolower($file->getClientOriginalExtension() ?: $file->extension());
+        if (! in_array($ext, ['png', 'jpg', 'jpeg', 'svg', 'webp', 'gif'], true)) {
+            return response()->json(['error' => 'Ugyldig filtype. Bruk PNG, SVG, JPG eller WebP.'], 422);
+        }
         $dir = public_path('uploads/sponsors');
         if (! is_dir($dir)) {
             @mkdir($dir, 0755, true);
