@@ -56,6 +56,12 @@ return [
         'home_orgid' => env('NIF_HOME_ORGID'),
         'company_id' => env('NIF_COMPANY_ID'),
         'default_category' => env('NIF_DEFAULT_CATEGORY', 'Håndball'),
+        // Idrett per admOrgId (særforbundets administrerende ledd) i TA-responsen.
+        // 506503 = håndball (Region Sør), 387 = volleyball (Agder). Ukjente → default.
+        'sport_map' => [
+            '506503' => 'Håndball',
+            '387' => 'Volleyball',
+        ],
     ],
 
 ];

@@ -86,9 +86,10 @@ class NifTaService
         $matches = $this->scheduledMatchesForClub($orgid);
 
         $defaultCat = config('services.nif.default_category', 'Håndball');
-        $catId = Category::where('company_id', $company->id)
-            ->whereRaw('LOWER(name) = ?', [mb_strtolower($defaultCat)])
-            ->value('id');
+        $sportMap = config('services.nif.sport_map', []);
+        // Kategori-oppslag per navn (små bokstaver) → id, for å tagge kamper per idrett.
+        $catByName = Category::where('company_id', $company->id)->get(['id', 'name'])
+            ->mapWithKeys(fn ($c) => [mb_strtolower($c->name) => $c->id])->all();
 
         // Klubbens egen orgid i dataene (hometeamClubOrgId) er ofte ulik spørre-id-en.
         // Bruk evt. override fra .env, ellers autodetekter: orgid-en som er med i
@@ -110,7 +111,8 @@ class NifTaService
 
         $rows = [];
         $home = 0;
-        $breakdown = []; // admOrgId => antall, for å oppdage flere idretter
+        $breakdown = [];   // admOrgId => antall, for å oppdage flere idretter
+        $bySport = [];     // idrett => antall importerte hjemmekamper
 
         foreach ($matches as $m) {
             $adm = (string) ($m['admOrgId'] ?? '?');
@@ -127,6 +129,11 @@ class NifTaService
                 continue;
             }
             $home++;
+
+            // Idrett ut fra admOrgId (håndball/volleyball/…), ellers standard.
+            $sport = $sportMap[$adm] ?? $defaultCat;
+            $catId = $catByName[mb_strtolower($sport)] ?? null;
+            $bySport[$sport] = ($bySport[$sport] ?? 0) + 1;
 
             // matchStartTime er et heltall på formen HHMM (f.eks. 1400 = 14:00).
             $st = $m['matchStartTime'] ?? null;
@@ -171,6 +178,7 @@ class NifTaService
             'home' => $home,
             'home_orgid' => $homeOrgId,
             'breakdown' => $breakdown,
+            'by_sport' => $bySport,
         ];
     }
 
