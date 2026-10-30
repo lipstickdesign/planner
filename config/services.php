@@ -42,4 +42,17 @@ return [
         'model_pro' => env('AI_MODEL_PRO', 'claude-opus-5'),
     ],
 
+    // NIF / Idrettsforbundet – Turneringsadmin (TA) kampdata. OAuth2 client_credentials.
+    // Hemmeligheter settes i .env på serveren – aldri i kode.
+    'nif' => [
+        'client_id' => env('NIF_CLIENT_ID'),
+        'client_secret' => env('NIF_CLIENT_SECRET'),
+        'token_url' => env('NIF_TOKEN_URL', 'https://id.nif.no/connect/token'),
+        'data_url' => env('NIF_DATA_URL', 'https://data.nif.no'),
+        'scope' => env('NIF_SCOPE', 'data_ta_scheduledmatches_read'),
+        'club_orgid' => env('NIF_CLUB_ORGID'),
+        'company_id' => env('NIF_COMPANY_ID'),
+        'default_category' => env('NIF_DEFAULT_CATEGORY', 'Håndball'),
+    ],
+
 ];
