@@ -1168,7 +1168,7 @@ function openSettings(){
       '<div class="idearow"><span class="it">Hovedmål<small>Målene arrangementene kan merkes med</small></span><button class="btn sm" onclick="openGoalManager()">Åpne</button></div>'+
       '<div class="idearow"><span class="it">Kom i gang – importer<small>Lim inn tekst eller regneark → AI foreslår arrangement</small></span><button class="btn sm" onclick="openOnboarding()">Åpne</button></div>'+
       '<div class="idearow"><span class="it">Treningstider<small>Hvem trener når – brukes på dashbordet</small></span><button class="btn sm" onclick="openTrainingMgr()">Åpne</button></div>'+
-      '<div class="idearow"><span class="it">Kamper<small>Kommende kamper – vises på dashbordet</small></span><button class="btn sm" onclick="openKampMgr()">Åpne</button></div>'+
+      '<div class="idearow"><span class="it">Kamper &amp; feed<small>Administrer kamper og del feed – ligger nå under «Kamper» i menyen</small></span><a class="btn sm" href="/kamper" style="text-decoration:none">Åpne</a></div>'+
       '<div class="idearow"><span class="it">Del årshjulet<small>Innebygdbart årshjul til nettsiden (uten Administrasjon)</small></span><button class="btn sm" onclick="openShareWheel()">Åpne</button></div>'+
     '</div>';
   document.getElementById('overlay').classList.add('open');

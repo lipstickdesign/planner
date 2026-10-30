@@ -6,6 +6,7 @@ use App\Models\Company;
 use App\Models\Kamp;
 use App\Models\KampTemplate;
 use App\Services\KampImportService;
+use App\Services\NifTaService;
 use Illuminate\Http\Request;
 
 class KampController extends Controller
@@ -75,7 +76,55 @@ class KampController extends Controller
         $sponsors = \App\Models\Sponsor::where('company_id', $company->id)
             ->orderBy('sort_order')->orderBy('name')->get()->map->card()->values();
 
-        return view('kamper', compact('kampdata', 'matches', 'sports', 'company', 'templates', 'sponsors'));
+        // «Kamper & feed»-fanen: kommende hjemmekamper til administrasjon + kategorier til skjemaet.
+        $manageKamper = Kamp::with('category')->where('company_id', $company->id)
+            ->where('home', true)->whereNotNull('match_date')
+            ->whereDate('match_date', '>=', $today->format('Y-m-d'))
+            ->orderBy('match_date')->orderBy('match_time')->get()
+            ->map(fn (Kamp $k) => $k->card())->values();
+
+        $categories = \App\Models\Category::where('company_id', $company->id)->whereNull('archived_at')
+            ->orderBy('sort_order')->get(['id', 'name', 'color'])->values();
+
+        $canEdit = auth()->user()?->isCompanyAdmin() ?? false;
+        $slug = $company->slug;
+        $feeds = [
+            'fotball' => ! empty(($company->settings['football_ical_url'] ?? null)),
+            'nif' => ! empty(config('services.nif.client_id')) && ! empty(config('services.nif.club_orgid')),
+        ];
+
+        return view('kamper', compact('kampdata', 'matches', 'sports', 'company', 'templates', 'sponsors', 'manageKamper', 'categories', 'canEdit', 'slug', 'feeds'));
+    }
+
+    /** Importer hjemmekamper fra NIF Turneringsadmin (håndball m.m.). */
+    public function importNif(NifTaService $service)
+    {
+        $company = app()->bound('currentCompany') ? app('currentCompany') : Company::first();
+        if (! $company) {
+            return response()->json(['error' => 'Fant ikke selskap.'], 422);
+        }
+        $orgid = config('services.nif.club_orgid');
+        if (! $orgid) {
+            return response()->json(['error' => 'NIF-feed er ikke satt opp (mangler NIF_CLUB_ORGID).'], 422);
+        }
+
+        try {
+            $result = $service->import($company, (string) $orgid);
+        } catch (\Throwable $e) {
+            return response()->json(['error' => $e->getMessage()], 422);
+        }
+
+        return response()->json(['ok' => true, 'result' => $result, 'kamper' => $this->upcomingHomeCards($company)]);
+    }
+
+    /** Kommende hjemmekamper som kort (til administrasjonslista). */
+    private function upcomingHomeCards(Company $company): array
+    {
+        return Kamp::with('category')->where('company_id', $company->id)
+            ->where('home', true)->whereNotNull('match_date')
+            ->whereDate('match_date', '>=', now('Europe/Oslo')->startOfDay()->format('Y-m-d'))
+            ->orderBy('match_date')->orderBy('match_time')->get()
+            ->map(fn (Kamp $k) => $k->card())->values()->all();
     }
 
     /** Lagre (eller oppdatere) en kampplakat-mal. Bilder sendes som data-URL og lagres som fil. */

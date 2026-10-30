@@ -63,6 +63,30 @@
   .dlbtn{font-family:inherit;font-size:12px;font-weight:600;padding:7px 11px;border-radius:8px;border:1px solid var(--flik);background:#fff;color:var(--flik);cursor:pointer}
   .emptyc{color:var(--ink-soft);font-size:13px;padding:30px;background:var(--card);border:1px dashed var(--line);border-radius:12px}
   .hide{display:none}
+  /* Sub-faner (Lag grafikk / Kamper & feed) */
+  .subtabs{display:flex;gap:6px;margin:0 0 18px;border-bottom:1px solid var(--line)}
+  .subtabs button{font-family:inherit;font-size:14.5px;font-weight:600;padding:10px 18px;border:none;background:none;color:var(--ink-soft);cursor:pointer;border-bottom:3px solid transparent;margin-bottom:-1px}
+  .subtabs button.on{color:var(--flik);border-bottom-color:var(--flik)}
+  /* Kamper & feed */
+  .feedbar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}
+  .fb{font-family:inherit;font-size:13px;font-weight:600;padding:9px 14px;border-radius:9px;border:1px solid var(--line);background:#fff;color:var(--ink);cursor:pointer;width:auto;margin:0}
+  .fb:hover{border-color:var(--flik);color:var(--flik)}
+  .fb.solid{background:var(--flik);border-color:var(--flik);color:#fff}
+  .fb.solid:hover{color:#fff;opacity:.92}
+  .kamprow{display:flex;align-items:center;gap:12px;padding:10px 12px;border:1px solid var(--line);border-radius:10px;margin-bottom:7px;background:#fff}
+  .kamprow .kdate{flex:none;font-size:12px;font-weight:700;color:#fff;border-radius:7px;padding:5px 9px;min-width:92px;text-align:center}
+  .kamprow .kinfo{flex:1;min-width:0}
+  .kamprow .kt{font-weight:600;font-size:14px}
+  .kamprow .km{font-size:12px;color:var(--ink-soft);margin-top:2px}
+  .kamprow .kbtn{flex:none;border:1px solid var(--line);background:#fff;border-radius:8px;padding:6px 10px;cursor:pointer;color:var(--ink-soft);font-size:12px;font-weight:600}
+  .kamprow .kbtn:hover{border-color:var(--flik);color:var(--flik)}
+  .kamprow .kbtn.del:hover{color:var(--accent);border-color:var(--accent)}
+  .kampform{border:1px solid var(--line);border-radius:12px;padding:16px;background:#fbfcfe;margin-bottom:16px}
+  .kampform label{display:block;font-size:12px;font-weight:600;color:var(--ink-soft);margin:8px 0 4px}
+  .kampempty{color:var(--grey);padding:18px;text-align:center;border:1px dashed var(--line);border-radius:10px}
+  .sharebox{border:1px solid var(--line);border-radius:12px;padding:16px;background:#fbfcfe;margin-bottom:16px}
+  .sharebox label{display:block;font-size:12px;font-weight:600;color:var(--ink-soft);margin:12px 0 4px}
+  .sharebox input,.sharebox textarea{width:100%;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px;padding:9px 10px;border:1px solid var(--line);border-radius:8px;background:#fff;color:var(--ink)}
 
   /* ---- Felles plakat ---- */
   .poster{width:1080px;color:#fff;position:relative;overflow:hidden;transform-origin:top left;font-family:'Ubuntu',system-ui,sans-serif}
@@ -135,7 +159,12 @@
 @include('partials.topbar-js')
 <div class="wrap">
   <h1>Kamper</h1>
-  <p class="sub">Lag ferdige kampbilder til sosiale medier – on-brand, uten AI. Velg type, juster om du vil, og last ned som JPG (story eller post).</p>
+  <p class="sub">Alt om kamper på ett sted: lag ferdige kampbilder til sosiale medier, administrer kampene og del feed til nettsiden.</p>
+  <div class="subtabs">
+    <button id="st_grafikk" class="on" onclick="setTab('grafikk')">Lag grafikk</button>
+    <button id="st_feed" onclick="setTab('feed')">Kamper &amp; feed</button>
+  </div>
+  <div id="tab-grafikk">
   <div class="layout3">
 
     <!-- Kolonne 1: Maler / Sponsorer -->
@@ -241,10 +270,36 @@
       <div class="gallery" id="gallery"></div>
     </div>
   </div>
+  </div><!-- /tab-grafikk -->
+
+  <div id="tab-feed" class="hide">
+    <div class="pcol" style="max-width:940px">
+      <div class="coltitle">Kamper &amp; feed</div>
+      <p class="colnote">Kommende hjemmekamper. Importér fra feeds eller legg inn manuelt, og del kampoversikten til nettsiden.</p>
+      @if($canEdit)
+      <div class="feedbar">
+        <button class="fb solid" onclick="newKamp()">+ Ny kamp</button>
+        @if($feeds['fotball'])<button class="fb" onclick="importFeed('fotball')">Importer fotball.no</button>@endif
+        @if($feeds['nif'])<button class="fb" onclick="importFeed('nif')">Hent håndball (NIF)</button>@endif
+        <button class="fb" onclick="toggleShare()">Del til nettside</button>
+      </div>
+      <div id="kampform" class="hide"></div>
+      <div id="sharebox" class="sharebox hide"></div>
+      @else
+      <p class="colnote">Du har lesetilgang. Redigering og import gjøres av en administrator.</p>
+      @endif
+      <div id="kamplist"></div>
+    </div>
+  </div>
 </div>
 
 <script>
   window.KAMPDATA = @json($kampdata);
+  window.MANAGE_KAMPER = @json($manageKamper);
+  window.CATS = @json($categories);
+  window.SLUG = @json($slug);
+  window.CAN_EDIT = {{ $canEdit ? 'true' : 'false' }};
+  window.FEEDS = @json($feeds);
   window.SPORTS = @json($sports);
   window.EK_MATCHES = @json($matches);
   window.TEMPLATES = @json($templates);
@@ -257,6 +312,7 @@
   var KAMPDATA=window.KAMPDATA||{}, SPORTS=window.SPORTS||[], MATCHES=window.EK_MATCHES||[];
   var TEMPLATES=window.TEMPLATES||[], CSRF=window.CSRF||'', selMal=null;
   var SPONSORS=window.SPONSORS||[];
+  var KAMPER=window.MANAGE_KAMPER||[], CATS=window.CATS||[], SLUG=window.SLUG||'flik', CAN_EDIT=!!window.CAN_EDIT;
   var ICON_CLOCK='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>';
   var ICON_PIN='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s7-6.2 7-11a7 7 0 1 0-14 0c0 4.8 7 11 7 11z"/><circle cx="12" cy="10" r="2.5"/></svg>';
   var ICON_CAL='<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4.5" width="18" height="16" rx="2.5"/><path d="M3 9h18M8 2.5v4M16 2.5v4"/></svg>';
@@ -391,6 +447,97 @@
   }
   function onEkSponSel(){var v=document.getElementById('ek_spon_sel').value;SPON=v||null;buildEk();}
 
+  /* ---------- Faner: Lag grafikk / Kamper & feed ---------- */
+  function setTab(t){
+    document.getElementById('st_grafikk').classList.toggle('on',t==='grafikk');
+    document.getElementById('st_feed').classList.toggle('on',t==='feed');
+    document.getElementById('tab-grafikk').classList.toggle('hide',t!=='grafikk');
+    document.getElementById('tab-feed').classList.toggle('hide',t!=='feed');
+    if(t==='feed')renderKampList();
+  }
+  function gv(id){var e=document.getElementById(id);return e?e.value:'';}
+  function api(method,url,body){
+    var opt={method:method,headers:{'X-CSRF-TOKEN':CSRF,'Accept':'application/json'}};
+    if(body!==undefined){opt.headers['Content-Type']='application/json';opt.body=JSON.stringify(body);}
+    return fetch(url,opt).then(function(r){return r.json().then(function(j){if(!r.ok)throw new Error(j.error||j.message||('Feil ('+r.status+')'));return j;});});
+  }
+  function fmtDate(d){var p=(d||'').split('-');return p.length===3?(p[2]+'.'+p[1]+'.'+p[0].slice(2)):(d||'');}
+  function renderKampList(){
+    var box=document.getElementById('kamplist');if(!box)return;
+    if(!KAMPER.length){box.innerHTML='<div class="kampempty">Ingen kommende hjemmekamper.</div>';return;}
+    box.innerHTML=KAMPER.map(function(k){
+      var teams=(k.home_team&&k.away_team)?(esc(k.home_team)+' – '+esc(k.away_team)):esc(k.title||'Kamp');
+      var meta=[k.category,k.time,k.location].filter(Boolean).map(esc).join(' · ');
+      var src=k.source?(' · '+(k.source==='nif-ta'?'håndball-feed':(k.source==='fotball.no'?'fotball-feed':esc(k.source)))):'';
+      var btns=CAN_EDIT?('<button class="kbtn" onclick="editKamp('+k.id+')">Rediger</button><button class="kbtn del" onclick="deleteKamp('+k.id+')">Slett</button>'):'';
+      return '<div class="kamprow"><span class="kdate" style="background:'+(k.color||'#8795a3')+'">'+(k.date?fmtDate(k.date):'—')+'</span><div class="kinfo"><div class="kt">'+teams+'</div><div class="km">'+meta+src+'</div></div>'+btns+'</div>';
+    }).join('');
+  }
+  function newKamp(){showKampForm(null);}
+  function editKamp(id){showKampForm(KAMPER.find(function(x){return x.id===id;}));}
+  function showKampForm(k){
+    var f=document.getElementById('kampform');if(!f)return;f.className='kampform';
+    var catOpts='<option value="">– idrett –</option>'+CATS.map(function(c){return '<option value="'+c.id+'">'+esc(c.name)+'</option>';}).join('');
+    f.innerHTML='<div class="coltitle" style="font-size:14px">'+(k?'Rediger kamp':'Ny kamp')+'</div>'+
+      '<label>Kamp / navn (f.eks. FLIK – Vanse)</label><input type="text" id="ka_title">'+
+      '<div class="two" style="margin-top:4px"><div><label>Idrett</label><select id="ka_cat">'+catOpts+'</select></div><div><label>Hjemme/borte</label><select id="ka_home"><option value="1">Hjemme</option><option value="0">Borte</option></select></div></div>'+
+      '<div class="two" style="margin-top:4px"><div><label>Dato</label><input type="date" id="ka_date"></div><div><label>Tid</label><input type="text" id="ka_time" placeholder="18:30"></div></div>'+
+      '<label>Sted</label><input type="text" id="ka_loc">'+
+      '<div style="display:flex;gap:8px;margin-top:14px"><button class="fb solid" onclick="saveKamp('+(k?k.id:'null')+')">Lagre</button><button class="fb" onclick="cancelKampForm()">Avbryt</button></div>';
+    if(k){setTxt('ka_title',k.title);if(k.category_id)setVal('ka_cat',k.category_id);setTxt('ka_date',k.date);setTxt('ka_time',k.time);setTxt('ka_loc',k.location);setVal('ka_home',k.home?'1':'0');}
+    if(f.scrollIntoView)f.scrollIntoView({behavior:'smooth',block:'nearest'});
+  }
+  function cancelKampForm(){var f=document.getElementById('kampform');if(f){f.className='hide';f.innerHTML='';}}
+  function saveKamp(id){
+    var body={title:gv('ka_title').trim(),category_id:(+gv('ka_cat')||null),match_date:gv('ka_date'),match_time:gv('ka_time').trim()||null,location:gv('ka_loc').trim()||null,home:gv('ka_home')==='1'};
+    if(!body.title||!body.match_date){alert('Fyll inn navn og dato.');return;}
+    (id?api('PUT','/kamper/'+id,body):api('POST','/kamper',body)).then(function(card){
+      if(id){var i=KAMPER.findIndex(function(x){return x.id===id;});if(i>=0)KAMPER[i]=card;}else{KAMPER.push(card);}
+      KAMPER.sort(function(a,b){return ((a.date+(a.time||''))<(b.date+(b.time||''))?-1:1);});
+      cancelKampForm();renderKampList();
+    }).catch(function(e){alert(e.message||e);});
+  }
+  function deleteKamp(id){
+    if(!confirm('Slette denne kampen?'))return;
+    api('DELETE','/kamper/'+id).then(function(){KAMPER=KAMPER.filter(function(x){return x.id!==id;});renderKampList();}).catch(function(e){alert(e.message||e);});
+  }
+  function importFeed(kind){
+    var msg=kind==='nif'?'Hente håndballkamper fra Idrettsforbundet (NIF)?':'Synkronisere hjemmekamper fra fotball.no? Tidligere importerte erstattes (manuelt lagt inn kamper røres ikke).';
+    if(!confirm(msg))return;
+    var url=kind==='nif'?'/kamper/import-nif':'/kamper/import';
+    api('POST',url).then(function(r){
+      alert('Ferdig: '+r.result.synced+' hjemmekamper synkronisert'+(r.result.total?(' (av '+r.result.total+' i feeden)'):'')+'. Siden lastes på nytt.');
+      location.reload();
+    }).catch(function(e){alert(e.message||e);});
+  }
+  /* ---- Del til nettside ---- */
+  function toggleShare(){var b=document.getElementById('sharebox');if(!b)return;if(b.classList.contains('hide')){buildShare();b.classList.remove('hide');if(b.scrollIntoView)b.scrollIntoView({behavior:'smooth',block:'nearest'});}else{b.classList.add('hide');}}
+  function buildShare(){
+    var b=document.getElementById('sharebox');
+    var sports=[];KAMPER.forEach(function(k){if(k.category&&sports.indexOf(k.category)<0)sports.push(k.category);});sports.sort();
+    var opts='<option value="">Alle idretter (kombinert)</option>'+sports.map(function(s){return '<option value="'+esc(s)+'">Bare '+esc(s)+'</option>';}).join('');
+    b.innerHTML='<div class="coltitle" style="font-size:14px">Del kampoversikt til nettsiden</div>'+
+      '<div class="two" style="margin-top:4px"><div><label>Hva skal vises?</label><select id="sh_sport" onchange="updShare()">'+opts+'</select></div><div><label>Innbyggingsmåte</label><select id="sh_type" onchange="updShare()"><option value="script">Uten iframe (arver sidens font)</option><option value="iframe">Med iframe</option></select></div></div>'+
+      '<label>Dager fram (valgfritt, standard 7)</label><input type="text" id="sh_days" placeholder="7" oninput="updShare()">'+
+      '<label>Direkte lenke</label><input id="sh_url" readonly onclick="this.select()">'+
+      '<label>Innbyggingskode – lim inn på nettsiden</label><textarea id="sh_embed" readonly style="min-height:70px" onclick="this.select()"></textarea>'+
+      '<div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap"><button class="fb" onclick="copyEl(\'sh_embed\')">Kopier kode</button><button class="fb" onclick="window.open(document.getElementById(\'sh_url\').value,\'_blank\')">Forhåndsvis</button><button class="fb" onclick="toggleShare()">Lukk</button></div>';
+    updShare();
+  }
+  function updShare(){
+    var sport=gv('sh_sport'),type=gv('sh_type'),days=gv('sh_days').trim();
+    var origin=window.location.origin,q=[];
+    if(sport)q.push('sport='+encodeURIComponent(sport));
+    if(days&&/^\d+$/.test(days))q.push('days='+days);
+    var qs=q.length?('?'+q.join('&')):'';
+    var pageUrl=origin+'/embed/'+SLUG+'/kamper'+qs,jsUrl=origin+'/embed/'+SLUG+'/kamper.js'+qs;
+    var embed=type==='iframe'
+      ? '<iframe src="'+pageUrl+'" scrolling="no" style="border:0;width:100%" title="Kommende hjemmekamper"></iframe>'
+      : '<script src="'+jsUrl+'"><\/script>';
+    setTxt('sh_url',pageUrl);setTxt('sh_embed',embed);
+  }
+  function copyEl(id){var e=document.getElementById(id);if(!e)return;e.focus();e.select();try{if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(e.value);else document.execCommand('copy');}catch(_){}}
+
   function setFmt(f){fmt=f;['ovf','ekf'].forEach(function(p){document.getElementById(p+'_s').classList.toggle('on',f==='story');document.getElementById(p+'_p').classList.toggle('on',f==='post');});build();}
   function build(){mode==='ov'?buildOv():buildEk();}
 
@@ -445,7 +592,7 @@
     if(!document.getElementById('e_date').value){var t=new Date();document.getElementById('e_date').value=t.toISOString().slice(0,10);}
     renderEkMatches(false);
     renderSponsorLib();renderSponsorPickers();
-    renderMalList();
+    renderMalList();renderKampList();
     buildOv();
   })();
 </script>

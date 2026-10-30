@@ -185,6 +185,12 @@ class NifTaService
         if ($name === null || $name === '') {
             return $name;
         }
+
+        // Fjern alders-/serie-suffiks etter klubbnavnet («FLIK - J16 1» → «FLIK»).
+        // Serien (f.eks. «Jenter 16, Breddeserie 01») vises på egen linje, så dette
+        // er overflødig i selve lagnavnet.
+        $name = preg_split('/\s+-\s+/u', $name, 2)[0];
+
         $settings = is_array($company->settings) ? $company->settings : [];
         $short = $settings['team_short'] ?? 'FLIK';
         $patterns = $settings['team_long'] ?? [

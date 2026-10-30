@@ -221,6 +221,7 @@ Route::middleware('auth')->group(function () {
 
         // Kamper
         Route::post('/kamper/import', [KampController::class, 'import']);
+        Route::post('/kamper/import-nif', [KampController::class, 'importNif']);
         Route::post('/kamper', [KampController::class, 'store']);
         Route::put('/kamper/{kamp}', [KampController::class, 'update']);
         Route::delete('/kamper/{kamp}', [KampController::class, 'destroy']);
