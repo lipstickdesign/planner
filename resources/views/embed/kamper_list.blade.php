@@ -36,7 +36,7 @@
     @endforeach
   </div>
 @empty
-  <div class="vk-empty">Ingen hjemmekamper de neste sju dagene.</div>
+  <div class="vk-empty">Ingen kommende hjemmekamper akkurat nå.</div>
 @endforelse
   <div class="vk-foot">Oppdateres automatisk med <a href="https://havdurdesign.no/produkter/vivu-planner/" target="_blank" rel="nofollow noopener" style="color:inherit;text-decoration:underline">Vivu Planner – Havdur Design</a></div>
 </div>

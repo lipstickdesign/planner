@@ -52,11 +52,15 @@ class PublicKampController extends Controller
         // Valgfritt: egen feed per idrett (?sport=Fotball). Uten = alle idretter.
         $sport = trim((string) request('sport')) ?: null;
 
+        // Valgfritt: hvor langt fram feeden viser (?days=30). Standard 7, maks 90.
+        $window = (int) request('days', 7);
+        $window = max(1, min($window, 90));
+
         $today = now('Europe/Oslo')->startOfDay();
-        $end = $today->copy()->addDays(7);
+        $end = $today->copy()->addDays($window);
 
         // Cache-nøkkel inkluderer dagens dato → ruller automatisk ved midnatt.
-        $cacheKey = 'kampfeed_'.$company->id.'_'.$today->format('Ymd').'_'.($sport ? mb_strtolower($sport) : 'alle');
+        $cacheKey = 'kampfeed_'.$company->id.'_'.$today->format('Ymd').'_'.$window.'_'.($sport ? mb_strtolower($sport) : 'alle');
         $kamper = Cache::remember($cacheKey, now()->addMinutes(30), function () use ($today, $end, $sport) {
             return Kamp::with('category')
                 ->where('home', true)
