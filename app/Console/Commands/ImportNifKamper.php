@@ -45,6 +45,7 @@ class ImportNifKamper extends Command
         }
 
         $this->info($company->name.': '.$r['synced'].' hjemmekamper synkronisert (av '.$r['total'].' kamper i feeden).');
+        $this->line('Klubbens orgid i dataene (hjemmelag): '.$r['home_orgid']);
         $this->line('Fordeling per admOrgId (for å se om flere idretter ligger inne): '.json_encode($r['breakdown']));
 
         return self::SUCCESS;

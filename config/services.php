@@ -51,6 +51,9 @@ return [
         'data_url' => env('NIF_DATA_URL', 'https://data.nif.no'),
         'scope' => env('NIF_SCOPE', 'data_ta_scheduledmatches_read'),
         'club_orgid' => env('NIF_CLUB_ORGID'),
+        // Klubbens egen orgid slik den står i kampdataene (hometeamClubOrgId).
+        // Oftest ulik club_orgid (som er spørre-id-en). Står den tom, autodetekteres den.
+        'home_orgid' => env('NIF_HOME_ORGID'),
         'company_id' => env('NIF_COMPANY_ID'),
         'default_category' => env('NIF_DEFAULT_CATEGORY', 'Håndball'),
     ],

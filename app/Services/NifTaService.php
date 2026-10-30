@@ -90,6 +90,24 @@ class NifTaService
             ->whereRaw('LOWER(name) = ?', [mb_strtolower($defaultCat)])
             ->value('id');
 
+        // Klubbens egen orgid i dataene (hometeamClubOrgId) er ofte ulik spørre-id-en.
+        // Bruk evt. override fra .env, ellers autodetekter: orgid-en som er med i
+        // flest kamper (hjemme ELLER borte) er klubben selv.
+        $homeOrgId = (string) (config('services.nif.home_orgid') ?: '');
+        if ($homeOrgId === '') {
+            $counts = [];
+            foreach ($matches as $m) {
+                foreach (['hometeamClubOrgId', 'awayteamClubOrgId'] as $k) {
+                    $v = $m[$k] ?? null;
+                    if ($v !== null && $v !== '') {
+                        $counts[(string) $v] = ($counts[(string) $v] ?? 0) + 1;
+                    }
+                }
+            }
+            arsort($counts);
+            $homeOrgId = (string) (array_key_first($counts) ?? $orgid);
+        }
+
         $rows = [];
         $home = 0;
         $breakdown = []; // admOrgId => antall, for å oppdage flere idretter
@@ -99,7 +117,7 @@ class NifTaService
             $breakdown[$adm] = ($breakdown[$adm] ?? 0) + 1;
 
             // Hjemmekamp = klubbens lag står som hjemmelag.
-            $isHome = (string) ($m['hometeamClubOrgId'] ?? '') === (string) $orgid;
+            $isHome = (string) ($m['hometeamClubOrgId'] ?? '') === $homeOrgId;
             if (! $isHome) {
                 continue;
             }
@@ -148,6 +166,7 @@ class NifTaService
             'synced' => count($rows),
             'total' => count($matches),
             'home' => $home,
+            'home_orgid' => $homeOrgId,
             'breakdown' => $breakdown,
         ];
     }
