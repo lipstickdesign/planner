@@ -12,3 +12,7 @@ Artisan::command('inspire', function () {
 // så flyttede kamper fanges opp samme dag).
 Schedule::command('kamper:import')->dailyAt('06:00')->withoutOverlapping();
 Schedule::command('kamper:import')->dailyAt('13:00')->withoutOverlapping();
+
+// Synk håndballkamper (m.m.) fra NIF Turneringsadmin. Bruker NIF_CLUB_ORGID fra .env.
+Schedule::command('kamper:import-nif')->dailyAt('06:15')->withoutOverlapping();
+Schedule::command('kamper:import-nif')->dailyAt('13:15')->withoutOverlapping();
