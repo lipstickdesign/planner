@@ -136,13 +136,16 @@ class NifTaService
                 $time = substr($p, 0, 2).':'.substr($p, 2, 2).':00';
             }
 
+            $homeTeam = $this->shorten($m['hometeam'] ?? null, $company);
+            $awayTeam = $this->shorten($m['awayteam'] ?? null, $company);
+
             $rows[] = [
                 'company_id' => $company->id,
                 'category_id' => $catId,
                 'external_uid' => 'nif-'.($m['matchId'] ?? $m['id'] ?? uniqid()),
-                'title' => trim(($m['hometeam'] ?? '').' - '.($m['awayteam'] ?? '')),
-                'home_team' => $m['hometeam'] ?? null,
-                'away_team' => $m['awayteam'] ?? null,
+                'title' => trim(($homeTeam ?? '').' - '.($awayTeam ?? '')),
+                'home_team' => $homeTeam,
+                'away_team' => $awayTeam,
                 'tournament' => $m['tournamentName'] ?? null,
                 'match_date' => $date,
                 'match_time' => $time,
@@ -169,5 +172,30 @@ class NifTaService
             'home_orgid' => $homeOrgId,
             'breakdown' => $breakdown,
         ];
+    }
+
+    /**
+     * Forkort klubbens lange navn til kortform (f.eks. «Farsund og Lista
+     * Idrettsklubb» → «FLIK», «Farsund og Lista 2» → «FLIK 2»). Styres av
+     * klubbens innstillinger (team_short / team_long), med fornuftige
+     * standardverdier. Lengste mønstre først så de erstattes riktig.
+     */
+    private function shorten(?string $name, Company $company): ?string
+    {
+        if ($name === null || $name === '') {
+            return $name;
+        }
+        $settings = is_array($company->settings) ? $company->settings : [];
+        $short = $settings['team_short'] ?? 'FLIK';
+        $patterns = $settings['team_long'] ?? [
+            'Farsund og Lista Idrettsklubb',
+            'Farsund og Lista Idrettslag',
+            'Farsund og Lista',
+        ];
+        foreach ($patterns as $p) {
+            $name = preg_replace('/'.preg_quote($p, '/').'/iu', $short, $name);
+        }
+
+        return trim(preg_replace('/\s{2,}/', ' ', $name));
     }
 }
